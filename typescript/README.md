@@ -57,6 +57,23 @@ await client.createDocument(
   },
   'idem-pdv-2026-0001',
 );
+
+const history = await client.listDocuments({
+  document_type: 'nfce',
+  fiscal_status: 'authorized',
+  per_page: 20,
+});
+
+const companyConfig = await client.getCompanyConfiguration();
+
+await client.updateCompanyConfiguration({
+  ...companyConfig,
+  telefone: '+55 11 4000-1234',
+  nfse: {
+    ...(typeof companyConfig.nfse === 'object' && companyConfig.nfse !== null ? companyConfig.nfse as Record<string, unknown> : {}),
+    provider_key: 'abrasf-v2-soap',
+  },
+});
 ```
 
 For clients that already assemble the complete fiscal form payload or XML, use the direct surface. This bypasses NotaAgil fiscal rule resolution and requires a token with `documents:direct`.

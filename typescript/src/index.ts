@@ -97,6 +97,30 @@ export interface DocumentStatus {
   [key: string]: unknown;
 }
 
+export interface DocumentListFilters {
+  external_id?: string;
+  document_type?: DocumentType;
+  operational_status?: string;
+  fiscal_status?: string;
+  created_from?: string;
+  created_to?: string;
+  per_page?: number;
+}
+
+export interface PaginatedDocumentList {
+  data: DocumentStatus[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
+export interface CompanyConfigurationPayload {
+  [key: string]: unknown;
+}
+
 export interface NotagilClientOptions {
   baseUrl: string;
   token: string;
@@ -169,6 +193,36 @@ export class NotagilIntegrationClient {
     });
   }
 
+  listDocuments(filters: DocumentListFilters = {}): Promise<PaginatedDocumentList> {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value === undefined || value === null || value === '') {
+        continue;
+      }
+      query.set(key, String(value));
+    }
+
+    const path = query.size > 0 ? `/documents?${query.toString()}` : '/documents';
+
+    return this.request<PaginatedDocumentList>(path, {
+      method: 'GET',
+      unwrapData: false,
+    });
+  }
+
+  getCompanyConfiguration(): Promise<CompanyConfigurationPayload> {
+    return this.request<CompanyConfigurationPayload>('/configuration/company', {
+      method: 'GET',
+    });
+  }
+
+  updateCompanyConfiguration(payload: CompanyConfigurationPayload): Promise<CompanyConfigurationPayload> {
+    return this.request<CompanyConfigurationPayload>('/configuration/company', {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
   cancelDocument(externalId: string, reason: string): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(`/documents/${encodeURIComponent(externalId)}/cancel`, {
       method: 'POST',
@@ -187,9 +241,10 @@ export class NotagilIntegrationClient {
   }
 
   private async request<T>(path: string, options: {
-    method: 'GET' | 'POST';
+    method: 'GET' | 'POST' | 'PUT';
     headers?: Record<string, string>;
     body?: unknown;
+    unwrapData?: boolean;
   }): Promise<T> {
     const response = await this.fetcher(`${this.baseUrl}${path}`, {
       method: options.method,
@@ -207,6 +262,10 @@ export class NotagilIntegrationClient {
 
     if (!response.ok) {
       throw new NotagilApiError(response.status, parsed);
+    }
+
+    if (options.unwrapData === false) {
+      return parsed as T;
     }
 
     return (parsed && typeof parsed === 'object' && 'data' in parsed ? (parsed as { data: T }).data : parsed) as T;
