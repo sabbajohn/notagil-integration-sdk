@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"NotaAgil\\Integration\\Tests\\NotaAgilClientTest::test_create_document_sends_idempotency_key_and_bearer_token":0.008,"NotaAgil\\Integration\\Tests\\NotaAgilClientTest::test_api_errors_throw_typed_exception":0.002}}
