@@ -1,24 +1,73 @@
 export type DocumentType = 'nfe' | 'nfce' | 'nfse';
 export type ResolutionStatus = 'resolved' | 'review' | 'blocked';
+export type FiscalEnvironment = 'homologacao' | 'producao';
+export type NfsePolicyField =
+  | 'service.municipal_code'
+  | 'service.national_tax_code'
+  | 'service.nbs'
+  | 'service.cnae_code'
+  | 'service.activity_code'
+  | 'prestador.op_simp_nac';
+
+export interface NfseFieldSchema {
+  label?: string;
+  control?: string;
+  payload_paths?: string[];
+  options?: Array<{ value: string; label: string }>;
+  [key: string]: unknown;
+}
+
+export interface NfseFormPolicy {
+  provider_key: string | null;
+  layout_family: string | null;
+  municipio_ibge: string | null;
+  municipio_nome: string | null;
+  policy_source: string;
+  required_fields: NfsePolicyField[];
+  visible_fields: NfsePolicyField[];
+  default_values?: Partial<Record<NfsePolicyField, string>>;
+  field_schema?: Partial<Record<NfsePolicyField, NfseFieldSchema>>;
+  labels: Partial<Record<NfsePolicyField, string>>;
+  hints: Partial<Record<NfsePolicyField, string>>;
+}
+
+export interface NfseProviderInfo {
+  provider_key: string | null;
+  municipio: string | null;
+  resolution_source: string | null;
+  provider_metadata: Record<string, unknown>;
+  form_policy: NfseFormPolicy;
+  warnings?: string[];
+}
 
 export interface FiscalPayload {
   type: DocumentType;
-  fiscal_environment?: 'homologacao' | 'producao';
+  fiscal_environment?: FiscalEnvironment;
   operation_profile_id: string | number;
-  taker_profile_id?: string | number | null;
   tomador_id?: string | number | null;
   consumer_final_pf?: boolean;
   counterparty?: Record<string, unknown>;
   document_data?: Record<string, unknown>;
   items: Array<Record<string, unknown> & {
     product_id?: string | number | null;
-    product_profile_id?: string | number | null;
     cfop_id?: string | number | null;
     sku?: string;
     description?: string;
     quantity: number;
     unit_price: number;
     gross_amount?: number;
+    codigo_servico_municipal?: string;
+    codigo_cnae?: string;
+    codigoCnae?: string;
+    codigo_atividade?: string;
+    manual_overrides?: {
+      codigo_tributacao_nacional?: string;
+      codigo_tributacao_municipal?: string;
+      codigo_nbs?: string;
+      codigo_cnae?: string;
+      codigo_atividade?: string;
+      [key: string]: unknown;
+    };
   }>;
   [key: string]: unknown;
 }
@@ -39,7 +88,7 @@ export interface DirectDocumentSubmitRequest {
   external_id: string;
   document_type: DocumentType;
   municipio?: string | null;
-  fiscal_environment?: 'homologacao' | 'producao';
+  fiscal_environment?: FiscalEnvironment;
   payload: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 }
@@ -48,7 +97,7 @@ export interface DirectXmlSubmitRequest {
   external_id: string;
   document_type: 'nfe' | 'nfce';
   municipio?: string | null;
-  fiscal_environment?: 'homologacao' | 'producao';
+  fiscal_environment?: FiscalEnvironment;
   xml?: string;
   xml_base64?: string;
   already_signed?: boolean;
@@ -66,7 +115,6 @@ export interface PreviewResult {
   tax_resolution?: Record<string, unknown>;
   blocking_issues?: Array<Record<string, unknown>>;
   warnings?: string[];
-  draft_suggestions?: Array<Record<string, unknown>>;
 }
 
 export interface DocumentAccepted {
@@ -220,6 +268,41 @@ export class NotagilIntegrationClient {
     return this.request<CompanyConfigurationPayload>('/configuration/company', {
       method: 'PUT',
       body: payload,
+    });
+  }
+
+  getNfseProviderInfo(params: { municipio?: string | null; fiscal_environment?: FiscalEnvironment } = {}): Promise<NfseProviderInfo> {
+    const query = new URLSearchParams();
+    if (params.municipio) {
+      query.set('municipio', params.municipio);
+    }
+    if (params.fiscal_environment) {
+      query.set('fiscal_environment', params.fiscal_environment);
+    }
+
+    const path = query.size > 0 ? `/nfse/provider-info?${query.toString()}` : '/nfse/provider-info';
+
+    return this.request<NfseProviderInfo>(path, {
+      method: 'GET',
+    });
+  }
+
+  getCompanyNfseProviderInfo(
+    companyId: string | number,
+    params: { municipio?: string | null; fiscal_environment?: FiscalEnvironment } = {},
+  ): Promise<NfseProviderInfo> {
+    const query = new URLSearchParams();
+    if (params.municipio) {
+      query.set('municipio', params.municipio);
+    }
+    if (params.fiscal_environment) {
+      query.set('fiscal_environment', params.fiscal_environment);
+    }
+
+    const suffix = query.size > 0 ? `?${query.toString()}` : '';
+
+    return this.request<NfseProviderInfo>(`/companies/${encodeURIComponent(String(companyId))}/nfse/provider-info${suffix}`, {
+      method: 'GET',
     });
   }
 

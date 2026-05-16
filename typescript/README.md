@@ -19,9 +19,10 @@ const preview = await client.previewDocument({
     consumer_final_pf: true,
     items: [
       {
-        product_profile_id: 31,
+        product_id: 31,
         sku: 'SKU-BALCAO-001',
         description: 'Refeicao por quilo',
+        ncm: '21069090',
         quantity: 1,
         unit_price: 42.9,
         gross_amount: 42.9,
@@ -45,9 +46,10 @@ await client.createDocument(
       consumer_final_pf: true,
       items: [
         {
-          product_profile_id: 31,
+          product_id: 31,
           sku: 'SKU-BALCAO-001',
           description: 'Refeicao por quilo',
+          ncm: '21069090',
           quantity: 1,
           unit_price: 42.9,
           gross_amount: 42.9,
