@@ -1,0 +1,518 @@
+openapi: 3.1.0
+info:
+  title: NotaAgil Integration API
+  version: 1.1.0-beta
+  summary: Public API-first surface for fiscal documents, company data, catalogs and webhooks.
+  description: |
+    Public contract for API clients. Every path in this document is relative to
+    `/api/v1/integrations` and requires a NotaAgil integration bearer token unless
+    explicitly stated otherwise.
+servers:
+  - url: https://api.notagil.com.br/api/v1/integrations
+    description: Production
+  - url: https://sandbox.notagil.com.br/api/v1/integrations
+    description: Sandbox
+security:
+  - bearerAuth: []
+tags:
+  - name: Companies
+  - name: Documents
+  - name: Configuration
+  - name: Products
+  - name: Takers
+  - name: Webhooks
+  - name: Metrics
+  - name: Billing
+paths:
+  /companies:
+    get:
+      tags: [Companies]
+      operationId: listCompanies
+      x-required-scopes: [companies:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /companies/{company_id}:
+    get:
+      tags: [Companies]
+      operationId: getCompany
+      x-required-scopes: [companies:read]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/configuration:
+    get:
+      tags: [Configuration]
+      operationId: getCompanyConfiguration
+      x-required-scopes: [configuration:read]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    put:
+      tags: [Configuration]
+      operationId: updateCompanyConfiguration
+      x-required-scopes: [configuration:write]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/nfse/provider-info:
+    get:
+      tags: [Configuration]
+      operationId: getCompanyNfseProviderInfo
+      description: Returns the dynamic NFSe form policy required by the resolved municipal provider.
+      x-required-scopes: [configuration:read]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/MunicipioQuery"
+        - $ref: "#/components/parameters/FiscalEnvironmentQuery"
+      responses:
+        "200":
+          description: NFSe provider metadata and form policy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/NfseProviderInfo" }
+  /companies/{company_id}/documents/preview:
+    post:
+      tags: [Documents]
+      operationId: previewCompanyDocument
+      x-required-scopes: [documents:write]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/DocumentPreview" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/documents:
+    get:
+      tags: [Documents]
+      operationId: listCompanyDocuments
+      x-required-scopes: [documents:read]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/DocumentTypeQuery"
+      responses:
+        "200": { $ref: "#/components/responses/PaginatedCollection" }
+    post:
+      tags: [Documents]
+      operationId: createCompanyDocument
+      x-required-scopes: [documents:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/documents/{external_id}:
+    get:
+      tags: [Documents]
+      operationId: getCompanyDocument
+      x-required-scopes: [documents:read]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExternalId"
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/documents/{external_id}/cancel:
+    post:
+      tags: [Documents]
+      operationId: cancelCompanyDocument
+      x-required-scopes: [documents:cancel]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExternalId"
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/documents/{external_id}/correct:
+    post:
+      tags: [Documents]
+      operationId: correctCompanyDocument
+      x-required-scopes: [documents:correct]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ExternalId"
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/direct/documents:
+    post:
+      tags: [Documents]
+      operationId: createCompanyDirectDocument
+      x-required-scopes: [documents:direct]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/direct/documents/xml:
+    post:
+      tags: [Documents]
+      operationId: transmitCompanyDirectXml
+      x-required-scopes: [documents:direct]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/products:
+    get:
+      tags: [Products]
+      operationId: listProducts
+      x-required-scopes: [products:read]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Products]
+      operationId: createProduct
+      x-required-scopes: [products:write]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/products/{product_id}:
+    get:
+      tags: [Products]
+      operationId: getProduct
+      x-required-scopes: [products:read]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: product_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    put:
+      tags: [Products]
+      operationId: updateProduct
+      x-required-scopes: [products:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: product_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Products]
+      operationId: deleteProduct
+      x-required-scopes: [products:delete]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: product_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/takers:
+    get:
+      tags: [Takers]
+      operationId: listTakers
+      x-required-scopes: [takers:read]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Takers]
+      operationId: createTaker
+      x-required-scopes: [takers:write]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhooks
+      x-required-scopes: [webhooks:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Webhooks]
+      operationId: createWebhook
+      x-required-scopes: [webhooks:manage]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /webhooks/{webhook_id}/test:
+    post:
+      tags: [Webhooks]
+      operationId: testWebhook
+      x-required-scopes: [webhooks:manage]
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /metrics:
+    get:
+      tags: [Metrics]
+      operationId: getIntegrationMetrics
+      x-required-scopes: [metrics:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /billing:
+    get:
+      tags: [Billing]
+      operationId: getIntegrationBilling
+      x-required-scopes: [billing:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /documents:
+    get:
+      tags: [Documents]
+      operationId: listDefaultCompanyDocuments
+      deprecated: false
+      description: Compatibility alias for the integration client's default company.
+      x-required-scopes: [documents:read]
+      responses:
+        "200": { $ref: "#/components/responses/PaginatedCollection" }
+    post:
+      tags: [Documents]
+      operationId: createDefaultCompanyDocument
+      description: Compatibility alias for the integration client's default company.
+      x-required-scopes: [documents:write]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
+  /documents/preview:
+    post:
+      tags: [Documents]
+      operationId: previewDefaultCompanyDocument
+      description: Compatibility alias for the integration client's default company.
+      x-required-scopes: [documents:write]
+      requestBody: { $ref: "#/components/requestBodies/DocumentPreview" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /documents/{external_id}:
+    get:
+      tags: [Documents]
+      operationId: getDefaultCompanyDocument
+      x-required-scopes: [documents:read]
+      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /direct/documents:
+    post:
+      tags: [Documents]
+      operationId: createDefaultCompanyDirectDocument
+      description: Compatibility alias for direct transmission on the integration client's default company.
+      x-required-scopes: [documents:direct]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
+  /direct/documents/xml:
+    post:
+      tags: [Documents]
+      operationId: transmitDefaultCompanyDirectXml
+      description: Compatibility alias for direct XML transmission on the integration client's default company.
+      x-required-scopes: [documents:direct]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
+  /configuration/company:
+    get:
+      tags: [Configuration]
+      operationId: getDefaultCompanyConfiguration
+      x-required-scopes: [configuration:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    put:
+      tags: [Configuration]
+      operationId: updateDefaultCompanyConfiguration
+      x-required-scopes: [configuration:write]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /nfse/provider-info:
+    get:
+      tags: [Configuration]
+      operationId: getDefaultCompanyNfseProviderInfo
+      description: Compatibility alias for the integration client's default company.
+      x-required-scopes: [configuration:read]
+      parameters:
+        - $ref: "#/components/parameters/MunicipioQuery"
+        - $ref: "#/components/parameters/FiscalEnvironmentQuery"
+      responses:
+        "200":
+          description: NFSe provider metadata and form policy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/NfseProviderInfo" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    CompanyId:
+      name: company_id
+      in: path
+      required: true
+      schema: { type: string }
+    ExternalId:
+      name: external_id
+      in: path
+      required: true
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string }
+    DocumentTypeQuery:
+      name: document_type
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [nfe, nfce, nfse]
+    MunicipioQuery:
+      name: municipio
+      in: query
+      required: false
+      schema: { type: string }
+    FiscalEnvironmentQuery:
+      name: fiscal_environment
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [homologacao, producao, production, prod]
+  requestBodies:
+    JsonObject:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    DocumentPreview:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentRequest"
+    DocumentSubmit:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/DocumentRequest"
+              - type: object
+                required: [external_id]
+  responses:
+    Resource:
+      description: JSON resource response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { type: object, additionalProperties: true }
+    Collection:
+      description: JSON collection response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items: { type: object, additionalProperties: true }
+    PaginatedCollection:
+      description: Paginated JSON collection response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items: { type: object, additionalProperties: true }
+              meta:
+                type: object
+                additionalProperties: true
+  schemas:
+    DocumentRequest:
+      type: object
+      required: [document_type, payload]
+      properties:
+        external_id: { type: string }
+        document_type:
+          type: string
+          enum: [nfe, nfce, nfse]
+        municipio: { type: string }
+        payload:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+    NfseProviderInfo:
+      type: object
+      properties:
+        provider_key: { type: [string, "null"] }
+        municipio: { type: [string, "null"] }
+        resolution_source: { type: [string, "null"] }
+        provider_metadata:
+          type: object
+          additionalProperties: true
+        warnings:
+          type: array
+          items: { type: string }
+        form_policy:
+          $ref: "#/components/schemas/NfseFormPolicy"
+    NfseFormPolicy:
+      type: object
+      properties:
+        provider_key: { type: [string, "null"] }
+        layout_family: { type: [string, "null"] }
+        municipio_ibge: { type: [string, "null"] }
+        municipio_nome: { type: [string, "null"] }
+        policy_source: { type: string }
+        required_fields:
+          type: array
+          items: { $ref: "#/components/schemas/NfsePolicyField" }
+        visible_fields:
+          type: array
+          items: { $ref: "#/components/schemas/NfsePolicyField" }
+        default_values:
+          type: object
+          additionalProperties: { type: string }
+        field_schema:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: true
+        labels:
+          type: object
+          additionalProperties: { type: string }
+        hints:
+          type: object
+          additionalProperties: { type: string }
+    NfsePolicyField:
+      type: string
+      enum:
+        - service.municipal_code
+        - service.national_tax_code
+        - service.nbs
+        - service.cnae_code
+        - service.activity_code
+        - prestador.op_simp_nac

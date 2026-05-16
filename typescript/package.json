@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "generate:types": "openapi-typescript ../../backend/laravel-api/docs/openapi/integration-v1.yaml -o src/openapi-types.ts"
+    "generate:types": "openapi-typescript ../openapi/integration-v1.yaml -o src/openapi-types.ts"
   },
   "devDependencies": {
     "openapi-typescript": "^7.6.1",

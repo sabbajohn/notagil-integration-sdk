@@ -1,6 +1,6 @@
 # NotaAgil Integration SDK
 
-TypeScript beta SDK for the public integration API documented in `backend/laravel-api/docs/openapi/integration-v1.yaml`.
+TypeScript beta SDK for the public integration API documented in `../openapi/integration-v1.yaml`.
 
 ```ts
 import { NotagilIntegrationClient } from '@notagil/integration-sdk';
