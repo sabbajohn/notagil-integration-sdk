@@ -1,10 +1,14 @@
 # NotaAgil PHP Integration SDK
 
-SDK PHP oficial para a API pública da NotaAgil.
+SDK PHP oficial para a API publica de integracao da NotaAgil.
+
+## Instalacao
 
 ```bash
-composer require notagil/integration-sdk
+composer require notagil/integration-sdk:0.1.0-beta.0
 ```
+
+## Uso Basico
 
 ```php
 use NotaAgil\Integration\NotaAgilClient;
@@ -32,5 +36,14 @@ $document = $client->createDocument(
     idempotencyKey: 'erp-0001',
 );
 ```
+
+## Superficies Disponiveis
+
+- Empresas e configuracao fiscal.
+- Preview fiscal antes da emissao.
+- Criacao, listagem, consulta, cancelamento e correcao de documentos.
+- Envio direto de payload fiscal completo.
+- Transmissao direta de XML NFe/NFCe.
+- Produtos, tomadores, webhooks, metricas e billing.
 
 O pacote e agnostico de framework. Veja `examples/laravel.php` para uma forma simples de registrar o cliente no container Laravel.

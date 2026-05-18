@@ -1,51 +1,96 @@
 # NotaAgil Integration SDK
 
-SDKs oficiais para a API pública de integração da NotaAgil.
+SDKs oficiais para a API publica de integracao da NotaAgil.
 
-## Pacotes
+Este repositorio publica dois pacotes a partir do mesmo codigo fonte:
 
-- `typescript/`: pacote `@notagil/integration-sdk`
-- `php/`: pacote `notagil/integration-sdk`
-- `openapi/integration-v1.yaml`: cópia versionada do contrato publicado pelo `fiscal-platform-api`
+- PHP/Composer: `notagil/integration-sdk`
+- TypeScript/npm: `@notagil/integration-sdk`
+
+O contrato OpenAPI versionado fica em `openapi/integration-v1.yaml`.
+
+## Release Atual
+
+`v0.1.0-beta.0` e o primeiro release publico beta.
+
+Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, preview/emissao/consulta/cancelamento/correcao de documentos, envio direto, XML direto, produtos, tomadores, webhooks, metricas e billing.
+
+## Instalacao PHP
+
+```sh
+composer require notagil/integration-sdk:0.1.0-beta.0
+```
+
+```php
+use NotaAgil\Integration\NotaAgilClient;
+
+$client = new NotaAgilClient(
+    baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
+    token: getenv('NOTAGIL_TOKEN'),
+);
+
+$companies = $client->companies();
+```
+
+O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src`.
+
+## Instalacao TypeScript
+
+```sh
+npm install @notagil/integration-sdk@0.1.0-beta.0
+```
+
+```ts
+import { NotagilIntegrationClient } from '@notagil/integration-sdk';
+
+const client = new NotagilIntegrationClient({
+  baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
+  token: process.env.NOTAGIL_TOKEN!,
+});
+
+const documents = await client.listDocuments({ per_page: 20 });
+```
+
+O pacote npm e publicado a partir do diretorio `typescript/`.
 
 ## Desenvolvimento
 
-Atualize `openapi/integration-v1.yaml` a partir do repositório `fiscal-platform-api` antes de gerar novos tipos.
-
-```sh
-cd typescript
-npm install
-npm run generate:types
-npm run build
-```
-
-```sh
-cd php
-composer install
-composer test
-```
-
-## Release
-
-O repositório está preparado para publicar os dois SDKs a partir de uma tag semver.
-
-1. Atualize a versão em `typescript/package.json`.
-2. Rode as validações locais:
+Atualize `openapi/integration-v1.yaml` a partir do `fiscal-platform-api` antes de gerar novos tipos.
 
 ```sh
 cd typescript
 npm ci
+npm run generate:types
 npm run build
 npm run pack:dry-run
 ```
 
 ```sh
-cd php
 composer install
 composer validate --strict
 composer test
 ```
 
-3. Crie uma release/tag no formato `vX.Y.Z` ou `vX.Y.Z-beta.N`.
+Tambem e possivel trabalhar somente no pacote PHP isolado:
 
-O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`. Para o PHP, o `composer.json` da raiz permite cadastro direto no Packagist; configure o webhook do Packagist ou os secrets `PACKAGIST_USERNAME` e `PACKAGIST_TOKEN` para acionar a atualização pela Action.
+```sh
+cd php
+composer install
+composer test
+```
+
+## Publicacao
+
+1. Atualize o changelog.
+2. Atualize a versao em `typescript/package.json`.
+3. Rode as validacoes locais.
+4. Crie a tag semver, por exemplo:
+
+```sh
+git tag v0.1.0-beta.0
+git push origin v0.1.0-beta.0
+```
+
+O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.
+
+Para PHP, cadastre este repositorio no Packagist como `notagil/integration-sdk`. O Packagist deve ler o `composer.json` da raiz; configure o webhook do GitHub ou os secrets `PACKAGIST_USERNAME` e `PACKAGIST_TOKEN` para atualizar o pacote automaticamente.

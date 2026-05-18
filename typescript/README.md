@@ -1,12 +1,16 @@
-# NotaAgil Integration SDK
+# NotaAgil TypeScript Integration SDK
 
-TypeScript beta SDK for the public integration API documented in `../openapi/integration-v1.yaml`.
+TypeScript beta SDK for the NotaAgil public integration API documented in `../openapi/integration-v1.yaml`.
+
+```bash
+npm install @notagil/integration-sdk@0.1.0-beta.0
+```
 
 ```ts
 import { NotagilIntegrationClient } from '@notagil/integration-sdk';
 
 const client = new NotagilIntegrationClient({
-  baseUrl: 'https://api.notagil.local/api/v1/integrations',
+  baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
   token: process.env.NOTAGIL_TOKEN!,
 });
 
@@ -111,4 +115,12 @@ Generate OpenAPI operation types when `openapi-typescript` is installed:
 
 ```bash
 npm run generate:types
+```
+
+Build and inspect the package before publishing:
+
+```bash
+npm ci
+npm run build
+npm run pack:dry-run
 ```
