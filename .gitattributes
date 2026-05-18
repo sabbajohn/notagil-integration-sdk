@@ -1,0 +1,12 @@
+/.gitattributes export-ignore
+/.DS_Store export-ignore
+/.gitignore export-ignore
+/.github export-ignore
+/php/.DS_Store export-ignore
+/php/.phpunit.result.cache export-ignore
+/php/composer.lock export-ignore
+/php/phpunit.xml export-ignore
+/php/tests export-ignore
+/php/vendor export-ignore
+/typescript export-ignore
+*.tgz export-ignore

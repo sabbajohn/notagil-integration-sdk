@@ -30,16 +30,13 @@
   },
   "autoload": {
     "psr-4": {
-      "NotaAgil\\Integration\\": "src/"
+      "NotaAgil\\Integration\\": "php/src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "NotaAgil\\Integration\\Tests\\": "tests/"
+      "NotaAgil\\Integration\\Tests\\": "php/tests/"
     }
-  },
-  "scripts": {
-    "test": "phpunit"
   },
   "minimum-stability": "stable"
 }

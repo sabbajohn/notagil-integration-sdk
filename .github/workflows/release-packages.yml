@@ -1,0 +1,82 @@
+name: Release SDK Packages
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Git tag to publish, for example v0.1.0-beta.0.
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  npm:
+    name: Publish TypeScript SDK to npm
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: typescript/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure package version matches tag
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          VERSION="$(node -p "require('./package.json').version")"
+          test "$TAG" = "v$VERSION"
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  packagist:
+    name: Notify Packagist
+    runs-on: ubuntu-latest
+    env:
+      PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+      PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Validate Composer package
+        run: composer validate --strict
+
+      - name: Notify Packagist when credentials are configured
+        if: ${{ env.PACKAGIST_USERNAME != '' && env.PACKAGIST_TOKEN != '' }}
+        run: |
+          curl --fail --show-error --silent \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --data '{"repository":{"url":"https://github.com/sabbajohn/notagil-integration-sdk"}}' \
+            "https://packagist.org/api/update-package?username=${PACKAGIST_USERNAME}&apiToken=${PACKAGIST_TOKEN}"

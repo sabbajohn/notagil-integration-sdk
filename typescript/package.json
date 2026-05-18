@@ -3,15 +3,49 @@
   "version": "0.1.0-beta.0",
   "description": "TypeScript SDK for the NotaAgil Integration API beta.",
   "type": "module",
+  "license": "MIT",
+  "author": "Sabba Sistemas",
+  "homepage": "https://github.com/sabbajohn/notagil-integration-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sabbajohn/notagil-integration-sdk.git",
+    "directory": "typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/sabbajohn/notagil-integration-sdk/issues"
+  },
+  "keywords": [
+    "notagil",
+    "fiscal",
+    "nfe",
+    "nfce",
+    "nfse",
+    "sdk"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "files": [
     "dist",
     "README.md"
   ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "generate:types": "openapi-typescript ../openapi/integration-v1.yaml -o src/openapi-types.ts"
+    "generate:types": "openapi-typescript ../openapi/integration-v1.yaml -o src/openapi-types.ts",
+    "prepack": "npm run build",
+    "pack:dry-run": "npm pack --dry-run"
   },
   "devDependencies": {
     "openapi-typescript": "^7.6.1",
