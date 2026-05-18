@@ -103,6 +103,49 @@ class NotaAgilClient
         return $this->request('GET', $this->withQuery($path, $filters), unwrapData: false);
     }
 
+    public function waitDocument(string $externalId, ?string $companyId = null, int $timeoutSeconds = 120, int $intervalMilliseconds = 2000): array
+    {
+        $started = microtime(true);
+        $terminalFiscal = ['authorized', 'rejected', 'cancelled', 'corrected'];
+        $terminalOperational = ['completed', 'failed'];
+
+        do {
+            $document = $this->document($externalId, $companyId);
+            if (
+                in_array((string) ($document['fiscal_status'] ?? ''), $terminalFiscal, true)
+                || in_array((string) ($document['operational_status'] ?? ''), $terminalOperational, true)
+            ) {
+                return $document;
+            }
+
+            usleep($intervalMilliseconds * 1000);
+        } while ((microtime(true) - $started) < $timeoutSeconds);
+
+        return $document;
+    }
+
+    public function downloadDocumentXml(string $externalId, ?string $companyId = null): array
+    {
+        return $this->download($this->documentArtifactPath($externalId, 'xml', $companyId));
+    }
+
+    public function downloadDocumentPdf(string $externalId, ?string $companyId = null): array
+    {
+        return $this->download($this->documentArtifactPath($externalId, 'pdf', $companyId));
+    }
+
+    public function documentSnapshot(string $externalId, ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->documentArtifactPath($externalId, 'snapshot', $companyId));
+    }
+
+    public function queryDocument(string $externalId, ?string $companyId = null, bool $forceRemote = false): array
+    {
+        return $this->request('POST', $this->withQuery($this->documentArtifactPath($externalId, 'query', $companyId), [
+            'force_remote' => $forceRemote ? 1 : null,
+        ]));
+    }
+
     public function cancelDocument(string $externalId, string $reason, ?string $companyId = null): array
     {
         $path = $companyId === null
@@ -219,6 +262,96 @@ class NotaAgilClient
         return $this->request('GET', '/billing');
     }
 
+    public function certificates(?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/certificates', $companyId));
+    }
+
+    public function createCertificate(array $payload, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/certificates', $companyId), ['json' => $payload]);
+    }
+
+    public function updateCertificate(string|int $certificateId, array $payload, ?string $companyId = null): array
+    {
+        return $this->request('PATCH', $this->companyPath('/certificates/'.$certificateId, $companyId), ['json' => $payload]);
+    }
+
+    public function validateCertificate(string|int $certificateId, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/certificates/'.$certificateId.'/validate', $companyId));
+    }
+
+    public function readiness(?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/readiness', $companyId));
+    }
+
+    public function onboardingImports(?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/onboarding/imports', $companyId));
+    }
+
+    public function createOnboardingImport(array $payload, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/onboarding/imports', $companyId), ['json' => $payload]);
+    }
+
+    public function onboardingImport(string|int $importId, ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/onboarding/imports/'.$importId, $companyId));
+    }
+
+    public function reviewOnboardingImport(string|int $importId, array $payload, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/onboarding/imports/'.$importId.'/review', $companyId), ['json' => $payload]);
+    }
+
+    public function promoteOnboardingImport(string|int $importId, array $payload = [], ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/onboarding/imports/'.$importId.'/promote', $companyId), ['json' => $payload]);
+    }
+
+    public function fiscalOptions(?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/fiscal/options', $companyId));
+    }
+
+    public function cfops(?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/fiscal/cfops', $companyId));
+    }
+
+    public function municipalities(array $filters = [], ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/utils/municipalities', $companyId), $filters), unwrapData: false);
+    }
+
+    public function ncms(array $filters, ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/utils/ncms', $companyId), $filters), unwrapData: false);
+    }
+
+    public function taxCatalogs(array $filters = [], ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-catalogs', $companyId), $filters));
+    }
+
+    public function taxSituations(string|int $catalog, array $filters = [], ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-catalogs/'.$catalog.'/situations', $companyId), $filters));
+    }
+
+    public function taxClassifications(string|int $situation, array $filters = [], ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-situations/'.$situation.'/classifications', $companyId), $filters));
+    }
+
+    public function taxConsequenceTemplate(string|int $situation, array $filters, ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-situations/'.$situation.'/consequence-template', $companyId), $filters));
+    }
+
     public function operationProfiles(string|int $companyId): array
     {
         return $this->request('GET', "/companies/{$companyId}/fiscal/operation-profiles");
@@ -277,6 +410,132 @@ class NotaAgilClient
     public function deleteTaxRuleSet(string|int $companyId, string|int $taxRuleSetId): array
     {
         return $this->request('DELETE', "/companies/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}");
+    }
+
+    public function unifiedDocuments(array $filters = [], ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/consulta-notas', $companyId), $filters));
+    }
+
+    public function lookupUnifiedDocument(array $payload, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/consulta-notas/lookup', $companyId), ['json' => $payload]);
+    }
+
+    public function downloadUnifiedDocumentXml(string $source, string|int $documentId, ?string $companyId = null): array
+    {
+        return $this->download($this->companyPath('/consulta-notas/'.$source.'/'.$documentId.'/xml', $companyId));
+    }
+
+    public function downloadUnifiedDocumentPdf(string $source, string|int $documentId, ?string $companyId = null): array
+    {
+        return $this->download($this->companyPath('/consulta-notas/'.$source.'/'.$documentId.'/pdf', $companyId));
+    }
+
+    public function syncInboundNfe(array $payload = [], ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/inbound/nfe/sync', $companyId), ['json' => $payload], unwrapData: false);
+    }
+
+    public function inboundNfe(array $filters = [], ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/inbound/nfe', $companyId), $filters), unwrapData: false);
+    }
+
+    public function manifestInboundNfe(string|int $documentId, array $payload, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/manifest', $companyId), ['json' => $payload], unwrapData: false);
+    }
+
+    public function downloadInboundNfeXml(string|int $documentId, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/download-xml', $companyId), unwrapData: false);
+    }
+
+    public function updateInboundNfeEntryBookkeeping(string|int $documentId, array $payload, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/entry-bookkeeping', $companyId), ['json' => $payload], unwrapData: false);
+    }
+
+    public function confirmInboundNfeEntryBookkeeping(string|int $documentId, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/entry-bookkeeping/confirm', $companyId), unwrapData: false);
+    }
+
+    public function stockMovements(array $filters = [], ?string $companyId = null): array
+    {
+        return $this->request('GET', $this->withQuery($this->companyPath('/stock/movements', $companyId), $filters));
+    }
+
+    public function stockBalance(?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/stock/balance', $companyId));
+    }
+
+    public function schedules(?string $companyId = null): array
+    {
+        return $this->request('GET', $this->companyPath('/schedules', $companyId));
+    }
+
+    public function createSchedule(array $payload, ?string $companyId = null): array
+    {
+        return $this->request('POST', $this->companyPath('/schedules', $companyId), ['json' => $payload]);
+    }
+
+    public function updateSchedule(string|int $scheduleId, array $payload, ?string $companyId = null): array
+    {
+        return $this->request('PUT', $this->companyPath('/schedules/'.$scheduleId, $companyId), ['json' => $payload]);
+    }
+
+    public function deleteSchedule(string|int $scheduleId, ?string $companyId = null): array
+    {
+        return $this->request('DELETE', $this->companyPath('/schedules/'.$scheduleId, $companyId));
+    }
+
+    public static function webhookSignature(string $secret, string $deliveryId, string $timestamp, string $body): string
+    {
+        return hash_hmac('sha256', "{$deliveryId}.{$timestamp}.{$body}", $secret);
+    }
+
+    private function companyPath(string $path, ?string $companyId = null): string
+    {
+        return $companyId === null ? $path : "/companies/{$companyId}{$path}";
+    }
+
+    private function documentArtifactPath(string $externalId, string $artifact, ?string $companyId = null): string
+    {
+        return $this->companyPath('/documents/'.rawurlencode($externalId).'/'.$artifact, $companyId);
+    }
+
+    private function download(string $path): array
+    {
+        try {
+            $response = $this->http->request('GET', $this->baseUrl.$path, [
+                'headers' => [
+                    'Accept' => '*/*',
+                    'Authorization' => 'Bearer '.$this->token,
+                ],
+            ]);
+        } catch (RequestException $exception) {
+            $response = $exception->getResponse();
+            $payload = $response ? $this->decode((string) $response->getBody()) : ['message' => $exception->getMessage()];
+            throw new NotaAgilApiException($response?->getStatusCode() ?? 0, $payload);
+        }
+
+        return [
+            'content' => (string) $response->getBody(),
+            'content_type' => $response->getHeaderLine('Content-Type') ?: null,
+            'filename' => $this->filenameFromDisposition($response->getHeaderLine('Content-Disposition')),
+        ];
+    }
+
+    private function filenameFromDisposition(string $disposition): ?string
+    {
+        if ($disposition === '') {
+            return null;
+        }
+
+        return preg_match('/filename="?([^";]+)"?/i', $disposition, $matches) === 1 ? $matches[1] : null;
     }
 
     private function withQuery(string $path, array $filters): string

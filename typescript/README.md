@@ -70,6 +70,13 @@ const history = await client.listDocuments({
   per_page: 20,
 });
 
+const authorized = await client.waitDocument('pdv-2026-0001', { timeoutMs: 120_000 });
+if (authorized.fiscal_status === 'authorized') {
+  const xml = await client.downloadDocumentXml('pdv-2026-0001');
+  const pdf = await client.downloadDocumentPdf('pdv-2026-0001');
+  console.log(xml.filename, pdf.filename);
+}
+
 const companyConfig = await client.getCompanyConfiguration();
 
 await client.updateCompanyConfiguration({
@@ -80,6 +87,47 @@ await client.updateCompanyConfiguration({
     provider_key: 'abrasf-v2-soap',
   },
 });
+```
+
+Prepare a company without using the NotaAgil frontend:
+
+```ts
+const readiness = await client.getReadiness();
+const certificates = await client.listCertificates();
+const cfops = await client.listCfops();
+const catalogs = await client.listTaxCatalogs();
+
+await client.createOnboardingImport({
+  source_type: 'xml',
+  flow: 'saida',
+  filename: 'historico-nfe.xml',
+  xml: process.env.NFE_XML!,
+});
+```
+
+Consume post-emission and inbound operations:
+
+```ts
+const unified = await client.listUnifiedDocuments({ direction: 'saida', per_page: 20 });
+const inbound = await client.listInboundNfe({ status: 'pending' });
+const stock = await client.getStockBalance();
+
+await client.createSchedule({
+  tipo: 'unica',
+  proxima_execucao: '2026-01-20T09:00:00-03:00',
+  nota_base: { document_type: 'nfce' },
+});
+```
+
+Verify webhook signatures:
+
+```ts
+const expected = await NotagilIntegrationClient.webhookSignature(
+  process.env.NOTAGIL_WEBHOOK_SECRET!,
+  deliveryId,
+  timestamp,
+  rawBody,
+);
 ```
 
 For clients that already assemble the complete fiscal form payload or XML, use the direct surface. This bypasses NotaAgil fiscal rule resolution and requires a token with `documents:direct`.

@@ -21,11 +21,14 @@ tags:
   - name: Fiscal Operations
   - name: Fiscal Rates
   - name: Fiscal Rules
+  - name: Fiscal Catalog
   - name: Products
   - name: Takers
   - name: Webhooks
   - name: Metrics
   - name: Billing
+  - name: Stock
+  - name: Schedules
 paths:
   /companies:
     get:
@@ -124,28 +127,7 @@ paths:
       tags: [Fiscal Rates]
       operationId: listCompanyFiscalRateReferences
       x-required-scopes: [fiscal:rates:read]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: tax_type
-          in: query
-          required: false
-          schema: { type: string }
-        - name: tax_situation_code
-          in: query
-          required: false
-          schema: { type: string }
-        - name: tax_classification_code
-          in: query
-          required: false
-          schema: { type: string }
-        - name: municipality_ibge
-          in: query
-          required: false
-          schema: { type: string }
-        - name: uf
-          in: query
-          required: false
-          schema: { type: string }
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
@@ -377,44 +359,6 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/takers/{taker_id}:
-    get:
-      tags: [Takers]
-      operationId: getTaker
-      x-required-scopes: [takers:read]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: taker_id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        "200": { $ref: "#/components/responses/Resource" }
-    put:
-      tags: [Takers]
-      operationId: updateTaker
-      x-required-scopes: [takers:write]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: taker_id
-          in: path
-          required: true
-          schema: { type: string }
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
-      responses:
-        "200": { $ref: "#/components/responses/Resource" }
-    delete:
-      tags: [Takers]
-      operationId: deleteTaker
-      x-required-scopes: [takers:delete]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: taker_id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        "200": { $ref: "#/components/responses/Resource" }
   /webhooks:
     get:
       tags: [Webhooks]
@@ -538,24 +482,6 @@ paths:
       parameters: [{ $ref: "#/components/parameters/ExternalId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /documents/{external_id}/cancel:
-    post:
-      tags: [Documents]
-      operationId: cancelDefaultCompanyDocument
-      x-required-scopes: [documents:cancel]
-      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
-      responses:
-        "200": { $ref: "#/components/responses/Resource" }
-  /documents/{external_id}/correct:
-    post:
-      tags: [Documents]
-      operationId: correctDefaultCompanyDocument
-      x-required-scopes: [documents:correct]
-      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
-      responses:
-        "200": { $ref: "#/components/responses/Resource" }
   /direct/documents:
     post:
       tags: [Documents]
@@ -608,6 +534,302 @@ paths:
                 type: object
                 properties:
                   data: { $ref: "#/components/schemas/NfseProviderInfo" }
+  /documents/{external_id}/xml:
+    get:
+      tags: [Documents]
+      operationId: downloadDefaultCompanyDocumentXml
+      x-required-scopes: [documents:read]
+      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+      responses:
+        "200": { description: XML artifact. }
+  /documents/{external_id}/pdf:
+    get:
+      tags: [Documents]
+      operationId: downloadDefaultCompanyDocumentPdf
+      x-required-scopes: [documents:read]
+      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+      responses:
+        "200": { description: PDF artifact. }
+  /documents/{external_id}/snapshot:
+    get:
+      tags: [Documents]
+      operationId: getDefaultCompanyDocumentSnapshot
+      x-required-scopes: [documents:read]
+      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /documents/{external_id}/query:
+    post:
+      tags: [Documents]
+      operationId: queryDefaultCompanyDocument
+      x-required-scopes: [documents:read]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+        - name: force_remote
+          in: query
+          required: false
+          schema: { type: boolean }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /certificates:
+    get:
+      tags: [Configuration]
+      operationId: listDefaultCompanyCertificates
+      x-required-scopes: [certificates:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Configuration]
+      operationId: createDefaultCompanyCertificate
+      x-required-scopes: [certificates:write]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /certificates/{certificate_id}:
+    patch:
+      tags: [Configuration]
+      operationId: updateDefaultCompanyCertificate
+      x-required-scopes: [certificates:write]
+      parameters:
+        - name: certificate_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /certificates/{certificate_id}/validate:
+    post:
+      tags: [Configuration]
+      operationId: validateDefaultCompanyCertificate
+      x-required-scopes: [certificates:write]
+      parameters:
+        - name: certificate_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /readiness:
+    get:
+      tags: [Configuration]
+      operationId: getDefaultCompanyReadiness
+      x-required-scopes: [onboarding:read, configuration:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /onboarding/imports:
+    get:
+      tags: [Configuration]
+      operationId: listDefaultCompanyOnboardingImports
+      x-required-scopes: [onboarding:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Configuration]
+      operationId: createDefaultCompanyOnboardingImport
+      x-required-scopes: [onboarding:write]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /onboarding/imports/{import_id}:
+    get:
+      tags: [Configuration]
+      operationId: getDefaultCompanyOnboardingImport
+      x-required-scopes: [onboarding:read]
+      parameters:
+        - name: import_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /onboarding/imports/{import_id}/review:
+    post:
+      tags: [Configuration]
+      operationId: reviewDefaultCompanyOnboardingImport
+      x-required-scopes: [onboarding:write]
+      parameters:
+        - name: import_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /onboarding/imports/{import_id}/promote:
+    post:
+      tags: [Configuration]
+      operationId: promoteDefaultCompanyOnboardingImport
+      x-required-scopes: [onboarding:promote]
+      parameters:
+        - name: import_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /fiscal/options:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: listDefaultCompanyFiscalOptions
+      x-required-scopes: [fiscal_catalog:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /fiscal/cfops:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: listDefaultCompanyCfops
+      x-required-scopes: [fiscal_catalog:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /fiscal/utils/municipalities:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: searchDefaultCompanyMunicipalities
+      x-required-scopes: [fiscal_catalog:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /fiscal/utils/ncms:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: searchDefaultCompanyNcms
+      x-required-scopes: [fiscal_catalog:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /fiscal/tax-catalogs:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: listDefaultCompanyTaxCatalogs
+      x-required-scopes: [fiscal_catalog:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /fiscal/tax-catalogs/{catalog}/situations:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: listDefaultCompanyTaxSituations
+      x-required-scopes: [fiscal_catalog:read]
+      parameters:
+        - name: catalog
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /fiscal/tax-situations/{situation}/classifications:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: listDefaultCompanyTaxClassifications
+      x-required-scopes: [fiscal_catalog:read]
+      parameters:
+        - name: situation
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /fiscal/tax-situations/{situation}/consequence-template:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: getDefaultCompanyTaxConsequenceTemplate
+      x-required-scopes: [fiscal_catalog:read]
+      parameters:
+        - name: situation
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /consulta-notas:
+    get:
+      tags: [Documents]
+      operationId: listDefaultCompanyUnifiedDocuments
+      x-required-scopes: [documents:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /consulta-notas/lookup:
+    post:
+      tags: [Documents]
+      operationId: lookupDefaultCompanyUnifiedDocument
+      x-required-scopes: [documents:read]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /consulta-notas/{source}/{document_id}/xml:
+    get:
+      tags: [Documents]
+      operationId: downloadDefaultCompanyUnifiedDocumentXml
+      x-required-scopes: [documents:read]
+      parameters:
+        - name: source
+          in: path
+          required: true
+          schema: { type: string, enum: [inbound, outbound] }
+        - name: document_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: XML artifact. }
+  /consulta-notas/{source}/{document_id}/pdf:
+    get:
+      tags: [Documents]
+      operationId: downloadDefaultCompanyUnifiedDocumentPdf
+      x-required-scopes: [documents:read]
+      parameters:
+        - name: source
+          in: path
+          required: true
+          schema: { type: string, enum: [inbound, outbound] }
+        - name: document_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: PDF artifact. }
+  /inbound/nfe:
+    get:
+      tags: [Documents]
+      operationId: listDefaultCompanyInboundNfe
+      x-required-scopes: [inbound:read]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /inbound/nfe/sync:
+    post:
+      tags: [Documents]
+      operationId: syncDefaultCompanyInboundNfe
+      x-required-scopes: [inbound:write]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /stock/movements:
+    get:
+      tags: [Stock]
+      operationId: listDefaultCompanyStockMovements
+      x-required-scopes: [stock:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /stock/balance:
+    get:
+      tags: [Stock]
+      operationId: getDefaultCompanyStockBalance
+      x-required-scopes: [stock:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /schedules:
+    get:
+      tags: [Schedules]
+      operationId: listDefaultCompanySchedules
+      x-required-scopes: [schedules:read]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Schedules]
+      operationId: createDefaultCompanySchedule
+      x-required-scopes: [schedules:write]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
 components:
   securitySchemes:
     bearerAuth:

@@ -35,6 +35,12 @@ $document = $client->createDocument(
     ],
     idempotencyKey: 'erp-0001',
 );
+
+$authorized = $client->waitDocument('erp-0001');
+if (($authorized['fiscal_status'] ?? null) === 'authorized') {
+    $xml = $client->downloadDocumentXml('erp-0001');
+    $pdf = $client->downloadDocumentPdf('erp-0001');
+}
 ```
 
 ## Superficies Disponiveis
@@ -45,6 +51,18 @@ $document = $client->createDocument(
 - Criacao, listagem, consulta, cancelamento e correcao de documentos.
 - Envio direto de payload fiscal completo.
 - Transmissao direta de XML NFe/NFCe.
-- Produtos, tomadores, webhooks, metricas e billing.
+- Certificados, catalogos fiscais, CFOPs, prontidao e importacao XML de onboarding.
+- Consulta unificada, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
+
+## Webhooks
+
+```php
+$expected = NotaAgilClient::webhookSignature(
+    getenv('NOTAGIL_WEBHOOK_SECRET'),
+    $deliveryId,
+    $timestamp,
+    $rawBody,
+);
+```
 
 O pacote e agnostico de framework. Veja `examples/laravel.php` para uma forma simples de registrar o cliente no container Laravel.

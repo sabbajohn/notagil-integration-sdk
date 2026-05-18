@@ -71,6 +71,43 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame('/api/v1/integrations/companies/10/fiscal/operation-profiles/99', $history[2]['request']->getUri()->getPath());
     }
 
+    public function test_document_download_and_operational_helpers_use_public_paths(): void
+    {
+        $history = [];
+        $client = $this->client([
+            new Response(200, [
+                'Content-Type' => 'application/xml',
+                'Content-Disposition' => 'attachment; filename="nfce.xml"',
+            ], '<xml />'),
+            new Response(200, [], json_encode(['data' => ['status' => 'blocked']])),
+            new Response(200, [], json_encode(['data' => [['id' => 'cfop-1']]])),
+            new Response(201, [], json_encode(['data' => ['id' => 'schedule-1']])),
+        ], $history);
+
+        $download = $client->downloadDocumentXml('erp-1', '10');
+        $readiness = $client->readiness();
+        $cfops = $client->cfops('10');
+        $schedule = $client->createSchedule(['tipo' => 'unica', 'proxima_execucao' => '2026-01-01T00:00:00Z']);
+
+        $this->assertSame('<xml />', $download['content']);
+        $this->assertSame('nfce.xml', $download['filename']);
+        $this->assertSame(['status' => 'blocked'], $readiness);
+        $this->assertSame([['id' => 'cfop-1']], $cfops);
+        $this->assertSame(['id' => 'schedule-1'], $schedule);
+        $this->assertSame('/api/v1/integrations/companies/10/documents/erp-1/xml', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/readiness', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/cfops', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/schedules', $history[3]['request']->getUri()->getPath());
+    }
+
+    public function test_webhook_signature_helper_matches_hmac_contract(): void
+    {
+        $this->assertSame(
+            hash_hmac('sha256', 'delivery-1.2026-01-01T00:00:00Z.{"ok":true}', 'whsec_test'),
+            NotaAgilClient::webhookSignature('whsec_test', 'delivery-1', '2026-01-01T00:00:00Z', '{"ok":true}')
+        );
+    }
+
     private function client(array $responses, array &$history): NotaAgilClient
     {
         $mock = new MockHandler($responses);
