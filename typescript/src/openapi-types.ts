@@ -69,6 +69,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{company_id}/fiscal/operation-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompanyFiscalOperationProfiles"];
+        put?: never;
+        post: operations["createCompanyFiscalOperationProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/operation-profiles/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateCompanyFiscalOperationProfile"];
+        post?: never;
+        delete: operations["deleteCompanyFiscalOperationProfile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/rate-references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompanyFiscalRateReferences"];
+        put?: never;
+        post: operations["createCompanyFiscalRateReference"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/rate-references/{rate_reference_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateCompanyFiscalRateReference"];
+        post?: never;
+        delete: operations["deleteCompanyFiscalRateReference"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/tax-rule-sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompanyFiscalTaxRuleSets"];
+        put?: never;
+        post: operations["createCompanyFiscalTaxRuleSet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateCompanyFiscalTaxRuleSet"];
+        post?: never;
+        delete: operations["deleteCompanyFiscalTaxRuleSet"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{company_id}/documents/preview": {
         parameters: {
             query?: never;
@@ -229,6 +325,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{company_id}/takers/{taker_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTaker"];
+        put: operations["updateTaker"];
+        post?: never;
+        delete: operations["deleteTaker"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks": {
         parameters: {
             query?: never;
@@ -245,6 +357,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/webhooks/{webhook_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateWebhook"];
+        post?: never;
+        delete: operations["deleteWebhook"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/{webhook_id}/rotate-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rotateWebhookSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/{webhook_id}/test": {
         parameters: {
             query?: never;
@@ -255,6 +399,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["testWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/{webhook_id}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listWebhookDeliveries"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -338,6 +498,38 @@ export interface paths {
         get: operations["getDefaultCompanyDocument"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{external_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelDefaultCompanyDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{external_id}/correct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["correctDefaultCompanyDocument"];
         delete?: never;
         options?: never;
         head?: never;
@@ -620,6 +812,186 @@ export interface operations {
             };
         };
     };
+    listCompanyFiscalOperationProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompanyFiscalOperationProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["Resource"];
+        };
+    };
+    updateCompanyFiscalOperationProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    deleteCompanyFiscalOperationProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    listCompanyFiscalRateReferences: {
+        parameters: {
+            query?: {
+                tax_type?: string;
+                tax_situation_code?: string;
+                tax_classification_code?: string;
+                municipality_ibge?: string;
+                uf?: string;
+            };
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompanyFiscalRateReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["Resource"];
+        };
+    };
+    updateCompanyFiscalRateReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                rate_reference_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    deleteCompanyFiscalRateReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                rate_reference_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    listCompanyFiscalTaxRuleSets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompanyFiscalTaxRuleSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["Resource"];
+        };
+    };
+    updateCompanyFiscalTaxRuleSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                tax_rule_set_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    deleteCompanyFiscalTaxRuleSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                tax_rule_set_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
     previewCompanyDocument: {
         parameters: {
             query?: never;
@@ -844,6 +1216,51 @@ export interface operations {
             201: components["responses"]["Resource"];
         };
     };
+    getTaker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                taker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    updateTaker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                taker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    deleteTaker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                taker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
     listWebhooks: {
         parameters: {
             query?: never;
@@ -868,6 +1285,48 @@ export interface operations {
             201: components["responses"]["Resource"];
         };
     };
+    updateWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    deleteWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    rotateWebhookSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
     testWebhook: {
         parameters: {
             query?: never;
@@ -880,6 +1339,20 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["Resource"];
+        };
+    };
+    listWebhookDeliveries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
         };
     };
     getIntegrationMetrics: {
@@ -954,6 +1427,34 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    cancelDefaultCompanyDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                external_id: components["parameters"]["ExternalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    correctDefaultCompanyDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                external_id: components["parameters"]["ExternalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
         responses: {
             200: components["responses"]["Resource"];
         };

@@ -5,7 +5,7 @@ SDK PHP oficial para a API publica de integracao da NotaAgil.
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:0.1.0-beta.0
+composer require notagil/integration-sdk:0.1.0-beta.1
 ```
 
 ## Uso Basico
@@ -40,6 +40,7 @@ $document = $client->createDocument(
 ## Superficies Disponiveis
 
 - Empresas e configuracao fiscal.
+- Perfis de operacao, referencias de aliquota e regras fiscais por empresa.
 - Preview fiscal antes da emissao.
 - Criacao, listagem, consulta, cancelamento e correcao de documentos.
 - Envio direto de payload fiscal completo.

@@ -169,6 +169,51 @@ export interface CompanyConfigurationPayload {
   [key: string]: unknown;
 }
 
+export interface IntegrationCompany {
+  id: string | number;
+  [key: string]: unknown;
+}
+
+export interface ProductPayload {
+  [key: string]: unknown;
+}
+
+export interface TakerPayload {
+  [key: string]: unknown;
+}
+
+export interface WebhookPayload {
+  [key: string]: unknown;
+}
+
+export interface FiscalOperationProfilePayload {
+  id?: string | number;
+  [key: string]: unknown;
+}
+
+export interface FiscalRateReferenceFilters {
+  tax_type?: string;
+  tax_situation_code?: string;
+  tax_classification_code?: string;
+  municipality_ibge?: string;
+  uf?: string;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface FiscalRateReferencePayload {
+  id?: string | number;
+  [key: string]: unknown;
+}
+
+export interface TaxRuleSetPayload {
+  id?: string | number;
+  [key: string]: unknown;
+}
+
+export interface DeleteResult {
+  deleted: boolean;
+}
+
 export interface NotagilClientOptions {
   baseUrl: string;
   token: string;
@@ -196,6 +241,18 @@ export class NotagilIntegrationClient {
     this.baseUrl = options.baseUrl.replace(/\/+$/, '');
     this.token = options.token;
     this.fetcher = options.fetch ?? fetch;
+  }
+
+  listCompanies(): Promise<IntegrationCompany[]> {
+    return this.request<IntegrationCompany[]>('/companies', {
+      method: 'GET',
+    });
+  }
+
+  getCompany(companyId: string | number): Promise<IntegrationCompany> {
+    return this.request<IntegrationCompany>(`/companies/${encodeURIComponent(String(companyId))}`, {
+      method: 'GET',
+    });
   }
 
   previewDocument(payload: DocumentPreviewRequest): Promise<PreviewResult> {
@@ -235,6 +292,59 @@ export class NotagilIntegrationClient {
     });
   }
 
+  previewCompanyDocument(companyId: string | number, payload: DocumentPreviewRequest): Promise<PreviewResult> {
+    return this.request<PreviewResult>(`/companies/${encodeURIComponent(String(companyId))}/documents/preview`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  createCompanyDocument(companyId: string | number, payload: DocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
+    return this.request<DocumentAccepted>(`/companies/${encodeURIComponent(String(companyId))}/documents`, {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: payload,
+    });
+  }
+
+  createCompanyDirectDocument(companyId: string | number, payload: DirectDocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
+    return this.request<DocumentAccepted>(`/companies/${encodeURIComponent(String(companyId))}/direct/documents`, {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: payload,
+    });
+  }
+
+  transmitCompanyDirectXml(companyId: string | number, payload: DirectXmlSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
+    return this.request<DocumentAccepted>(`/companies/${encodeURIComponent(String(companyId))}/direct/documents/xml`, {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: payload,
+    });
+  }
+
+  getCompanyDocument(companyId: string | number, externalId: string): Promise<DocumentStatus> {
+    return this.request<DocumentStatus>(`/companies/${encodeURIComponent(String(companyId))}/documents/${encodeURIComponent(externalId)}`, {
+      method: 'GET',
+    });
+  }
+
+  listCompanyDocuments(companyId: string | number, filters: DocumentListFilters = {}): Promise<PaginatedDocumentList> {
+    return this.request<PaginatedDocumentList>(
+      this.withQuery(`/companies/${encodeURIComponent(String(companyId))}/documents`, filters),
+      {
+        method: 'GET',
+        unwrapData: false,
+      },
+    );
+  }
+
   getDocument(externalId: string): Promise<DocumentStatus> {
     return this.request<DocumentStatus>(`/documents/${encodeURIComponent(externalId)}`, {
       method: 'GET',
@@ -242,30 +352,28 @@ export class NotagilIntegrationClient {
   }
 
   listDocuments(filters: DocumentListFilters = {}): Promise<PaginatedDocumentList> {
-    const query = new URLSearchParams();
-    for (const [key, value] of Object.entries(filters)) {
-      if (value === undefined || value === null || value === '') {
-        continue;
-      }
-      query.set(key, String(value));
-    }
-
-    const path = query.size > 0 ? `/documents?${query.toString()}` : '/documents';
-
-    return this.request<PaginatedDocumentList>(path, {
+    return this.request<PaginatedDocumentList>(this.withQuery('/documents', filters), {
       method: 'GET',
       unwrapData: false,
     });
   }
 
-  getCompanyConfiguration(): Promise<CompanyConfigurationPayload> {
-    return this.request<CompanyConfigurationPayload>('/configuration/company', {
+  getCompanyConfiguration(companyId?: string | number): Promise<CompanyConfigurationPayload> {
+    const path = companyId === undefined
+      ? '/configuration/company'
+      : `/companies/${encodeURIComponent(String(companyId))}/configuration`;
+
+    return this.request<CompanyConfigurationPayload>(path, {
       method: 'GET',
     });
   }
 
-  updateCompanyConfiguration(payload: CompanyConfigurationPayload): Promise<CompanyConfigurationPayload> {
-    return this.request<CompanyConfigurationPayload>('/configuration/company', {
+  updateCompanyConfiguration(payload: CompanyConfigurationPayload, companyId?: string | number): Promise<CompanyConfigurationPayload> {
+    const path = companyId === undefined
+      ? '/configuration/company'
+      : `/companies/${encodeURIComponent(String(companyId))}/configuration`;
+
+    return this.request<CompanyConfigurationPayload>(path, {
       method: 'PUT',
       body: payload,
     });
@@ -313,6 +421,13 @@ export class NotagilIntegrationClient {
     });
   }
 
+  cancelCompanyDocument(companyId: string | number, externalId: string, reason: string): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/companies/${encodeURIComponent(String(companyId))}/documents/${encodeURIComponent(externalId)}/cancel`, {
+      method: 'POST',
+      body: { reason },
+    });
+  }
+
   correctDocument(externalId: string, correcao: string, sequencia?: number): Promise<DocumentStatus> {
     return this.request<DocumentStatus>(`/documents/${encodeURIComponent(externalId)}/correct`, {
       method: 'POST',
@@ -323,8 +438,230 @@ export class NotagilIntegrationClient {
     });
   }
 
+  correctCompanyDocument(companyId: string | number, externalId: string, correcao: string, sequencia?: number): Promise<DocumentStatus> {
+    return this.request<DocumentStatus>(`/companies/${encodeURIComponent(String(companyId))}/documents/${encodeURIComponent(externalId)}/correct`, {
+      method: 'POST',
+      body: {
+        correcao,
+        ...(sequencia === undefined ? {} : { sequencia }),
+      },
+    });
+  }
+
+  listProducts(companyId: string | number): Promise<ProductPayload[]> {
+    return this.request<ProductPayload[]>(`/companies/${encodeURIComponent(String(companyId))}/products`, {
+      method: 'GET',
+    });
+  }
+
+  getProduct(companyId: string | number, productId: string | number): Promise<ProductPayload> {
+    return this.request<ProductPayload>(`/companies/${encodeURIComponent(String(companyId))}/products/${encodeURIComponent(String(productId))}`, {
+      method: 'GET',
+    });
+  }
+
+  createProduct(companyId: string | number, payload: ProductPayload): Promise<ProductPayload> {
+    return this.request<ProductPayload>(`/companies/${encodeURIComponent(String(companyId))}/products`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateProduct(companyId: string | number, productId: string | number, payload: ProductPayload): Promise<ProductPayload> {
+    return this.request<ProductPayload>(`/companies/${encodeURIComponent(String(companyId))}/products/${encodeURIComponent(String(productId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteProduct(companyId: string | number, productId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/products/${encodeURIComponent(String(productId))}`, {
+      method: 'DELETE',
+    });
+  }
+
+  listTakers(companyId: string | number): Promise<TakerPayload[]> {
+    return this.request<TakerPayload[]>(`/companies/${encodeURIComponent(String(companyId))}/takers`, {
+      method: 'GET',
+    });
+  }
+
+  getTaker(companyId: string | number, takerId: string | number): Promise<TakerPayload> {
+    return this.request<TakerPayload>(`/companies/${encodeURIComponent(String(companyId))}/takers/${encodeURIComponent(String(takerId))}`, {
+      method: 'GET',
+    });
+  }
+
+  createTaker(companyId: string | number, payload: TakerPayload): Promise<TakerPayload> {
+    return this.request<TakerPayload>(`/companies/${encodeURIComponent(String(companyId))}/takers`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateTaker(companyId: string | number, takerId: string | number, payload: TakerPayload): Promise<TakerPayload> {
+    return this.request<TakerPayload>(`/companies/${encodeURIComponent(String(companyId))}/takers/${encodeURIComponent(String(takerId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteTaker(companyId: string | number, takerId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/takers/${encodeURIComponent(String(takerId))}`, {
+      method: 'DELETE',
+    });
+  }
+
+  listWebhooks(): Promise<WebhookPayload[]> {
+    return this.request<WebhookPayload[]>('/webhooks', {
+      method: 'GET',
+    });
+  }
+
+  createWebhook(payload: WebhookPayload): Promise<WebhookPayload> {
+    return this.request<WebhookPayload>('/webhooks', {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateWebhook(webhookId: string | number, payload: WebhookPayload): Promise<WebhookPayload> {
+    return this.request<WebhookPayload>(`/webhooks/${encodeURIComponent(String(webhookId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteWebhook(webhookId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/webhooks/${encodeURIComponent(String(webhookId))}`, {
+      method: 'DELETE',
+    });
+  }
+
+  rotateWebhookSecret(webhookId: string | number): Promise<WebhookPayload> {
+    return this.request<WebhookPayload>(`/webhooks/${encodeURIComponent(String(webhookId))}/rotate-secret`, {
+      method: 'POST',
+    });
+  }
+
+  testWebhook(webhookId: string | number): Promise<WebhookPayload> {
+    return this.request<WebhookPayload>(`/webhooks/${encodeURIComponent(String(webhookId))}/test`, {
+      method: 'POST',
+    });
+  }
+
+  listWebhookDeliveries(webhookId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/webhooks/${encodeURIComponent(String(webhookId))}/deliveries`, {
+      method: 'GET',
+      unwrapData: false,
+    });
+  }
+
+  getMetrics(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/metrics', {
+      method: 'GET',
+    });
+  }
+
+  getBilling(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/billing', {
+      method: 'GET',
+    });
+  }
+
+  listOperationProfiles(companyId: string | number): Promise<FiscalOperationProfilePayload[]> {
+    return this.request<FiscalOperationProfilePayload[]>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/operation-profiles`, {
+      method: 'GET',
+    });
+  }
+
+  createOperationProfile(companyId: string | number, payload: FiscalOperationProfilePayload): Promise<FiscalOperationProfilePayload> {
+    return this.request<FiscalOperationProfilePayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/operation-profiles`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateOperationProfile(companyId: string | number, profileId: string | number, payload: FiscalOperationProfilePayload): Promise<FiscalOperationProfilePayload> {
+    return this.request<FiscalOperationProfilePayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/operation-profiles/${encodeURIComponent(String(profileId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteOperationProfile(companyId: string | number, profileId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/operation-profiles/${encodeURIComponent(String(profileId))}`, {
+      method: 'DELETE',
+    });
+  }
+
+  listRateReferences(companyId: string | number, filters: FiscalRateReferenceFilters = {}): Promise<FiscalRateReferencePayload[]> {
+    return this.request<FiscalRateReferencePayload[]>(
+      this.withQuery(`/companies/${encodeURIComponent(String(companyId))}/fiscal/rate-references`, filters),
+      { method: 'GET' },
+    );
+  }
+
+  createRateReference(companyId: string | number, payload: FiscalRateReferencePayload): Promise<FiscalRateReferencePayload> {
+    return this.request<FiscalRateReferencePayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/rate-references`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateRateReference(companyId: string | number, rateReferenceId: string | number, payload: FiscalRateReferencePayload): Promise<FiscalRateReferencePayload> {
+    return this.request<FiscalRateReferencePayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/rate-references/${encodeURIComponent(String(rateReferenceId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteRateReference(companyId: string | number, rateReferenceId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/rate-references/${encodeURIComponent(String(rateReferenceId))}`, {
+      method: 'DELETE',
+    });
+  }
+
+  listTaxRuleSets(companyId: string | number): Promise<TaxRuleSetPayload[]> {
+    return this.request<TaxRuleSetPayload[]>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/tax-rule-sets`, {
+      method: 'GET',
+    });
+  }
+
+  createTaxRuleSet(companyId: string | number, payload: TaxRuleSetPayload): Promise<TaxRuleSetPayload> {
+    return this.request<TaxRuleSetPayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/tax-rule-sets`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateTaxRuleSet(companyId: string | number, taxRuleSetId: string | number, payload: TaxRuleSetPayload): Promise<TaxRuleSetPayload> {
+    return this.request<TaxRuleSetPayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/tax-rule-sets/${encodeURIComponent(String(taxRuleSetId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteTaxRuleSet(companyId: string | number, taxRuleSetId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/tax-rule-sets/${encodeURIComponent(String(taxRuleSetId))}`, {
+      method: 'DELETE',
+    });
+  }
+
+  private withQuery(path: string, params: object): string {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null || value === '') {
+        continue;
+      }
+      query.set(key, String(value));
+    }
+
+    return query.size > 0 ? `${path}?${query.toString()}` : path;
+  }
+
   private async request<T>(path: string, options: {
-    method: 'GET' | 'POST' | 'PUT';
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE';
     headers?: Record<string, string>;
     body?: unknown;
     unwrapData?: boolean;

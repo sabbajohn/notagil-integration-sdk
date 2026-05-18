@@ -42,6 +42,35 @@ class NotaAgilClientTest extends TestCase
         $client->companies();
     }
 
+    public function test_fiscal_management_methods_use_company_scoped_paths(): void
+    {
+        $history = [];
+        $client = $this->client([
+            new Response(200, [], json_encode(['data' => [['id' => 'rate-1']]])),
+            new Response(201, [], json_encode(['data' => ['id' => 'rule-1']])),
+            new Response(200, [], json_encode(['data' => ['deleted' => true]])),
+        ], $history);
+
+        $rates = $client->rateReferences('10', ['tax_type' => 'ibs', 'uf' => 'SC']);
+        $rule = $client->createTaxRuleSet('10', [
+            'code' => 'IBS-SC',
+            'name' => 'IBS SC',
+            'rule_scope_type' => 'product',
+            'valid_from' => '2026-01-01',
+        ]);
+        $deleted = $client->deleteOperationProfile('10', '99');
+
+        $this->assertSame([['id' => 'rate-1']], $rates);
+        $this->assertSame(['id' => 'rule-1'], $rule);
+        $this->assertSame(['deleted' => true], $deleted);
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/rate-references', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('tax_type=ibs&uf=SC', $history[0]['request']->getUri()->getQuery());
+        $this->assertSame('POST', $history[1]['request']->getMethod());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/tax-rule-sets', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('DELETE', $history[2]['request']->getMethod());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/operation-profiles/99', $history[2]['request']->getUri()->getPath());
+    }
+
     private function client(array $responses, array &$history): NotaAgilClient
     {
         $mock = new MockHandler($responses);

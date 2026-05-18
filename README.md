@@ -11,14 +11,14 @@ O contrato OpenAPI versionado fica em `openapi/integration-v1.yaml`.
 
 ## Release Atual
 
-`v0.1.0-beta.0` e o primeiro release publico beta.
+`v0.1.0-beta.1` evolui o beta publico do SDK.
 
-Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, preview/emissao/consulta/cancelamento/correcao de documentos, envio direto, XML direto, produtos, tomadores, webhooks, metricas e billing.
+Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, perfis de operacao, referencias de aliquota, regras fiscais, preview/emissao/consulta/cancelamento/correcao de documentos, envio direto, XML direto, produtos, tomadores, webhooks, metricas e billing.
 
 ## Instalacao PHP
 
 ```sh
-composer require notagil/integration-sdk:0.1.0-beta.0
+composer require notagil/integration-sdk:0.1.0-beta.1
 ```
 
 ```php
@@ -37,7 +37,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ## Instalacao TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@0.1.0-beta.0
+npm install @notagil/integration-sdk@0.1.0-beta.1
 ```
 
 ```ts
@@ -87,8 +87,8 @@ composer test
 4. Crie a tag semver, por exemplo:
 
 ```sh
-git tag v0.1.0-beta.0
-git push origin v0.1.0-beta.0
+git tag v0.1.0-beta.1
+git push origin v0.1.0-beta.1
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.

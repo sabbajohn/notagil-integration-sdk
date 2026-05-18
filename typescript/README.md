@@ -3,7 +3,7 @@
 TypeScript beta SDK for the NotaAgil public integration API documented in `../openapi/integration-v1.yaml`.
 
 ```bash
-npm install @notagil/integration-sdk@0.1.0-beta.0
+npm install @notagil/integration-sdk@0.1.0-beta.1
 ```
 
 ```ts
@@ -109,6 +109,35 @@ await client.transmitDirectXml(
   },
   'idem-direct-xml-2026-0001',
 );
+```
+
+Manage company fiscal configuration through the company-scoped fiscal endpoints:
+
+```ts
+const operationProfiles = await client.listOperationProfiles(10);
+
+await client.createRateReference(10, {
+  code: 'IBS-SC-2026',
+  tax_type: 'ibs',
+  jurisdiction_level: 'state',
+  uf: 'SC',
+  rate: 0.1,
+  valid_from: '2026-01-01',
+});
+
+await client.createTaxRuleSet(10, {
+  code: 'IBS-PADRAO',
+  name: 'IBS padrao',
+  rule_scope_type: 'product',
+  valid_from: '2026-01-01',
+  activation: {
+    operation: {
+      active: true,
+      operation_profile_ids: operationProfiles.map((profile) => profile.id),
+    },
+  },
+  results: [],
+});
 ```
 
 Generate OpenAPI operation types when `openapi-typescript` is installed:

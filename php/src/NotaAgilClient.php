@@ -43,6 +43,13 @@ class NotaAgilClient
         return $this->request('PUT', $path, ['json' => $payload]);
     }
 
+    public function nfseProviderInfo(array $filters = [], ?string $companyId = null): array
+    {
+        $path = $companyId === null ? '/nfse/provider-info' : "/companies/{$companyId}/nfse/provider-info";
+
+        return $this->request('GET', $this->withQuery($path, $filters));
+    }
+
     public function previewDocument(array $payload, ?string $companyId = null): array
     {
         $path = $companyId === null ? '/documents/preview' : "/companies/{$companyId}/documents/preview";
@@ -92,9 +99,8 @@ class NotaAgilClient
     public function documents(array $filters = [], ?string $companyId = null): array
     {
         $path = $companyId === null ? '/documents' : "/companies/{$companyId}/documents";
-        $query = http_build_query(array_filter($filters, static fn ($value): bool => $value !== null && $value !== ''));
 
-        return $this->request('GET', $query === '' ? $path : $path . '?' . $query, unwrapData: false);
+        return $this->request('GET', $this->withQuery($path, $filters), unwrapData: false);
     }
 
     public function cancelDocument(string $externalId, string $reason, ?string $companyId = null): array
@@ -123,6 +129,11 @@ class NotaAgilClient
         return $this->request('GET', "/companies/{$companyId}/products");
     }
 
+    public function product(string|int $companyId, string|int $productId): array
+    {
+        return $this->request('GET', "/companies/{$companyId}/products/{$productId}");
+    }
+
     public function createProduct(string|int $companyId, array $payload): array
     {
         return $this->request('POST', "/companies/{$companyId}/products", ['json' => $payload]);
@@ -141,6 +152,11 @@ class NotaAgilClient
     public function takers(string|int $companyId): array
     {
         return $this->request('GET', "/companies/{$companyId}/takers");
+    }
+
+    public function taker(string|int $companyId, string|int $takerId): array
+    {
+        return $this->request('GET', "/companies/{$companyId}/takers/{$takerId}");
     }
 
     public function createTaker(string|int $companyId, array $payload): array
@@ -173,6 +189,11 @@ class NotaAgilClient
         return $this->request('PUT', "/webhooks/{$webhookId}", ['json' => $payload]);
     }
 
+    public function deleteWebhook(string|int $webhookId): array
+    {
+        return $this->request('DELETE', "/webhooks/{$webhookId}");
+    }
+
     public function rotateWebhookSecret(string|int $webhookId): array
     {
         return $this->request('POST', "/webhooks/{$webhookId}/rotate-secret");
@@ -196,6 +217,73 @@ class NotaAgilClient
     public function billing(): array
     {
         return $this->request('GET', '/billing');
+    }
+
+    public function operationProfiles(string|int $companyId): array
+    {
+        return $this->request('GET', "/companies/{$companyId}/fiscal/operation-profiles");
+    }
+
+    public function createOperationProfile(string|int $companyId, array $payload): array
+    {
+        return $this->request('POST', "/companies/{$companyId}/fiscal/operation-profiles", ['json' => $payload]);
+    }
+
+    public function updateOperationProfile(string|int $companyId, string|int $profileId, array $payload): array
+    {
+        return $this->request('PUT', "/companies/{$companyId}/fiscal/operation-profiles/{$profileId}", ['json' => $payload]);
+    }
+
+    public function deleteOperationProfile(string|int $companyId, string|int $profileId): array
+    {
+        return $this->request('DELETE', "/companies/{$companyId}/fiscal/operation-profiles/{$profileId}");
+    }
+
+    public function rateReferences(string|int $companyId, array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery("/companies/{$companyId}/fiscal/rate-references", $filters));
+    }
+
+    public function createRateReference(string|int $companyId, array $payload): array
+    {
+        return $this->request('POST', "/companies/{$companyId}/fiscal/rate-references", ['json' => $payload]);
+    }
+
+    public function updateRateReference(string|int $companyId, string|int $rateReferenceId, array $payload): array
+    {
+        return $this->request('PUT', "/companies/{$companyId}/fiscal/rate-references/{$rateReferenceId}", ['json' => $payload]);
+    }
+
+    public function deleteRateReference(string|int $companyId, string|int $rateReferenceId): array
+    {
+        return $this->request('DELETE', "/companies/{$companyId}/fiscal/rate-references/{$rateReferenceId}");
+    }
+
+    public function taxRuleSets(string|int $companyId): array
+    {
+        return $this->request('GET', "/companies/{$companyId}/fiscal/tax-rule-sets");
+    }
+
+    public function createTaxRuleSet(string|int $companyId, array $payload): array
+    {
+        return $this->request('POST', "/companies/{$companyId}/fiscal/tax-rule-sets", ['json' => $payload]);
+    }
+
+    public function updateTaxRuleSet(string|int $companyId, string|int $taxRuleSetId, array $payload): array
+    {
+        return $this->request('PUT', "/companies/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}", ['json' => $payload]);
+    }
+
+    public function deleteTaxRuleSet(string|int $companyId, string|int $taxRuleSetId): array
+    {
+        return $this->request('DELETE', "/companies/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}");
+    }
+
+    private function withQuery(string $path, array $filters): string
+    {
+        $query = http_build_query(array_filter($filters, static fn ($value): bool => $value !== null && $value !== ''));
+
+        return $query === '' ? $path : $path . '?' . $query;
     }
 
     private function request(string $method, string $path, array $options = [], bool $unwrapData = true): array

@@ -18,6 +18,9 @@ tags:
   - name: Companies
   - name: Documents
   - name: Configuration
+  - name: Fiscal Operations
+  - name: Fiscal Rates
+  - name: Fiscal Rules
   - name: Products
   - name: Takers
   - name: Webhooks
@@ -74,6 +77,153 @@ paths:
                 type: object
                 properties:
                   data: { $ref: "#/components/schemas/NfseProviderInfo" }
+  /companies/{company_id}/fiscal/operation-profiles:
+    get:
+      tags: [Fiscal Operations]
+      operationId: listCompanyFiscalOperationProfiles
+      x-required-scopes: [fiscal:operations:read]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Fiscal Operations]
+      operationId: createCompanyFiscalOperationProfile
+      x-required-scopes: [fiscal:operations:write]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/operation-profiles/{profile_id}:
+    put:
+      tags: [Fiscal Operations]
+      operationId: updateCompanyFiscalOperationProfile
+      x-required-scopes: [fiscal:operations:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: profile_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Fiscal Operations]
+      operationId: deleteCompanyFiscalOperationProfile
+      x-required-scopes: [fiscal:operations:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: profile_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/rate-references:
+    get:
+      tags: [Fiscal Rates]
+      operationId: listCompanyFiscalRateReferences
+      x-required-scopes: [fiscal:rates:read]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: tax_type
+          in: query
+          required: false
+          schema: { type: string }
+        - name: tax_situation_code
+          in: query
+          required: false
+          schema: { type: string }
+        - name: tax_classification_code
+          in: query
+          required: false
+          schema: { type: string }
+        - name: municipality_ibge
+          in: query
+          required: false
+          schema: { type: string }
+        - name: uf
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Fiscal Rates]
+      operationId: createCompanyFiscalRateReference
+      x-required-scopes: [fiscal:rates:write]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/rate-references/{rate_reference_id}:
+    put:
+      tags: [Fiscal Rates]
+      operationId: updateCompanyFiscalRateReference
+      x-required-scopes: [fiscal:rates:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: rate_reference_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Fiscal Rates]
+      operationId: deleteCompanyFiscalRateReference
+      x-required-scopes: [fiscal:rates:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: rate_reference_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/tax-rule-sets:
+    get:
+      tags: [Fiscal Rules]
+      operationId: listCompanyFiscalTaxRuleSets
+      x-required-scopes: [fiscal:rules:read]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Fiscal Rules]
+      operationId: createCompanyFiscalTaxRuleSet
+      x-required-scopes: [fiscal:rules:write]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}:
+    put:
+      tags: [Fiscal Rules]
+      operationId: updateCompanyFiscalTaxRuleSet
+      x-required-scopes: [fiscal:rules:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: tax_rule_set_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Fiscal Rules]
+      operationId: deleteCompanyFiscalTaxRuleSet
+      x-required-scopes: [fiscal:rules:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: tax_rule_set_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
   /companies/{company_id}/documents/preview:
     post:
       tags: [Documents]
@@ -227,6 +377,44 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/takers/{taker_id}:
+    get:
+      tags: [Takers]
+      operationId: getTaker
+      x-required-scopes: [takers:read]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: taker_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    put:
+      tags: [Takers]
+      operationId: updateTaker
+      x-required-scopes: [takers:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: taker_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Takers]
+      operationId: deleteTaker
+      x-required-scopes: [takers:delete]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: taker_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
   /webhooks:
     get:
       tags: [Webhooks]
@@ -237,15 +425,27 @@ paths:
     post:
       tags: [Webhooks]
       operationId: createWebhook
-      x-required-scopes: [webhooks:manage]
+      x-required-scopes: [webhooks:write, webhooks:manage]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /webhooks/{webhook_id}/test:
-    post:
+  /webhooks/{webhook_id}:
+    put:
       tags: [Webhooks]
-      operationId: testWebhook
-      x-required-scopes: [webhooks:manage]
+      operationId: updateWebhook
+      x-required-scopes: [webhooks:write, webhooks:manage]
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Webhooks]
+      operationId: deleteWebhook
+      x-required-scopes: [webhooks:write, webhooks:manage]
       parameters:
         - name: webhook_id
           in: path
@@ -253,6 +453,42 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
+  /webhooks/{webhook_id}/rotate-secret:
+    post:
+      tags: [Webhooks]
+      operationId: rotateWebhookSecret
+      x-required-scopes: [webhooks:write, webhooks:manage]
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /webhooks/{webhook_id}/test:
+    post:
+      tags: [Webhooks]
+      operationId: testWebhook
+      x-required-scopes: [webhooks:write, webhooks:manage]
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /webhooks/{webhook_id}/deliveries:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookDeliveries
+      x-required-scopes: [webhooks:read]
+      parameters:
+        - name: webhook_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
   /metrics:
     get:
       tags: [Metrics]
@@ -300,6 +536,24 @@ paths:
       operationId: getDefaultCompanyDocument
       x-required-scopes: [documents:read]
       parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /documents/{external_id}/cancel:
+    post:
+      tags: [Documents]
+      operationId: cancelDefaultCompanyDocument
+      x-required-scopes: [documents:cancel]
+      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /documents/{external_id}/correct:
+    post:
+      tags: [Documents]
+      operationId: correctDefaultCompanyDocument
+      x-required-scopes: [documents:correct]
+      parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /direct/documents:

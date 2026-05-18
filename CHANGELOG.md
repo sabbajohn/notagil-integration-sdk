@@ -4,6 +4,17 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-beta.1] - 2026-05-18
+
+### Added
+- Clientes PHP e TypeScript para gerenciar perfis de operacao, referencias de aliquota e conjuntos de regras fiscais por empresa.
+- Metodos TypeScript para empresas, documentos company-scoped, produtos, tomadores, webhooks, metricas e billing.
+- Suporte a requisicoes `DELETE` no cliente TypeScript.
+- Contrato OpenAPI e tipos gerados atualizados para a superficie fiscal e operacoes completas de webhooks.
+
+### Changed
+- Documentacao de instalacao atualizada para `0.1.0-beta.1`.
+
 ## [0.1.0-beta.0] - 2026-05-18
 
 ### Added
