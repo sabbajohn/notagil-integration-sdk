@@ -4,7 +4,7 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0-beta.2] - 2026-05-20
 
 ### Added
 - Metodos PHP e TypeScript para preview e emissao de documentos por `operation_code` usando o envelope `snapshot`.

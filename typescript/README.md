@@ -3,7 +3,7 @@
 TypeScript beta SDK for the NotaAgil public integration API documented in `../openapi/integration-v1.yaml`.
 
 ```bash
-npm install @notagil/integration-sdk@0.1.0-beta.1
+npm install @notagil/integration-sdk@0.1.0-beta.2
 ```
 
 ```ts

@@ -5,7 +5,7 @@ SDK PHP oficial para a API publica de integracao da NotaAgil.
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:0.1.0-beta.1
+composer require notagil/integration-sdk:0.1.0-beta.2
 ```
 
 ## Uso Basico
