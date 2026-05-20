@@ -39,6 +39,38 @@ if (!preview.emission_allowed) {
   throw new Error(`Resolucao fiscal pendente: ${preview.resolution_status}`);
 }
 
+const snapshot = {
+  fiscal_environment: 'homologacao',
+  document_direction: 'saida',
+  document_data: {
+    serie: '1',
+    numero: '0001',
+    natureza_operacao: 'Venda de mercadoria',
+  },
+  counterparty: {
+    buyer_identified: false,
+    final_consumer: true,
+    uf: 'SP',
+  },
+  items: [
+    {
+      product_id: 31,
+      sku: 'SKU-BALCAO-001',
+      description: 'Refeicao por quilo',
+      ncm: '21069090',
+      quantity: 1,
+      unit_price: 42.9,
+      gross_amount: 42.9,
+    },
+  ],
+};
+
+await client.previewDocumentByOperation('VENDA_BALCAO', {
+  external_id: 'pdv-preview-2026-0001',
+  document_type: 'nfce',
+  snapshot,
+});
+
 await client.createDocument(
   {
     external_id: 'pdv-2026-0001',
@@ -62,6 +94,19 @@ await client.createDocument(
     },
   },
   'idem-pdv-2026-0001',
+);
+
+await client.createDocumentByOperation(
+  'VENDA_BALCAO',
+  {
+    external_id: 'pdv-operation-2026-0001',
+    document_type: 'nfce',
+    snapshot: {
+      ...snapshot,
+      document_data: { ...snapshot.document_data, numero: '0002' },
+    },
+  },
+  'idem-pdv-operation-2026-0001',
 );
 
 const history = await client.listDocuments({

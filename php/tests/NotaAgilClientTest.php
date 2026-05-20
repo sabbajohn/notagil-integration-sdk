@@ -31,6 +31,37 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame('/api/v1/integrations/companies/10/documents', $request->getUri()->getPath());
     }
 
+    public function test_operation_code_document_methods_use_snapshot_contract_paths(): void
+    {
+        $history = [];
+        $client = $this->client([
+            new Response(200, [], json_encode(['data' => ['resolution_status' => 'resolved']])),
+            new Response(202, [], json_encode(['data' => ['id' => '1']])),
+        ], $history);
+
+        $snapshotRequest = [
+            'external_id' => 'erp-1',
+            'document_type' => 'nfe',
+            'snapshot' => [
+                'fiscal_environment' => 'homologacao',
+                'document_data' => ['numero' => '1'],
+                'items' => [
+                    ['description' => 'Produto', 'quantity' => 1, 'unit_price' => 10],
+                ],
+            ],
+        ];
+
+        $preview = $client->previewDocumentByOperation('VENDA_NORMAL', $snapshotRequest);
+        $created = $client->createDocumentByOperation('10', 'VENDA_NORMAL', $snapshotRequest, 'idem-operation-1');
+
+        $this->assertSame(['resolution_status' => 'resolved'], $preview);
+        $this->assertSame(['id' => '1'], $created);
+        $this->assertSame('/api/v1/integrations/documents/VENDA_NORMAL/preview', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/documents/VENDA_NORMAL', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('idem-operation-1', $history[1]['request']->getHeaderLine('Idempotency-Key'));
+        $this->assertStringContainsString('"snapshot"', (string) $history[1]['request']->getBody());
+    }
+
     public function test_api_errors_throw_typed_exception(): void
     {
         $history = [];

@@ -84,6 +84,52 @@ export interface DocumentSubmitRequest extends DocumentPreviewRequest {
   external_id: string;
 }
 
+export interface OperationDocumentSnapshotItem extends Record<string, unknown> {
+  product_id?: string | number | null;
+  cfop_id?: string | number | null;
+  sku?: string;
+  description?: string;
+  quantity: number;
+  unit_price: number;
+  gross_amount?: number;
+  codigo_servico_municipal?: string;
+  codigo_cnae?: string;
+  codigoCnae?: string;
+  codigo_atividade?: string;
+  manual_overrides?: {
+    codigo_tributacao_nacional?: string;
+    codigo_tributacao_municipal?: string;
+    codigo_nbs?: string;
+    codigo_cnae?: string;
+    codigo_atividade?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface OperationDocumentSnapshot {
+  document_direction?: string;
+  direction?: string;
+  fiscal_environment?: FiscalEnvironment;
+  reference_date?: string;
+  document_data?: Record<string, unknown>;
+  counterparty?: Record<string, unknown>;
+  document_references?: Array<Record<string, unknown>>;
+  items: OperationDocumentSnapshotItem[];
+  [key: string]: unknown;
+}
+
+export interface OperationDocumentPreviewRequest {
+  external_id?: string;
+  document_type: DocumentType;
+  municipio?: string | null;
+  snapshot: OperationDocumentSnapshot;
+  metadata?: Record<string, unknown>;
+}
+
+export interface OperationDocumentSubmitRequest extends OperationDocumentPreviewRequest {
+  external_id: string;
+}
+
 export interface DirectDocumentSubmitRequest {
   external_id: string;
   document_type: DocumentType;
@@ -276,8 +322,25 @@ export class NotagilIntegrationClient {
     });
   }
 
+  previewDocumentByOperation(operationCode: string, payload: OperationDocumentPreviewRequest): Promise<PreviewResult> {
+    return this.request<PreviewResult>(`/documents/${encodeURIComponent(operationCode)}/preview`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
   createDocument(payload: DocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
     return this.request<DocumentAccepted>('/documents', {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: payload,
+    });
+  }
+
+  createDocumentByOperation(operationCode: string, payload: OperationDocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
+    return this.request<DocumentAccepted>(`/documents/${encodeURIComponent(operationCode)}`, {
       method: 'POST',
       headers: {
         'Idempotency-Key': idempotencyKey,
@@ -313,6 +376,20 @@ export class NotagilIntegrationClient {
     });
   }
 
+  previewCompanyDocumentByOperation(
+    companyId: string | number,
+    operationCode: string,
+    payload: OperationDocumentPreviewRequest,
+  ): Promise<PreviewResult> {
+    return this.request<PreviewResult>(
+      `/companies/${encodeURIComponent(String(companyId))}/documents/${encodeURIComponent(operationCode)}/preview`,
+      {
+        method: 'POST',
+        body: payload,
+      },
+    );
+  }
+
   createCompanyDocument(companyId: string | number, payload: DocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
     return this.request<DocumentAccepted>(`/companies/${encodeURIComponent(String(companyId))}/documents`, {
       method: 'POST',
@@ -321,6 +398,24 @@ export class NotagilIntegrationClient {
       },
       body: payload,
     });
+  }
+
+  createCompanyDocumentByOperation(
+    companyId: string | number,
+    operationCode: string,
+    payload: OperationDocumentSubmitRequest,
+    idempotencyKey: string,
+  ): Promise<DocumentAccepted> {
+    return this.request<DocumentAccepted>(
+      `/companies/${encodeURIComponent(String(companyId))}/documents/${encodeURIComponent(operationCode)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: payload,
+      },
+    );
   }
 
   createCompanyDirectDocument(companyId: string | number, payload: DirectDocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {

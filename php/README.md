@@ -36,6 +36,41 @@ $document = $client->createDocument(
     idempotencyKey: 'erp-0001',
 );
 
+$snapshot = [
+    'fiscal_environment' => 'homologacao',
+    'document_direction' => 'saida',
+    'document_data' => [
+        'serie' => '1',
+        'numero' => '0002',
+        'natureza_operacao' => 'Venda de mercadoria',
+    ],
+    'counterparty' => [
+        'buyer_identified' => false,
+        'final_consumer' => true,
+        'uf' => 'SP',
+    ],
+    'items' => [
+        ['product_id' => 31, 'description' => 'Produto', 'quantity' => 1, 'unit_price' => 10],
+    ],
+];
+
+$preview = $client->previewDocumentByOperation('VENDA_BALCAO', [
+    'external_id' => 'erp-preview-0002',
+    'document_type' => 'nfce',
+    'snapshot' => $snapshot,
+]);
+
+$documentByOperation = $client->createDocumentByOperation(
+    companyId: $companies[0]['id'],
+    operationCode: 'VENDA_BALCAO',
+    payload: [
+        'external_id' => 'erp-0002',
+        'document_type' => 'nfce',
+        'snapshot' => $snapshot,
+    ],
+    idempotencyKey: 'erp-0002',
+);
+
 $authorized = $client->waitDocument('erp-0001');
 if (($authorized['fiscal_status'] ?? null) === 'authorized') {
     $xml = $client->downloadDocumentXml('erp-0001');

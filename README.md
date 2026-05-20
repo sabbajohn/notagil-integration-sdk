@@ -13,7 +13,7 @@ O contrato OpenAPI versionado fica em `openapi/integration-v1.yaml`.
 
 `v0.1.0-beta.1` evolui o beta publico do SDK.
 
-Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao/consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
+Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por payload legado ou por codigo de operacao com contrato `snapshot`, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
 
 ## Instalacao PHP
 

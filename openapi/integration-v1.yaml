@@ -215,6 +215,18 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/DocumentPreview" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/documents/{operation_code}/preview:
+    post:
+      tags: [Documents]
+      operationId: previewCompanyDocumentByOperation
+      description: Resolves the fiscal operation by code and previews a document from a snapshot-shaped input contract.
+      x-required-scopes: [documents:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/OperationCode"
+      requestBody: { $ref: "#/components/requestBodies/OperationDocumentPreview" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
   /companies/{company_id}/documents:
     get:
       tags: [Documents]
@@ -233,6 +245,19 @@ paths:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/documents/{operation_code}:
+    post:
+      tags: [Documents]
+      operationId: createCompanyDocumentByOperation
+      description: Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract.
+      x-required-scopes: [documents:write]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/OperationCode"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody: { $ref: "#/components/requestBodies/OperationDocumentSubmit" }
       responses:
         "202": { $ref: "#/components/responses/Resource" }
   /companies/{company_id}/documents/{external_id}:
@@ -474,6 +499,29 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/DocumentPreview" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
+  /documents/{operation_code}/preview:
+    post:
+      tags: [Documents]
+      operationId: previewDefaultCompanyDocumentByOperation
+      description: Compatibility alias for the default company. Resolves the fiscal operation by code and previews from snapshot-shaped input.
+      x-required-scopes: [documents:write]
+      parameters:
+        - $ref: "#/components/parameters/OperationCode"
+      requestBody: { $ref: "#/components/requestBodies/OperationDocumentPreview" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /documents/{operation_code}:
+    post:
+      tags: [Documents]
+      operationId: createDefaultCompanyDocumentByOperation
+      description: Compatibility alias for the default company. Resolves the fiscal operation by code and queues from snapshot-shaped input.
+      x-required-scopes: [documents:write]
+      parameters:
+        - $ref: "#/components/parameters/OperationCode"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody: { $ref: "#/components/requestBodies/OperationDocumentSubmit" }
+      responses:
+        "202": { $ref: "#/components/responses/Resource" }
   /documents/{external_id}:
     get:
       tags: [Documents]
@@ -846,6 +894,11 @@ components:
       in: path
       required: true
       schema: { type: string }
+    OperationCode:
+      name: operation_code
+      in: path
+      required: true
+      schema: { type: string }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -893,6 +946,25 @@ components:
               - $ref: "#/components/schemas/DocumentRequest"
               - type: object
                 required: [external_id]
+                properties:
+                  external_id: { type: string }
+    OperationDocumentPreview:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/OperationDocumentRequest"
+    OperationDocumentSubmit:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/OperationDocumentRequest"
+              - type: object
+                required: [external_id]
+                properties:
+                  external_id: { type: string }
   responses:
     Resource:
       description: JSON resource response.
@@ -941,6 +1013,48 @@ components:
         metadata:
           type: object
           additionalProperties: true
+    OperationDocumentRequest:
+      type: object
+      required: [document_type, snapshot]
+      properties:
+        external_id: { type: string }
+        document_type:
+          type: string
+          enum: [nfe, nfce, nfse]
+        municipio: { type: string }
+        snapshot:
+          $ref: "#/components/schemas/OperationDocumentSnapshot"
+        metadata:
+          type: object
+          additionalProperties: true
+    OperationDocumentSnapshot:
+      type: object
+      required: [items]
+      description: Snapshot-shaped input. Fiscal resolution fields are generated by NotaAgil and must not be sent by clients.
+      properties:
+        document_direction: { type: string }
+        direction: { type: string }
+        fiscal_environment:
+          type: string
+          enum: [homologacao, producao]
+        reference_date: { type: string }
+        document_data:
+          type: object
+          additionalProperties: true
+        counterparty:
+          type: object
+          additionalProperties: true
+        document_references:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      additionalProperties: true
     NfseProviderInfo:
       type: object
       properties:

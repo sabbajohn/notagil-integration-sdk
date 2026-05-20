@@ -57,9 +57,32 @@ class NotaAgilClient
         return $this->request('POST', $path, ['json' => $payload]);
     }
 
+    public function previewDocumentByOperation(string $operationCode, array $payload, ?string $companyId = null): array
+    {
+        $operationCode = rawurlencode($operationCode);
+        $path = $companyId === null
+            ? "/documents/{$operationCode}/preview"
+            : "/companies/{$companyId}/documents/{$operationCode}/preview";
+
+        return $this->request('POST', $path, ['json' => $payload]);
+    }
+
     public function createDocument(?string $companyId, array $payload, string $idempotencyKey): array
     {
         $path = $companyId === null ? '/documents' : "/companies/{$companyId}/documents";
+
+        return $this->request('POST', $path, [
+            'json' => $payload,
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
+        ]);
+    }
+
+    public function createDocumentByOperation(?string $companyId, string $operationCode, array $payload, string $idempotencyKey): array
+    {
+        $operationCode = rawurlencode($operationCode);
+        $path = $companyId === null
+            ? "/documents/{$operationCode}"
+            : "/companies/{$companyId}/documents/{$operationCode}";
 
         return $this->request('POST', $path, [
             'json' => $payload,
