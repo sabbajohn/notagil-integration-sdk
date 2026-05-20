@@ -39,7 +39,7 @@
     }
   },
   "scripts": {
-    "test": "phpunit -c php/phpunit.xml"
+    "test": "cd php && vendor/bin/phpunit"
   },
   "minimum-stability": "stable"
 }
