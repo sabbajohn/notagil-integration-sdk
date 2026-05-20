@@ -2,10 +2,12 @@
 
 SDK PHP oficial para a API publica de integracao da NotaAgil.
 
+Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padronizada do payload de emissao fiscal por `operation_code` e `snapshot`.
+
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:0.1.0-beta.2
+composer require notagil/integration-sdk:0.1.0-beta.3
 ```
 
 ## Uso Basico

@@ -34,14 +34,14 @@ paths:
     get:
       tags: [Companies]
       operationId: listCompanies
-      x-required-scopes: [companies:read]
+      x-required-scopes: ["companies:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
   /companies/{company_id}:
     get:
       tags: [Companies]
       operationId: getCompany
-      x-required-scopes: [companies:read]
+      x-required-scopes: ["companies:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
@@ -49,14 +49,14 @@ paths:
     get:
       tags: [Configuration]
       operationId: getCompanyConfiguration
-      x-required-scopes: [configuration:read]
+      x-required-scopes: ["configuration:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
     put:
       tags: [Configuration]
       operationId: updateCompanyConfiguration
-      x-required-scopes: [configuration:write]
+      x-required-scopes: ["configuration:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
@@ -66,7 +66,7 @@ paths:
       tags: [Configuration]
       operationId: getCompanyNfseProviderInfo
       description: Returns the dynamic NFSe form policy required by the resolved municipal provider.
-      x-required-scopes: [configuration:read]
+      x-required-scopes: ["configuration:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/MunicipioQuery"
@@ -84,14 +84,14 @@ paths:
     get:
       tags: [Fiscal Operations]
       operationId: listCompanyFiscalOperationProfiles
-      x-required-scopes: [fiscal:operations:read]
+      x-required-scopes: ["fiscal:operations:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Fiscal Operations]
       operationId: createCompanyFiscalOperationProfile
-      x-required-scopes: [fiscal:operations:write]
+      x-required-scopes: ["fiscal:operations:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
@@ -100,7 +100,7 @@ paths:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalOperationProfile
-      x-required-scopes: [fiscal:operations:write]
+      x-required-scopes: ["fiscal:operations:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: profile_id
@@ -113,7 +113,7 @@ paths:
     delete:
       tags: [Fiscal Operations]
       operationId: deleteCompanyFiscalOperationProfile
-      x-required-scopes: [fiscal:operations:write]
+      x-required-scopes: ["fiscal:operations:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: profile_id
@@ -126,14 +126,14 @@ paths:
     get:
       tags: [Fiscal Rates]
       operationId: listCompanyFiscalRateReferences
-      x-required-scopes: [fiscal:rates:read]
+      x-required-scopes: ["fiscal:rates:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Fiscal Rates]
       operationId: createCompanyFiscalRateReference
-      x-required-scopes: [fiscal:rates:write]
+      x-required-scopes: ["fiscal:rates:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
@@ -142,7 +142,7 @@ paths:
     put:
       tags: [Fiscal Rates]
       operationId: updateCompanyFiscalRateReference
-      x-required-scopes: [fiscal:rates:write]
+      x-required-scopes: ["fiscal:rates:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: rate_reference_id
@@ -155,7 +155,7 @@ paths:
     delete:
       tags: [Fiscal Rates]
       operationId: deleteCompanyFiscalRateReference
-      x-required-scopes: [fiscal:rates:write]
+      x-required-scopes: ["fiscal:rates:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: rate_reference_id
@@ -168,14 +168,14 @@ paths:
     get:
       tags: [Fiscal Rules]
       operationId: listCompanyFiscalTaxRuleSets
-      x-required-scopes: [fiscal:rules:read]
+      x-required-scopes: ["fiscal:rules:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Fiscal Rules]
       operationId: createCompanyFiscalTaxRuleSet
-      x-required-scopes: [fiscal:rules:write]
+      x-required-scopes: ["fiscal:rules:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
@@ -184,7 +184,7 @@ paths:
     put:
       tags: [Fiscal Rules]
       operationId: updateCompanyFiscalTaxRuleSet
-      x-required-scopes: [fiscal:rules:write]
+      x-required-scopes: ["fiscal:rules:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: tax_rule_set_id
@@ -197,7 +197,7 @@ paths:
     delete:
       tags: [Fiscal Rules]
       operationId: deleteCompanyFiscalTaxRuleSet
-      x-required-scopes: [fiscal:rules:write]
+      x-required-scopes: ["fiscal:rules:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: tax_rule_set_id
@@ -210,7 +210,7 @@ paths:
     post:
       tags: [Documents]
       operationId: previewCompanyDocument
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/DocumentPreview" }
       responses:
@@ -220,7 +220,7 @@ paths:
       tags: [Documents]
       operationId: previewCompanyDocumentByOperation
       description: Resolves the fiscal operation by code and previews a document from a snapshot-shaped input contract.
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/OperationCode"
@@ -231,7 +231,7 @@ paths:
     get:
       tags: [Documents]
       operationId: listCompanyDocuments
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/DocumentTypeQuery"
@@ -240,7 +240,7 @@ paths:
     post:
       tags: [Documents]
       operationId: createCompanyDocument
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -252,7 +252,7 @@ paths:
       tags: [Documents]
       operationId: createCompanyDocumentByOperation
       description: Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract.
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/OperationCode"
@@ -264,7 +264,7 @@ paths:
     get:
       tags: [Documents]
       operationId: getCompanyDocument
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/ExternalId"
@@ -274,7 +274,7 @@ paths:
     post:
       tags: [Documents]
       operationId: cancelCompanyDocument
-      x-required-scopes: [documents:cancel]
+      x-required-scopes: ["documents:cancel"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/ExternalId"
@@ -285,7 +285,7 @@ paths:
     post:
       tags: [Documents]
       operationId: correctCompanyDocument
-      x-required-scopes: [documents:correct]
+      x-required-scopes: ["documents:correct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/ExternalId"
@@ -296,7 +296,7 @@ paths:
     post:
       tags: [Documents]
       operationId: createCompanyDirectDocument
-      x-required-scopes: [documents:direct]
+      x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -307,7 +307,7 @@ paths:
     post:
       tags: [Documents]
       operationId: transmitCompanyDirectXml
-      x-required-scopes: [documents:direct]
+      x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -318,14 +318,14 @@ paths:
     get:
       tags: [Products]
       operationId: listProducts
-      x-required-scopes: [products:read]
+      x-required-scopes: ["products:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Products]
       operationId: createProduct
-      x-required-scopes: [products:write]
+      x-required-scopes: ["products:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
@@ -334,7 +334,7 @@ paths:
     get:
       tags: [Products]
       operationId: getProduct
-      x-required-scopes: [products:read]
+      x-required-scopes: ["products:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: product_id
@@ -346,7 +346,7 @@ paths:
     put:
       tags: [Products]
       operationId: updateProduct
-      x-required-scopes: [products:write]
+      x-required-scopes: ["products:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: product_id
@@ -359,7 +359,7 @@ paths:
     delete:
       tags: [Products]
       operationId: deleteProduct
-      x-required-scopes: [products:delete]
+      x-required-scopes: ["products:delete"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: product_id
@@ -372,14 +372,14 @@ paths:
     get:
       tags: [Takers]
       operationId: listTakers
-      x-required-scopes: [takers:read]
+      x-required-scopes: ["takers:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Takers]
       operationId: createTaker
-      x-required-scopes: [takers:write]
+      x-required-scopes: ["takers:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
@@ -388,13 +388,13 @@ paths:
     get:
       tags: [Webhooks]
       operationId: listWebhooks
-      x-required-scopes: [webhooks:read]
+      x-required-scopes: ["webhooks:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Webhooks]
       operationId: createWebhook
-      x-required-scopes: [webhooks:write, webhooks:manage]
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
@@ -402,7 +402,7 @@ paths:
     put:
       tags: [Webhooks]
       operationId: updateWebhook
-      x-required-scopes: [webhooks:write, webhooks:manage]
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
           in: path
@@ -414,7 +414,7 @@ paths:
     delete:
       tags: [Webhooks]
       operationId: deleteWebhook
-      x-required-scopes: [webhooks:write, webhooks:manage]
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
           in: path
@@ -426,7 +426,7 @@ paths:
     post:
       tags: [Webhooks]
       operationId: rotateWebhookSecret
-      x-required-scopes: [webhooks:write, webhooks:manage]
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
           in: path
@@ -438,7 +438,7 @@ paths:
     post:
       tags: [Webhooks]
       operationId: testWebhook
-      x-required-scopes: [webhooks:write, webhooks:manage]
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
           in: path
@@ -450,7 +450,7 @@ paths:
     get:
       tags: [Webhooks]
       operationId: listWebhookDeliveries
-      x-required-scopes: [webhooks:read]
+      x-required-scopes: ["webhooks:read"]
       parameters:
         - name: webhook_id
           in: path
@@ -462,14 +462,14 @@ paths:
     get:
       tags: [Metrics]
       operationId: getIntegrationMetrics
-      x-required-scopes: [metrics:read]
+      x-required-scopes: ["metrics:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /billing:
     get:
       tags: [Billing]
       operationId: getIntegrationBilling
-      x-required-scopes: [billing:read]
+      x-required-scopes: ["billing:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /documents:
@@ -478,14 +478,14 @@ paths:
       operationId: listDefaultCompanyDocuments
       deprecated: false
       description: Compatibility alias for the integration client's default company.
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       responses:
         "200": { $ref: "#/components/responses/PaginatedCollection" }
     post:
       tags: [Documents]
       operationId: createDefaultCompanyDocument
       description: Compatibility alias for the integration client's default company.
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
       responses:
@@ -495,7 +495,7 @@ paths:
       tags: [Documents]
       operationId: previewDefaultCompanyDocument
       description: Compatibility alias for the integration client's default company.
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       requestBody: { $ref: "#/components/requestBodies/DocumentPreview" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
@@ -504,7 +504,7 @@ paths:
       tags: [Documents]
       operationId: previewDefaultCompanyDocumentByOperation
       description: Compatibility alias for the default company. Resolves the fiscal operation by code and previews from snapshot-shaped input.
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/OperationCode"
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentPreview" }
@@ -515,7 +515,7 @@ paths:
       tags: [Documents]
       operationId: createDefaultCompanyDocumentByOperation
       description: Compatibility alias for the default company. Resolves the fiscal operation by code and queues from snapshot-shaped input.
-      x-required-scopes: [documents:write]
+      x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/OperationCode"
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -526,7 +526,7 @@ paths:
     get:
       tags: [Documents]
       operationId: getDefaultCompanyDocument
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters: [{ $ref: "#/components/parameters/ExternalId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
@@ -535,7 +535,7 @@ paths:
       tags: [Documents]
       operationId: createDefaultCompanyDirectDocument
       description: Compatibility alias for direct transmission on the integration client's default company.
-      x-required-scopes: [documents:direct]
+      x-required-scopes: ["documents:direct"]
       parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
       responses:
@@ -545,7 +545,7 @@ paths:
       tags: [Documents]
       operationId: transmitDefaultCompanyDirectXml
       description: Compatibility alias for direct XML transmission on the integration client's default company.
-      x-required-scopes: [documents:direct]
+      x-required-scopes: ["documents:direct"]
       parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
@@ -554,13 +554,13 @@ paths:
     get:
       tags: [Configuration]
       operationId: getDefaultCompanyConfiguration
-      x-required-scopes: [configuration:read]
+      x-required-scopes: ["configuration:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
     put:
       tags: [Configuration]
       operationId: updateDefaultCompanyConfiguration
-      x-required-scopes: [configuration:write]
+      x-required-scopes: ["configuration:write"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
@@ -569,7 +569,7 @@ paths:
       tags: [Configuration]
       operationId: getDefaultCompanyNfseProviderInfo
       description: Compatibility alias for the integration client's default company.
-      x-required-scopes: [configuration:read]
+      x-required-scopes: ["configuration:read"]
       parameters:
         - $ref: "#/components/parameters/MunicipioQuery"
         - $ref: "#/components/parameters/FiscalEnvironmentQuery"
@@ -586,7 +586,7 @@ paths:
     get:
       tags: [Documents]
       operationId: downloadDefaultCompanyDocumentXml
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters: [{ $ref: "#/components/parameters/ExternalId" }]
       responses:
         "200": { description: XML artifact. }
@@ -594,7 +594,7 @@ paths:
     get:
       tags: [Documents]
       operationId: downloadDefaultCompanyDocumentPdf
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters: [{ $ref: "#/components/parameters/ExternalId" }]
       responses:
         "200": { description: PDF artifact. }
@@ -602,7 +602,7 @@ paths:
     get:
       tags: [Documents]
       operationId: getDefaultCompanyDocumentSnapshot
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters: [{ $ref: "#/components/parameters/ExternalId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
@@ -610,7 +610,7 @@ paths:
     post:
       tags: [Documents]
       operationId: queryDefaultCompanyDocument
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters:
         - $ref: "#/components/parameters/ExternalId"
         - name: force_remote
@@ -623,13 +623,13 @@ paths:
     get:
       tags: [Configuration]
       operationId: listDefaultCompanyCertificates
-      x-required-scopes: [certificates:read]
+      x-required-scopes: ["certificates:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Configuration]
       operationId: createDefaultCompanyCertificate
-      x-required-scopes: [certificates:write]
+      x-required-scopes: ["certificates:write"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
@@ -637,7 +637,7 @@ paths:
     patch:
       tags: [Configuration]
       operationId: updateDefaultCompanyCertificate
-      x-required-scopes: [certificates:write]
+      x-required-scopes: ["certificates:write"]
       parameters:
         - name: certificate_id
           in: path
@@ -650,7 +650,7 @@ paths:
     post:
       tags: [Configuration]
       operationId: validateDefaultCompanyCertificate
-      x-required-scopes: [certificates:write]
+      x-required-scopes: ["certificates:write"]
       parameters:
         - name: certificate_id
           in: path
@@ -662,20 +662,20 @@ paths:
     get:
       tags: [Configuration]
       operationId: getDefaultCompanyReadiness
-      x-required-scopes: [onboarding:read, configuration:read]
+      x-required-scopes: ["onboarding:read", "configuration:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /onboarding/imports:
     get:
       tags: [Configuration]
       operationId: listDefaultCompanyOnboardingImports
-      x-required-scopes: [onboarding:read]
+      x-required-scopes: ["onboarding:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Configuration]
       operationId: createDefaultCompanyOnboardingImport
-      x-required-scopes: [onboarding:write]
+      x-required-scopes: ["onboarding:write"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
@@ -683,7 +683,7 @@ paths:
     get:
       tags: [Configuration]
       operationId: getDefaultCompanyOnboardingImport
-      x-required-scopes: [onboarding:read]
+      x-required-scopes: ["onboarding:read"]
       parameters:
         - name: import_id
           in: path
@@ -695,7 +695,7 @@ paths:
     post:
       tags: [Configuration]
       operationId: reviewDefaultCompanyOnboardingImport
-      x-required-scopes: [onboarding:write]
+      x-required-scopes: ["onboarding:write"]
       parameters:
         - name: import_id
           in: path
@@ -708,7 +708,7 @@ paths:
     post:
       tags: [Configuration]
       operationId: promoteDefaultCompanyOnboardingImport
-      x-required-scopes: [onboarding:promote]
+      x-required-scopes: ["onboarding:promote"]
       parameters:
         - name: import_id
           in: path
@@ -721,42 +721,42 @@ paths:
     get:
       tags: [Fiscal Catalog]
       operationId: listDefaultCompanyFiscalOptions
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /fiscal/cfops:
     get:
       tags: [Fiscal Catalog]
       operationId: listDefaultCompanyCfops
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
   /fiscal/utils/municipalities:
     get:
       tags: [Fiscal Catalog]
       operationId: searchDefaultCompanyMunicipalities
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /fiscal/utils/ncms:
     get:
       tags: [Fiscal Catalog]
       operationId: searchDefaultCompanyNcms
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /fiscal/tax-catalogs:
     get:
       tags: [Fiscal Catalog]
       operationId: listDefaultCompanyTaxCatalogs
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
   /fiscal/tax-catalogs/{catalog}/situations:
     get:
       tags: [Fiscal Catalog]
       operationId: listDefaultCompanyTaxSituations
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       parameters:
         - name: catalog
           in: path
@@ -768,7 +768,7 @@ paths:
     get:
       tags: [Fiscal Catalog]
       operationId: listDefaultCompanyTaxClassifications
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       parameters:
         - name: situation
           in: path
@@ -780,7 +780,7 @@ paths:
     get:
       tags: [Fiscal Catalog]
       operationId: getDefaultCompanyTaxConsequenceTemplate
-      x-required-scopes: [fiscal_catalog:read]
+      x-required-scopes: ["fiscal_catalog:read"]
       parameters:
         - name: situation
           in: path
@@ -792,14 +792,14 @@ paths:
     get:
       tags: [Documents]
       operationId: listDefaultCompanyUnifiedDocuments
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /consulta-notas/lookup:
     post:
       tags: [Documents]
       operationId: lookupDefaultCompanyUnifiedDocument
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
@@ -807,7 +807,7 @@ paths:
     get:
       tags: [Documents]
       operationId: downloadDefaultCompanyUnifiedDocumentXml
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters:
         - name: source
           in: path
@@ -823,7 +823,7 @@ paths:
     get:
       tags: [Documents]
       operationId: downloadDefaultCompanyUnifiedDocumentPdf
-      x-required-scopes: [documents:read]
+      x-required-scopes: ["documents:read"]
       parameters:
         - name: source
           in: path
@@ -839,14 +839,14 @@ paths:
     get:
       tags: [Documents]
       operationId: listDefaultCompanyInboundNfe
-      x-required-scopes: [inbound:read]
+      x-required-scopes: ["inbound:read"]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
   /inbound/nfe/sync:
     post:
       tags: [Documents]
       operationId: syncDefaultCompanyInboundNfe
-      x-required-scopes: [inbound:write]
+      x-required-scopes: ["inbound:write"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
@@ -854,27 +854,27 @@ paths:
     get:
       tags: [Stock]
       operationId: listDefaultCompanyStockMovements
-      x-required-scopes: [stock:read]
+      x-required-scopes: ["stock:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
   /stock/balance:
     get:
       tags: [Stock]
       operationId: getDefaultCompanyStockBalance
-      x-required-scopes: [stock:read]
+      x-required-scopes: ["stock:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
   /schedules:
     get:
       tags: [Schedules]
       operationId: listDefaultCompanySchedules
-      x-required-scopes: [schedules:read]
+      x-required-scopes: ["schedules:read"]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Schedules]
       operationId: createDefaultCompanySchedule
-      x-required-scopes: [schedules:write]
+      x-required-scopes: ["schedules:write"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }

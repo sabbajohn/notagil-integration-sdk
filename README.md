@@ -9,16 +9,18 @@ Este repositorio publica dois pacotes a partir do mesmo codigo fonte:
 
 O contrato OpenAPI versionado fica em `openapi/integration-v1.yaml`.
 
+A estrutura recomendada para preview e emissao fiscal por `operation_code` esta documentada em [docs/payload-emissao.md](docs/payload-emissao.md).
+
 ## Release Atual
 
-`v0.1.0-beta.2` evolui o beta publico do SDK.
+`v0.1.0-beta.3` evolui o beta publico do SDK.
 
-Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por payload legado ou por codigo de operacao com contrato `snapshot`, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
+Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por payload legado ou por codigo de operacao com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
 
 ## Instalacao PHP
 
 ```sh
-composer require notagil/integration-sdk:0.1.0-beta.2
+composer require notagil/integration-sdk:0.1.0-beta.3
 ```
 
 ```php
@@ -37,7 +39,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ## Instalacao TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@0.1.0-beta.2
+npm install @notagil/integration-sdk@0.1.0-beta.3
 ```
 
 ```ts
@@ -87,8 +89,8 @@ composer test
 4. Crie a tag semver, por exemplo:
 
 ```sh
-git tag v0.1.0-beta.2
-git push origin v0.1.0-beta.2
+git tag v0.1.0-beta.3
+git push origin v0.1.0-beta.3
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.

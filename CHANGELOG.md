@@ -4,6 +4,14 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-beta.3] - 2026-05-20
+
+### Added
+- Documentacao da estrutura padronizada do payload de emissao fiscal por `operation_code` e `snapshot`.
+
+### Changed
+- OpenAPI de integracao revisado para a superficie de emissao por `operation_code`.
+
 ## [0.1.0-beta.2] - 2026-05-20
 
 ### Added
