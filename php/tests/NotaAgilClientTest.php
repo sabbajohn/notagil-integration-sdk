@@ -13,22 +13,22 @@ use PHPUnit\Framework\TestCase;
 
 class NotaAgilClientTest extends TestCase
 {
-    public function test_create_document_sends_idempotency_key_and_bearer_token(): void
+    public function test_create_document_by_operation_sends_idempotency_key_and_bearer_token(): void
     {
         $history = [];
         $client = $this->client([new Response(202, [], json_encode(['data' => ['id' => '1']]))], $history);
 
-        $response = $client->createDocument('10', [
+        $response = $client->createDocumentByOperation('10', 'VENDA_BALCAO', [
             'external_id' => 'erp-1',
             'document_type' => 'nfce',
-            'payload' => [],
+            'snapshot' => ['items' => []],
         ], 'idem-1');
 
         $this->assertSame(['id' => '1'], $response);
         $request = $history[0]['request'];
         $this->assertSame('Bearer test-token', $request->getHeaderLine('Authorization'));
         $this->assertSame('idem-1', $request->getHeaderLine('Idempotency-Key'));
-        $this->assertSame('/api/v1/integrations/companies/10/documents', $request->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/documents/VENDA_BALCAO', $request->getUri()->getPath());
     }
 
     public function test_operation_code_document_methods_use_snapshot_contract_paths(): void
@@ -51,12 +51,12 @@ class NotaAgilClientTest extends TestCase
             ],
         ];
 
-        $preview = $client->previewDocumentByOperation('VENDA_NORMAL', $snapshotRequest);
+        $preview = $client->previewDocumentByOperation('10', 'VENDA_NORMAL', $snapshotRequest);
         $created = $client->createDocumentByOperation('10', 'VENDA_NORMAL', $snapshotRequest, 'idem-operation-1');
 
         $this->assertSame(['resolution_status' => 'resolved'], $preview);
         $this->assertSame(['id' => '1'], $created);
-        $this->assertSame('/api/v1/integrations/documents/VENDA_NORMAL/preview', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/documents/VENDA_NORMAL/preview', $history[0]['request']->getUri()->getPath());
         $this->assertSame('/api/v1/integrations/companies/10/documents/VENDA_NORMAL', $history[1]['request']->getUri()->getPath());
         $this->assertSame('idem-operation-1', $history[1]['request']->getHeaderLine('Idempotency-Key'));
         $this->assertStringContainsString('"snapshot"', (string) $history[1]['request']->getBody());
@@ -116,9 +116,9 @@ class NotaAgilClientTest extends TestCase
         ], $history);
 
         $download = $client->downloadDocumentXml('erp-1', '10');
-        $readiness = $client->readiness();
+        $readiness = $client->readiness('10');
         $cfops = $client->cfops('10');
-        $schedule = $client->createSchedule(['tipo' => 'unica', 'proxima_execucao' => '2026-01-01T00:00:00Z']);
+        $schedule = $client->createSchedule(['tipo' => 'unica', 'proxima_execucao' => '2026-01-01T00:00:00Z'], '10');
 
         $this->assertSame('<xml />', $download['content']);
         $this->assertSame('nfce.xml', $download['filename']);
@@ -126,9 +126,9 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame([['id' => 'cfop-1']], $cfops);
         $this->assertSame(['id' => 'schedule-1'], $schedule);
         $this->assertSame('/api/v1/integrations/companies/10/documents/erp-1/xml', $history[0]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/readiness', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/readiness', $history[1]['request']->getUri()->getPath());
         $this->assertSame('/api/v1/integrations/companies/10/fiscal/cfops', $history[2]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/schedules', $history[3]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/schedules', $history[3]['request']->getUri()->getPath());
     }
 
     public function test_webhook_signature_helper_matches_hmac_contract(): void

@@ -16,30 +16,8 @@ const client = new NotagilIntegrationClient({
   token: process.env.NOTAGIL_TOKEN!,
 });
 
-const preview = await client.previewDocument({
-  document_type: 'nfce',
-  payload: {
-    type: 'nfce',
-    fiscal_environment: 'homologacao',
-    operation_profile_id: 11,
-    consumer_final_pf: true,
-    items: [
-      {
-        product_id: 31,
-        sku: 'SKU-BALCAO-001',
-        description: 'Refeicao por quilo',
-        ncm: '21069090',
-        quantity: 1,
-        unit_price: 42.9,
-        gross_amount: 42.9,
-      },
-    ],
-  },
-});
-
-if (!preview.emission_allowed) {
-  throw new Error(`Resolucao fiscal pendente: ${preview.resolution_status}`);
-}
+const companies = await client.listCompanies();
+const companyId = companies[0].id;
 
 const snapshot = {
   fiscal_environment: 'homologacao',
@@ -67,38 +45,18 @@ const snapshot = {
   ],
 };
 
-await client.previewDocumentByOperation('VENDA_BALCAO', {
+const preview = await client.previewCompanyDocumentByOperation(companyId, 'VENDA_BALCAO', {
   external_id: 'pdv-preview-2026-0001',
   document_type: 'nfce',
   snapshot,
 });
 
-await client.createDocument(
-  {
-    external_id: 'pdv-2026-0001',
-    document_type: 'nfce',
-    payload: {
-      type: 'nfce',
-      fiscal_environment: 'homologacao',
-      operation_profile_id: 11,
-      consumer_final_pf: true,
-      items: [
-        {
-          product_id: 31,
-          sku: 'SKU-BALCAO-001',
-          description: 'Refeicao por quilo',
-          ncm: '21069090',
-          quantity: 1,
-          unit_price: 42.9,
-          gross_amount: 42.9,
-        },
-      ],
-    },
-  },
-  'idem-pdv-2026-0001',
-);
+if (!preview.emission_allowed) {
+  throw new Error(`Resolucao fiscal pendente: ${preview.resolution_status}`);
+}
 
-await client.createDocumentByOperation(
+await client.createCompanyDocumentByOperation(
+  companyId,
   'VENDA_BALCAO',
   {
     external_id: 'pdv-operation-2026-0001',
@@ -111,22 +69,22 @@ await client.createDocumentByOperation(
   'idem-pdv-operation-2026-0001',
 );
 
-const history = await client.listDocuments({
+const history = await client.listCompanyDocuments(companyId, {
   document_type: 'nfce',
   fiscal_status: 'authorized',
   per_page: 20,
 });
 
-const authorized = await client.waitDocument('pdv-2026-0001', { timeoutMs: 120_000 });
+const authorized = await client.waitDocument('pdv-operation-2026-0001', { companyId, timeoutMs: 120_000 });
 if (authorized.fiscal_status === 'authorized') {
-  const xml = await client.downloadDocumentXml('pdv-2026-0001');
-  const pdf = await client.downloadDocumentPdf('pdv-2026-0001');
+  const xml = await client.downloadDocumentXml('pdv-operation-2026-0001', companyId);
+  const pdf = await client.downloadDocumentPdf('pdv-operation-2026-0001', companyId);
   console.log(xml.filename, pdf.filename);
 }
 
-const companyConfig = await client.getCompanyConfiguration();
+const companyConfig = await client.getCompanyConfiguration(companyId);
 
-await client.updateCompanyConfiguration({
+await client.updateCompanyConfiguration(companyId, {
   ...companyConfig,
   telefone: '+55 11 4000-1234',
   nfse: {
@@ -139,31 +97,31 @@ await client.updateCompanyConfiguration({
 Prepare a company without using the NotaAgil frontend:
 
 ```ts
-const readiness = await client.getReadiness();
-const certificates = await client.listCertificates();
-const cfops = await client.listCfops();
-const catalogs = await client.listTaxCatalogs();
+const readiness = await client.getReadiness(companyId);
+const certificates = await client.listCertificates(companyId);
+const cfops = await client.listCfops(companyId);
+const catalogs = await client.listTaxCatalogs(companyId);
 
 await client.createOnboardingImport({
   source_type: 'xml',
   flow: 'saida',
   filename: 'historico-nfe.xml',
   xml: process.env.NFE_XML!,
-});
+}, companyId);
 ```
 
 Consume post-emission and inbound operations:
 
 ```ts
-const unified = await client.listUnifiedDocuments({ direction: 'saida', per_page: 20 });
-const inbound = await client.listInboundNfe({ status: 'pending' });
-const stock = await client.getStockBalance();
+const unified = await client.listUnifiedDocuments(companyId, { direction: 'saida', per_page: 20 });
+const inbound = await client.listInboundNfe(companyId, { status: 'pending' });
+const stock = await client.getStockBalance(companyId);
 
 await client.createSchedule({
   tipo: 'unica',
   proxima_execucao: '2026-01-20T09:00:00-03:00',
   nota_base: { document_type: 'nfce' },
-});
+}, companyId);
 ```
 
 Verify webhook signatures:
@@ -180,7 +138,8 @@ const expected = await NotagilIntegrationClient.webhookSignature(
 For clients that already assemble the complete fiscal form payload or XML, use the direct surface. This bypasses NotaAgil fiscal rule resolution and requires a token with `documents:direct`.
 
 ```ts
-await client.createDirectDocument(
+await client.createCompanyDirectDocument(
+  companyId,
   {
     external_id: 'erp-direct-2026-0001',
     document_type: 'nfe',
@@ -194,7 +153,8 @@ await client.createDirectDocument(
   'idem-direct-2026-0001',
 );
 
-await client.transmitDirectXml(
+await client.transmitCompanyDirectXml(
+  companyId,
   {
     external_id: 'erp-direct-xml-2026-0001',
     document_type: 'nfe',

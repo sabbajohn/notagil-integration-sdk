@@ -4,8 +4,6 @@ Este documento descreve o contrato recomendado para preview e emissao de documen
 
 A superficie preferencial e baseada no codigo da operacao fiscal:
 
-- `POST /api/v1/integrations/documents/{operation_code}/preview`
-- `POST /api/v1/integrations/documents/{operation_code}`
 - `POST /api/v1/integrations/companies/{company_id}/documents/{operation_code}/preview`
 - `POST /api/v1/integrations/companies/{company_id}/documents/{operation_code}`
 
@@ -256,7 +254,7 @@ Campos comuns de referencia:
 ## Exemplo Completo: Preview por Operacao
 
 ```bash
-curl -X POST "https://api.notagil.com.br/api/v1/integrations/documents/VENDA_BALCAO/preview" \
+curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO/preview" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -300,7 +298,7 @@ curl -X POST "https://api.notagil.com.br/api/v1/integrations/documents/VENDA_BAL
 ## Exemplo Completo: Emissao por Operacao
 
 ```bash
-curl -X POST "https://api.notagil.com.br/api/v1/integrations/documents/VENDA_BALCAO" \
+curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: erp-0001" \
@@ -337,53 +335,10 @@ curl -X POST "https://api.notagil.com.br/api/v1/integrations/documents/VENDA_BAL
   }'
 ```
 
-## Compatibilidade: Payload Legado
-
-As rotas antigas continuam funcionando:
-
-- `POST /api/v1/integrations/documents/preview`
-- `POST /api/v1/integrations/documents`
-- `POST /api/v1/integrations/companies/{company_id}/documents/preview`
-- `POST /api/v1/integrations/companies/{company_id}/documents`
-
-Nelas, a operacao ainda e enviada no corpo como `payload.operation_profile_id`.
-
-```json
-{
-  "external_id": "erp-0001",
-  "document_type": "nfce",
-  "payload": {
-    "type": "nfce",
-    "fiscal_environment": "homologacao",
-    "operation_profile_id": 11,
-    "document_data": {
-      "serie": "1",
-      "numero": "000001"
-    },
-    "counterparty": {
-      "final_consumer": true,
-      "uf": "SP"
-    },
-    "items": [
-      {
-        "product_id": 31,
-        "description": "Produto exemplo",
-        "quantity": 1,
-        "unit_price": 100,
-        "gross_amount": 100
-      }
-    ]
-  }
-}
-```
-
-Use esse formato apenas para clientes ja integrados ou casos em que o ID numerico do perfil de operacao ainda seja a referencia principal.
-
 ## Envio Direto
 
 As rotas diretas continuam separadas:
 
-- `POST /api/v1/integrations/direct/documents`
 - `POST /api/v1/integrations/companies/{company_id}/direct/documents`
 
 Essas rotas recebem um payload fiscal completo e bypassam a resolucao fiscal da NotaAgil. Use apenas quando o cliente ja monta integralmente o formato fiscal exigido para transmissao.
@@ -419,8 +374,6 @@ Essas rotas recebem um payload fiscal completo e bypassam a resolucao fiscal da 
 TypeScript:
 
 ```ts
-await client.previewDocumentByOperation('VENDA_BALCAO', payload);
-await client.createDocumentByOperation('VENDA_BALCAO', payload, 'idem-erp-0001');
 await client.previewCompanyDocumentByOperation(10, 'VENDA_BALCAO', payload);
 await client.createCompanyDocumentByOperation(10, 'VENDA_BALCAO', payload, 'idem-erp-0001');
 ```
@@ -428,7 +381,7 @@ await client.createCompanyDocumentByOperation(10, 'VENDA_BALCAO', payload, 'idem
 PHP:
 
 ```php
-$client->previewDocumentByOperation('VENDA_BALCAO', $payload);
+$client->previewDocumentByOperation(10, 'VENDA_BALCAO', $payload);
 $client->createDocumentByOperation(
     companyId: 10,
     operationCode: 'VENDA_BALCAO',

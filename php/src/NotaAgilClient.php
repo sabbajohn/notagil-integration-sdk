@@ -29,104 +29,61 @@ class NotaAgilClient
         return $this->request('GET', "/companies/{$companyId}");
     }
 
-    public function companyConfiguration(?string $companyId = null): array
+    public function companyConfiguration(string|int $companyId): array
     {
-        $path = $companyId === null ? '/configuration/company' : "/companies/{$companyId}/configuration";
-
-        return $this->request('GET', $path);
+        return $this->request('GET', "/companies/{$companyId}/configuration");
     }
 
-    public function updateCompanyConfiguration(array $payload, ?string $companyId = null): array
+    public function updateCompanyConfiguration(string|int $companyId, array $payload): array
     {
-        $path = $companyId === null ? '/configuration/company' : "/companies/{$companyId}/configuration";
-
-        return $this->request('PUT', $path, ['json' => $payload]);
+        return $this->request('PUT', "/companies/{$companyId}/configuration", ['json' => $payload]);
     }
 
-    public function nfseProviderInfo(array $filters = [], ?string $companyId = null): array
+    public function nfseProviderInfo(string|int $companyId, array $filters = []): array
     {
-        $path = $companyId === null ? '/nfse/provider-info' : "/companies/{$companyId}/nfse/provider-info";
-
-        return $this->request('GET', $this->withQuery($path, $filters));
+        return $this->request('GET', $this->withQuery("/companies/{$companyId}/nfse/provider-info", $filters));
     }
 
-    public function previewDocument(array $payload, ?string $companyId = null): array
+    public function previewDocumentByOperation(string|int $companyId, string $operationCode, array $payload): array
     {
-        $path = $companyId === null ? '/documents/preview' : "/companies/{$companyId}/documents/preview";
-
-        return $this->request('POST', $path, ['json' => $payload]);
+        return $this->request('POST', "/companies/{$companyId}/documents/".rawurlencode($operationCode).'/preview', ['json' => $payload]);
     }
 
-    public function previewDocumentByOperation(string $operationCode, array $payload, ?string $companyId = null): array
+    public function createDocumentByOperation(string|int $companyId, string $operationCode, array $payload, string $idempotencyKey): array
     {
-        $operationCode = rawurlencode($operationCode);
-        $path = $companyId === null
-            ? "/documents/{$operationCode}/preview"
-            : "/companies/{$companyId}/documents/{$operationCode}/preview";
-
-        return $this->request('POST', $path, ['json' => $payload]);
-    }
-
-    public function createDocument(?string $companyId, array $payload, string $idempotencyKey): array
-    {
-        $path = $companyId === null ? '/documents' : "/companies/{$companyId}/documents";
-
-        return $this->request('POST', $path, [
+        return $this->request('POST', "/companies/{$companyId}/documents/".rawurlencode($operationCode), [
             'json' => $payload,
             'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
     }
 
-    public function createDocumentByOperation(?string $companyId, string $operationCode, array $payload, string $idempotencyKey): array
+    public function createDirectDocument(string|int $companyId, array $payload, string $idempotencyKey): array
     {
-        $operationCode = rawurlencode($operationCode);
-        $path = $companyId === null
-            ? "/documents/{$operationCode}"
-            : "/companies/{$companyId}/documents/{$operationCode}";
-
-        return $this->request('POST', $path, [
+        return $this->request('POST', "/companies/{$companyId}/direct/documents", [
             'json' => $payload,
             'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
     }
 
-    public function createDirectDocument(?string $companyId, array $payload, string $idempotencyKey): array
+    public function transmitDirectXml(string|int $companyId, array $payload, string $idempotencyKey): array
     {
-        $path = $companyId === null ? '/direct/documents' : "/companies/{$companyId}/direct/documents";
-
-        return $this->request('POST', $path, [
+        return $this->request('POST', "/companies/{$companyId}/direct/documents/xml", [
             'json' => $payload,
             'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
     }
 
-    public function transmitDirectXml(?string $companyId, array $payload, string $idempotencyKey): array
+    public function document(string $externalId, string|int $companyId): array
     {
-        $path = $companyId === null ? '/direct/documents/xml' : "/companies/{$companyId}/direct/documents/xml";
-
-        return $this->request('POST', $path, [
-            'json' => $payload,
-            'headers' => ['Idempotency-Key' => $idempotencyKey],
-        ]);
+        return $this->request('GET', "/companies/{$companyId}/documents/" . rawurlencode($externalId));
     }
 
-    public function document(string $externalId, ?string $companyId = null): array
+    public function documents(string|int $companyId, array $filters = []): array
     {
-        $path = $companyId === null
-            ? '/documents/' . rawurlencode($externalId)
-            : "/companies/{$companyId}/documents/" . rawurlencode($externalId);
-
-        return $this->request('GET', $path);
+        return $this->request('GET', $this->withQuery("/companies/{$companyId}/documents", $filters), unwrapData: false);
     }
 
-    public function documents(array $filters = [], ?string $companyId = null): array
-    {
-        $path = $companyId === null ? '/documents' : "/companies/{$companyId}/documents";
-
-        return $this->request('GET', $this->withQuery($path, $filters), unwrapData: false);
-    }
-
-    public function waitDocument(string $externalId, ?string $companyId = null, int $timeoutSeconds = 120, int $intervalMilliseconds = 2000): array
+    public function waitDocument(string $externalId, string|int $companyId, int $timeoutSeconds = 120, int $intervalMilliseconds = 2000): array
     {
         $started = microtime(true);
         $terminalFiscal = ['authorized', 'rejected', 'cancelled', 'corrected'];
@@ -147,44 +104,36 @@ class NotaAgilClient
         return $document;
     }
 
-    public function downloadDocumentXml(string $externalId, ?string $companyId = null): array
+    public function downloadDocumentXml(string $externalId, string|int $companyId): array
     {
         return $this->download($this->documentArtifactPath($externalId, 'xml', $companyId));
     }
 
-    public function downloadDocumentPdf(string $externalId, ?string $companyId = null): array
+    public function downloadDocumentPdf(string $externalId, string|int $companyId): array
     {
         return $this->download($this->documentArtifactPath($externalId, 'pdf', $companyId));
     }
 
-    public function documentSnapshot(string $externalId, ?string $companyId = null): array
+    public function documentSnapshot(string $externalId, string|int $companyId): array
     {
         return $this->request('GET', $this->documentArtifactPath($externalId, 'snapshot', $companyId));
     }
 
-    public function queryDocument(string $externalId, ?string $companyId = null, bool $forceRemote = false): array
+    public function queryDocument(string $externalId, string|int $companyId, bool $forceRemote = false): array
     {
         return $this->request('POST', $this->withQuery($this->documentArtifactPath($externalId, 'query', $companyId), [
             'force_remote' => $forceRemote ? 1 : null,
         ]));
     }
 
-    public function cancelDocument(string $externalId, string $reason, ?string $companyId = null): array
+    public function cancelDocument(string $externalId, string $reason, string|int $companyId): array
     {
-        $path = $companyId === null
-            ? '/documents/' . rawurlencode($externalId) . '/cancel'
-            : "/companies/{$companyId}/documents/" . rawurlencode($externalId) . '/cancel';
-
-        return $this->request('POST', $path, ['json' => ['reason' => $reason]]);
+        return $this->request('POST', "/companies/{$companyId}/documents/" . rawurlencode($externalId) . '/cancel', ['json' => ['reason' => $reason]]);
     }
 
-    public function correctDocument(string $externalId, string $correcao, ?int $sequencia = null, ?string $companyId = null): array
+    public function correctDocument(string $externalId, string $correcao, ?int $sequencia, string|int $companyId): array
     {
-        $path = $companyId === null
-            ? '/documents/' . rawurlencode($externalId) . '/correct'
-            : "/companies/{$companyId}/documents/" . rawurlencode($externalId) . '/correct';
-
-        return $this->request('POST', $path, ['json' => array_filter([
+        return $this->request('POST', "/companies/{$companyId}/documents/" . rawurlencode($externalId) . '/correct', ['json' => array_filter([
             'correcao' => $correcao,
             'sequencia' => $sequencia,
         ], static fn ($value): bool => $value !== null)]);
@@ -285,92 +234,92 @@ class NotaAgilClient
         return $this->request('GET', '/billing');
     }
 
-    public function certificates(?string $companyId = null): array
+    public function certificates(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/certificates', $companyId));
     }
 
-    public function createCertificate(array $payload, ?string $companyId = null): array
+    public function createCertificate(array $payload, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/certificates', $companyId), ['json' => $payload]);
     }
 
-    public function updateCertificate(string|int $certificateId, array $payload, ?string $companyId = null): array
+    public function updateCertificate(string|int $certificateId, array $payload, string|int $companyId): array
     {
         return $this->request('PATCH', $this->companyPath('/certificates/'.$certificateId, $companyId), ['json' => $payload]);
     }
 
-    public function validateCertificate(string|int $certificateId, ?string $companyId = null): array
+    public function validateCertificate(string|int $certificateId, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/certificates/'.$certificateId.'/validate', $companyId));
     }
 
-    public function readiness(?string $companyId = null): array
+    public function readiness(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/readiness', $companyId));
     }
 
-    public function onboardingImports(?string $companyId = null): array
+    public function onboardingImports(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/onboarding/imports', $companyId));
     }
 
-    public function createOnboardingImport(array $payload, ?string $companyId = null): array
+    public function createOnboardingImport(array $payload, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/onboarding/imports', $companyId), ['json' => $payload]);
     }
 
-    public function onboardingImport(string|int $importId, ?string $companyId = null): array
+    public function onboardingImport(string|int $importId, string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/onboarding/imports/'.$importId, $companyId));
     }
 
-    public function reviewOnboardingImport(string|int $importId, array $payload, ?string $companyId = null): array
+    public function reviewOnboardingImport(string|int $importId, array $payload, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/onboarding/imports/'.$importId.'/review', $companyId), ['json' => $payload]);
     }
 
-    public function promoteOnboardingImport(string|int $importId, array $payload = [], ?string $companyId = null): array
+    public function promoteOnboardingImport(string|int $companyId, string|int $importId, array $payload = []): array
     {
         return $this->request('POST', $this->companyPath('/onboarding/imports/'.$importId.'/promote', $companyId), ['json' => $payload]);
     }
 
-    public function fiscalOptions(?string $companyId = null): array
+    public function fiscalOptions(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/fiscal/options', $companyId));
     }
 
-    public function cfops(?string $companyId = null): array
+    public function cfops(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/fiscal/cfops', $companyId));
     }
 
-    public function municipalities(array $filters = [], ?string $companyId = null): array
+    public function municipalities(string|int $companyId, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/utils/municipalities', $companyId), $filters), unwrapData: false);
     }
 
-    public function ncms(array $filters, ?string $companyId = null): array
+    public function ncms(array $filters, string|int $companyId): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/utils/ncms', $companyId), $filters), unwrapData: false);
     }
 
-    public function taxCatalogs(array $filters = [], ?string $companyId = null): array
+    public function taxCatalogs(string|int $companyId, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-catalogs', $companyId), $filters));
     }
 
-    public function taxSituations(string|int $catalog, array $filters = [], ?string $companyId = null): array
+    public function taxSituations(string|int $companyId, string|int $catalog, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-catalogs/'.$catalog.'/situations', $companyId), $filters));
     }
 
-    public function taxClassifications(string|int $situation, array $filters = [], ?string $companyId = null): array
+    public function taxClassifications(string|int $companyId, string|int $situation, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-situations/'.$situation.'/classifications', $companyId), $filters));
     }
 
-    public function taxConsequenceTemplate(string|int $situation, array $filters, ?string $companyId = null): array
+    public function taxConsequenceTemplate(string|int $situation, array $filters, string|int $companyId): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-situations/'.$situation.'/consequence-template', $companyId), $filters));
     }
@@ -435,82 +384,82 @@ class NotaAgilClient
         return $this->request('DELETE', "/companies/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}");
     }
 
-    public function unifiedDocuments(array $filters = [], ?string $companyId = null): array
+    public function unifiedDocuments(string|int $companyId, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/consulta-notas', $companyId), $filters));
     }
 
-    public function lookupUnifiedDocument(array $payload, ?string $companyId = null): array
+    public function lookupUnifiedDocument(array $payload, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/consulta-notas/lookup', $companyId), ['json' => $payload]);
     }
 
-    public function downloadUnifiedDocumentXml(string $source, string|int $documentId, ?string $companyId = null): array
+    public function downloadUnifiedDocumentXml(string $source, string|int $documentId, string|int $companyId): array
     {
         return $this->download($this->companyPath('/consulta-notas/'.$source.'/'.$documentId.'/xml', $companyId));
     }
 
-    public function downloadUnifiedDocumentPdf(string $source, string|int $documentId, ?string $companyId = null): array
+    public function downloadUnifiedDocumentPdf(string $source, string|int $documentId, string|int $companyId): array
     {
         return $this->download($this->companyPath('/consulta-notas/'.$source.'/'.$documentId.'/pdf', $companyId));
     }
 
-    public function syncInboundNfe(array $payload = [], ?string $companyId = null): array
+    public function syncInboundNfe(string|int $companyId, array $payload = []): array
     {
         return $this->request('POST', $this->companyPath('/inbound/nfe/sync', $companyId), ['json' => $payload], unwrapData: false);
     }
 
-    public function inboundNfe(array $filters = [], ?string $companyId = null): array
+    public function inboundNfe(string|int $companyId, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/inbound/nfe', $companyId), $filters), unwrapData: false);
     }
 
-    public function manifestInboundNfe(string|int $documentId, array $payload, ?string $companyId = null): array
+    public function manifestInboundNfe(string|int $documentId, array $payload, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/manifest', $companyId), ['json' => $payload], unwrapData: false);
     }
 
-    public function downloadInboundNfeXml(string|int $documentId, ?string $companyId = null): array
+    public function downloadInboundNfeXml(string|int $documentId, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/download-xml', $companyId), unwrapData: false);
     }
 
-    public function updateInboundNfeEntryBookkeeping(string|int $documentId, array $payload, ?string $companyId = null): array
+    public function updateInboundNfeEntryBookkeeping(string|int $documentId, array $payload, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/entry-bookkeeping', $companyId), ['json' => $payload], unwrapData: false);
     }
 
-    public function confirmInboundNfeEntryBookkeeping(string|int $documentId, ?string $companyId = null): array
+    public function confirmInboundNfeEntryBookkeeping(string|int $documentId, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/entry-bookkeeping/confirm', $companyId), unwrapData: false);
     }
 
-    public function stockMovements(array $filters = [], ?string $companyId = null): array
+    public function stockMovements(string|int $companyId, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/stock/movements', $companyId), $filters));
     }
 
-    public function stockBalance(?string $companyId = null): array
+    public function stockBalance(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/stock/balance', $companyId));
     }
 
-    public function schedules(?string $companyId = null): array
+    public function schedules(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/schedules', $companyId));
     }
 
-    public function createSchedule(array $payload, ?string $companyId = null): array
+    public function createSchedule(array $payload, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/schedules', $companyId), ['json' => $payload]);
     }
 
-    public function updateSchedule(string|int $scheduleId, array $payload, ?string $companyId = null): array
+    public function updateSchedule(string|int $scheduleId, array $payload, string|int $companyId): array
     {
         return $this->request('PUT', $this->companyPath('/schedules/'.$scheduleId, $companyId), ['json' => $payload]);
     }
 
-    public function deleteSchedule(string|int $scheduleId, ?string $companyId = null): array
+    public function deleteSchedule(string|int $scheduleId, string|int $companyId): array
     {
         return $this->request('DELETE', $this->companyPath('/schedules/'.$scheduleId, $companyId));
     }
@@ -520,12 +469,12 @@ class NotaAgilClient
         return hash_hmac('sha256', "{$deliveryId}.{$timestamp}.{$body}", $secret);
     }
 
-    private function companyPath(string $path, ?string $companyId = null): string
+    private function companyPath(string $path, string|int $companyId): string
     {
-        return $companyId === null ? $path : "/companies/{$companyId}{$path}";
+        return "/companies/{$companyId}{$path}";
     }
 
-    private function documentArtifactPath(string $externalId, string $artifact, ?string $companyId = null): string
+    private function documentArtifactPath(string $externalId, string $artifact, string|int $companyId): string
     {
         return $this->companyPath('/documents/'.rawurlencode($externalId).'/'.$artifact, $companyId);
     }

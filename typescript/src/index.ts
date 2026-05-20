@@ -40,50 +40,6 @@ export interface NfseProviderInfo {
   warnings?: string[];
 }
 
-export interface FiscalPayload {
-  type: DocumentType;
-  fiscal_environment?: FiscalEnvironment;
-  operation_profile_id: string | number;
-  tomador_id?: string | number | null;
-  consumer_final_pf?: boolean;
-  counterparty?: Record<string, unknown>;
-  document_data?: Record<string, unknown>;
-  items: Array<Record<string, unknown> & {
-    product_id?: string | number | null;
-    cfop_id?: string | number | null;
-    sku?: string;
-    description?: string;
-    quantity: number;
-    unit_price: number;
-    gross_amount?: number;
-    codigo_servico_municipal?: string;
-    codigo_cnae?: string;
-    codigoCnae?: string;
-    codigo_atividade?: string;
-    manual_overrides?: {
-      codigo_tributacao_nacional?: string;
-      codigo_tributacao_municipal?: string;
-      codigo_nbs?: string;
-      codigo_cnae?: string;
-      codigo_atividade?: string;
-      [key: string]: unknown;
-    };
-  }>;
-  [key: string]: unknown;
-}
-
-export interface DocumentPreviewRequest {
-  external_id?: string;
-  document_type: DocumentType;
-  municipio?: string | null;
-  payload: FiscalPayload;
-  metadata?: Record<string, unknown>;
-}
-
-export interface DocumentSubmitRequest extends DocumentPreviewRequest {
-  external_id: string;
-}
-
 export interface OperationDocumentSnapshotItem extends Record<string, unknown> {
   product_id?: string | number | null;
   cfop_id?: string | number | null;
@@ -155,7 +111,7 @@ export interface DirectXmlSubmitRequest {
 export interface PreviewResult {
   resolution_status: ResolutionStatus;
   emission_allowed: boolean;
-  payload?: FiscalPayload;
+  payload?: Record<string, unknown>;
   resolved_profiles?: Record<string, unknown>;
   snapshot_preview?: Record<string, unknown>;
   tax_resolution?: Record<string, unknown>;
@@ -267,7 +223,7 @@ export interface DownloadResult {
 }
 
 export interface WaitDocumentOptions {
-  companyId?: string | number;
+  companyId: string | number;
   intervalMs?: number;
   timeoutMs?: number;
   terminalFiscalStatuses?: string[];
@@ -315,67 +271,6 @@ export class NotagilIntegrationClient {
     });
   }
 
-  previewDocument(payload: DocumentPreviewRequest): Promise<PreviewResult> {
-    return this.request<PreviewResult>('/documents/preview', {
-      method: 'POST',
-      body: payload,
-    });
-  }
-
-  previewDocumentByOperation(operationCode: string, payload: OperationDocumentPreviewRequest): Promise<PreviewResult> {
-    return this.request<PreviewResult>(`/documents/${encodeURIComponent(operationCode)}/preview`, {
-      method: 'POST',
-      body: payload,
-    });
-  }
-
-  createDocument(payload: DocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
-    return this.request<DocumentAccepted>('/documents', {
-      method: 'POST',
-      headers: {
-        'Idempotency-Key': idempotencyKey,
-      },
-      body: payload,
-    });
-  }
-
-  createDocumentByOperation(operationCode: string, payload: OperationDocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
-    return this.request<DocumentAccepted>(`/documents/${encodeURIComponent(operationCode)}`, {
-      method: 'POST',
-      headers: {
-        'Idempotency-Key': idempotencyKey,
-      },
-      body: payload,
-    });
-  }
-
-  createDirectDocument(payload: DirectDocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
-    return this.request<DocumentAccepted>('/direct/documents', {
-      method: 'POST',
-      headers: {
-        'Idempotency-Key': idempotencyKey,
-      },
-      body: payload,
-    });
-  }
-
-  transmitDirectXml(payload: DirectXmlSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
-    return this.request<DocumentAccepted>('/direct/documents/xml', {
-      method: 'POST',
-      headers: {
-        'Idempotency-Key': idempotencyKey,
-      },
-      body: payload,
-    });
-  }
-
-  previewCompanyDocument(companyId: string | number, payload: DocumentPreviewRequest): Promise<PreviewResult> {
-    return this.request<PreviewResult>(`/companies/${encodeURIComponent(String(companyId))}/documents/preview`, {
-      method: 'POST',
-      body: payload,
-    });
-  }
-
   previewCompanyDocumentByOperation(
     companyId: string | number,
     operationCode: string,
@@ -388,16 +283,6 @@ export class NotagilIntegrationClient {
         body: payload,
       },
     );
-  }
-
-  createCompanyDocument(companyId: string | number, payload: DocumentSubmitRequest, idempotencyKey: string): Promise<DocumentAccepted> {
-    return this.request<DocumentAccepted>(`/companies/${encodeURIComponent(String(companyId))}/documents`, {
-      method: 'POST',
-      headers: {
-        'Idempotency-Key': idempotencyKey,
-      },
-      body: payload,
-    });
   }
 
   createCompanyDocumentByOperation(
@@ -454,13 +339,7 @@ export class NotagilIntegrationClient {
     );
   }
 
-  getDocument(externalId: string): Promise<DocumentStatus> {
-    return this.request<DocumentStatus>(`/documents/${encodeURIComponent(externalId)}`, {
-      method: 'GET',
-    });
-  }
-
-  async waitDocument(externalId: string, options: WaitDocumentOptions = {}): Promise<DocumentStatus> {
+  async waitDocument(externalId: string, options: WaitDocumentOptions): Promise<DocumentStatus> {
     const intervalMs = options.intervalMs ?? 2000;
     const timeoutMs = options.timeoutMs ?? 120000;
     const fiscalTerminals = new Set(options.terminalFiscalStatuses ?? ['authorized', 'rejected', 'cancelled', 'corrected']);
@@ -468,9 +347,7 @@ export class NotagilIntegrationClient {
     const started = Date.now();
 
     while (true) {
-      const document = options.companyId === undefined
-        ? await this.getDocument(externalId)
-        : await this.getCompanyDocument(options.companyId, externalId);
+      const document = await this.getCompanyDocument(options.companyId, externalId);
 
       if (fiscalTerminals.has(String(document.fiscal_status)) || operationalTerminals.has(String(document.operational_status))) {
         return document;
@@ -484,67 +361,36 @@ export class NotagilIntegrationClient {
     }
   }
 
-  listDocuments(filters: DocumentListFilters = {}): Promise<PaginatedDocumentList> {
-    return this.request<PaginatedDocumentList>(this.withQuery('/documents', filters), {
-      method: 'GET',
-      unwrapData: false,
-    });
-  }
-
-  downloadDocumentXml(externalId: string, companyId?: string | number): Promise<DownloadResult> {
+  downloadDocumentXml(externalId: string, companyId: string | number): Promise<DownloadResult> {
     return this.download(this.documentArtifactPath(externalId, 'xml', companyId));
   }
 
-  downloadDocumentPdf(externalId: string, companyId?: string | number): Promise<DownloadResult> {
+  downloadDocumentPdf(externalId: string, companyId: string | number): Promise<DownloadResult> {
     return this.download(this.documentArtifactPath(externalId, 'pdf', companyId));
   }
 
-  getDocumentSnapshot(externalId: string, companyId?: string | number): Promise<Record<string, unknown>> {
+  getDocumentSnapshot(externalId: string, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.documentArtifactPath(externalId, 'snapshot', companyId), {
       method: 'GET',
     });
   }
 
-  queryDocument(externalId: string, companyId?: string | number, forceRemote = false): Promise<Record<string, unknown>> {
+  queryDocument(externalId: string, companyId: string | number, forceRemote = false): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.withQuery(this.documentArtifactPath(externalId, 'query', companyId), { force_remote: forceRemote ? 1 : undefined }), {
       method: 'POST',
     });
   }
 
-  getCompanyConfiguration(companyId?: string | number): Promise<CompanyConfigurationPayload> {
-    const path = companyId === undefined
-      ? '/configuration/company'
-      : `/companies/${encodeURIComponent(String(companyId))}/configuration`;
-
-    return this.request<CompanyConfigurationPayload>(path, {
+  getCompanyConfiguration(companyId: string | number): Promise<CompanyConfigurationPayload> {
+    return this.request<CompanyConfigurationPayload>(`/companies/${encodeURIComponent(String(companyId))}/configuration`, {
       method: 'GET',
     });
   }
 
-  updateCompanyConfiguration(payload: CompanyConfigurationPayload, companyId?: string | number): Promise<CompanyConfigurationPayload> {
-    const path = companyId === undefined
-      ? '/configuration/company'
-      : `/companies/${encodeURIComponent(String(companyId))}/configuration`;
-
-    return this.request<CompanyConfigurationPayload>(path, {
+  updateCompanyConfiguration(companyId: string | number, payload: CompanyConfigurationPayload): Promise<CompanyConfigurationPayload> {
+    return this.request<CompanyConfigurationPayload>(`/companies/${encodeURIComponent(String(companyId))}/configuration`, {
       method: 'PUT',
       body: payload,
-    });
-  }
-
-  getNfseProviderInfo(params: { municipio?: string | null; fiscal_environment?: FiscalEnvironment } = {}): Promise<NfseProviderInfo> {
-    const query = new URLSearchParams();
-    if (params.municipio) {
-      query.set('municipio', params.municipio);
-    }
-    if (params.fiscal_environment) {
-      query.set('fiscal_environment', params.fiscal_environment);
-    }
-
-    const path = query.size > 0 ? `/nfse/provider-info?${query.toString()}` : '/nfse/provider-info';
-
-    return this.request<NfseProviderInfo>(path, {
-      method: 'GET',
     });
   }
 
@@ -567,27 +413,10 @@ export class NotagilIntegrationClient {
     });
   }
 
-  cancelDocument(externalId: string, reason: string): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>(`/documents/${encodeURIComponent(externalId)}/cancel`, {
-      method: 'POST',
-      body: { reason },
-    });
-  }
-
   cancelCompanyDocument(companyId: string | number, externalId: string, reason: string): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(`/companies/${encodeURIComponent(String(companyId))}/documents/${encodeURIComponent(externalId)}/cancel`, {
       method: 'POST',
       body: { reason },
-    });
-  }
-
-  correctDocument(externalId: string, correcao: string, sequencia?: number): Promise<DocumentStatus> {
-    return this.request<DocumentStatus>(`/documents/${encodeURIComponent(externalId)}/correct`, {
-      method: 'POST',
-      body: {
-        correcao,
-        ...(sequencia === undefined ? {} : { sequencia }),
-      },
     });
   }
 
@@ -722,75 +551,75 @@ export class NotagilIntegrationClient {
     });
   }
 
-  listCertificates(companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listCertificates(companyId: string | number): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.companyPath('/certificates', companyId), { method: 'GET' });
   }
 
-  createCertificate(payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  createCertificate(payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/certificates', companyId), { method: 'POST', body: payload });
   }
 
-  updateCertificate(certificateId: string | number, payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  updateCertificate(certificateId: string | number, payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/certificates/${encodeURIComponent(String(certificateId))}`, companyId), { method: 'PATCH', body: payload });
   }
 
-  validateCertificate(certificateId: string | number, companyId?: string | number): Promise<Record<string, unknown>> {
+  validateCertificate(certificateId: string | number, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/certificates/${encodeURIComponent(String(certificateId))}/validate`, companyId), { method: 'POST' });
   }
 
-  getReadiness(companyId?: string | number): Promise<Record<string, unknown>> {
+  getReadiness(companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/readiness', companyId), { method: 'GET' });
   }
 
-  listOnboardingImports(companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listOnboardingImports(companyId: string | number): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.companyPath('/onboarding/imports', companyId), { method: 'GET' });
   }
 
-  createOnboardingImport(payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  createOnboardingImport(payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/onboarding/imports', companyId), { method: 'POST', body: payload });
   }
 
-  getOnboardingImport(importId: string | number, companyId?: string | number): Promise<Record<string, unknown>> {
+  getOnboardingImport(importId: string | number, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/onboarding/imports/${encodeURIComponent(String(importId))}`, companyId), { method: 'GET' });
   }
 
-  reviewOnboardingImport(importId: string | number, payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  reviewOnboardingImport(importId: string | number, payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/onboarding/imports/${encodeURIComponent(String(importId))}/review`, companyId), { method: 'POST', body: payload });
   }
 
-  promoteOnboardingImport(importId: string | number, payload: Record<string, unknown> = {}, companyId?: string | number): Promise<Record<string, unknown>> {
+  promoteOnboardingImport(companyId: string | number, importId: string | number, payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/onboarding/imports/${encodeURIComponent(String(importId))}/promote`, companyId), { method: 'POST', body: payload });
   }
 
-  listFiscalOptions(companyId?: string | number): Promise<Record<string, unknown>> {
+  listFiscalOptions(companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/fiscal/options', companyId), { method: 'GET' });
   }
 
-  listCfops(companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listCfops(companyId: string | number): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.companyPath('/fiscal/cfops', companyId), { method: 'GET' });
   }
 
-  searchMunicipalities(params: Record<string, string | number | boolean | null | undefined> = {}, companyId?: string | number): Promise<Record<string, unknown>> {
+  searchMunicipalities(companyId: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.withQuery(this.companyPath('/fiscal/utils/municipalities', companyId), params), { method: 'GET', unwrapData: false });
   }
 
-  searchNcms(params: Record<string, string | number | boolean | null | undefined>, companyId?: string | number): Promise<Record<string, unknown>> {
+  searchNcms(params: Record<string, string | number | boolean | null | undefined>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.withQuery(this.companyPath('/fiscal/utils/ncms', companyId), params), { method: 'GET', unwrapData: false });
   }
 
-  listTaxCatalogs(params: Record<string, string | number | boolean | null | undefined> = {}, companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listTaxCatalogs(companyId: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.withQuery(this.companyPath('/fiscal/tax-catalogs', companyId), params), { method: 'GET' });
   }
 
-  listTaxSituations(catalog: string | number, params: Record<string, string | number | boolean | null | undefined> = {}, companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listTaxSituations(companyId: string | number, catalog: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.withQuery(this.companyPath(`/fiscal/tax-catalogs/${encodeURIComponent(String(catalog))}/situations`, companyId), params), { method: 'GET' });
   }
 
-  listTaxClassifications(situation: string | number, params: Record<string, string | number | boolean | null | undefined> = {}, companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listTaxClassifications(companyId: string | number, situation: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.withQuery(this.companyPath(`/fiscal/tax-situations/${encodeURIComponent(String(situation))}/classifications`, companyId), params), { method: 'GET' });
   }
 
-  getTaxConsequenceTemplate(situation: string | number, params: Record<string, string | number | boolean | null | undefined>, companyId?: string | number): Promise<Record<string, unknown>> {
+  getTaxConsequenceTemplate(situation: string | number, params: Record<string, string | number | boolean | null | undefined>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.withQuery(this.companyPath(`/fiscal/tax-situations/${encodeURIComponent(String(situation))}/consequence-template`, companyId), params), { method: 'GET' });
   }
 
@@ -873,67 +702,67 @@ export class NotagilIntegrationClient {
     });
   }
 
-  listUnifiedDocuments(params: Record<string, string | number | boolean | null | undefined> = {}, companyId?: string | number): Promise<Record<string, unknown>> {
+  listUnifiedDocuments(companyId: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.withQuery(this.companyPath('/consulta-notas', companyId), params), { method: 'GET' });
   }
 
-  lookupUnifiedDocument(payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  lookupUnifiedDocument(payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/consulta-notas/lookup', companyId), { method: 'POST', body: payload });
   }
 
-  downloadUnifiedDocumentXml(source: 'inbound' | 'outbound', documentId: string | number, companyId?: string | number): Promise<DownloadResult> {
+  downloadUnifiedDocumentXml(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number): Promise<DownloadResult> {
     return this.download(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/xml`, companyId));
   }
 
-  downloadUnifiedDocumentPdf(source: 'inbound' | 'outbound', documentId: string | number, companyId?: string | number): Promise<DownloadResult> {
+  downloadUnifiedDocumentPdf(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number): Promise<DownloadResult> {
     return this.download(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/pdf`, companyId));
   }
 
-  syncInboundNfe(payload: Record<string, unknown> = {}, companyId?: string | number): Promise<Record<string, unknown>> {
+  syncInboundNfe(companyId: string | number, payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/inbound/nfe/sync', companyId), { method: 'POST', body: payload, unwrapData: false });
   }
 
-  listInboundNfe(params: Record<string, string | number | boolean | null | undefined> = {}, companyId?: string | number): Promise<Record<string, unknown>> {
+  listInboundNfe(companyId: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.withQuery(this.companyPath('/inbound/nfe', companyId), params), { method: 'GET', unwrapData: false });
   }
 
-  manifestInboundNfe(documentId: string | number, payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  manifestInboundNfe(documentId: string | number, payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/manifest`, companyId), { method: 'POST', body: payload, unwrapData: false });
   }
 
-  downloadInboundNfeXml(documentId: string | number, companyId?: string | number): Promise<Record<string, unknown>> {
+  downloadInboundNfeXml(documentId: string | number, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/download-xml`, companyId), { method: 'POST', unwrapData: false });
   }
 
-  updateInboundNfeEntryBookkeeping(documentId: string | number, payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  updateInboundNfeEntryBookkeeping(documentId: string | number, payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/entry-bookkeeping`, companyId), { method: 'POST', body: payload, unwrapData: false });
   }
 
-  confirmInboundNfeEntryBookkeeping(documentId: string | number, companyId?: string | number): Promise<Record<string, unknown>> {
+  confirmInboundNfeEntryBookkeeping(documentId: string | number, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/entry-bookkeeping/confirm`, companyId), { method: 'POST', unwrapData: false });
   }
 
-  listStockMovements(params: Record<string, string | number | boolean | null | undefined> = {}, companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listStockMovements(companyId: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.withQuery(this.companyPath('/stock/movements', companyId), params), { method: 'GET' });
   }
 
-  getStockBalance(companyId?: string | number): Promise<Record<string, unknown>[]> {
+  getStockBalance(companyId: string | number): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.companyPath('/stock/balance', companyId), { method: 'GET' });
   }
 
-  listSchedules(companyId?: string | number): Promise<Record<string, unknown>[]> {
+  listSchedules(companyId: string | number): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.companyPath('/schedules', companyId), { method: 'GET' });
   }
 
-  createSchedule(payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  createSchedule(payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/schedules', companyId), { method: 'POST', body: payload });
   }
 
-  updateSchedule(scheduleId: string | number, payload: Record<string, unknown>, companyId?: string | number): Promise<Record<string, unknown>> {
+  updateSchedule(scheduleId: string | number, payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/schedules/${encodeURIComponent(String(scheduleId))}`, companyId), { method: 'PUT', body: payload });
   }
 
-  deleteSchedule(scheduleId: string | number, companyId?: string | number): Promise<DeleteResult> {
+  deleteSchedule(scheduleId: string | number, companyId: string | number): Promise<DeleteResult> {
     return this.request<DeleteResult>(this.companyPath(`/schedules/${encodeURIComponent(String(scheduleId))}`, companyId), { method: 'DELETE' });
   }
 
@@ -963,13 +792,11 @@ export class NotagilIntegrationClient {
     return query.size > 0 ? `${path}?${query.toString()}` : path;
   }
 
-  private companyPath(path: string, companyId?: string | number): string {
-    return companyId === undefined
-      ? path
-      : `/companies/${encodeURIComponent(String(companyId))}${path}`;
+  private companyPath(path: string, companyId: string | number): string {
+    return `/companies/${encodeURIComponent(String(companyId))}${path}`;
   }
 
-  private documentArtifactPath(externalId: string, artifact: 'xml' | 'pdf' | 'snapshot' | 'query', companyId?: string | number): string {
+  private documentArtifactPath(externalId: string, artifact: 'xml' | 'pdf' | 'snapshot' | 'query', companyId: string | number): string {
     return this.companyPath(`/documents/${encodeURIComponent(externalId)}/${artifact}`, companyId);
   }
 

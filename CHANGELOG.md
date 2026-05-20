@@ -11,6 +11,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as ve
 
 ### Changed
 - OpenAPI de integracao revisado para a superficie de emissao por `operation_code`.
+- Breaking beta: removidos aliases de empresa padrao e metodos de preview/emissao por `payload` legado.
+- SDKs PHP e TypeScript passam a exigir `companyId` para documentos, configuracoes, catalogos, onboarding, estoque e agendamentos.
 
 ## [0.1.0-beta.2] - 2026-05-20
 

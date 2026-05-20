@@ -15,7 +15,9 @@ A estrutura recomendada para preview e emissao fiscal por `operation_code` esta 
 
 `v0.1.0-beta.3` evolui o beta publico do SDK.
 
-Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por payload legado ou por codigo de operacao com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
+Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por `operation_code` com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto escopado por empresa, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
+
+Breaking beta: os aliases de empresa padrao e a emissao por `payload` legado foram removidos. Use sempre rotas/metodos com `companyId`.
 
 ## Instalacao PHP
 
@@ -50,7 +52,7 @@ const client = new NotagilIntegrationClient({
   token: process.env.NOTAGIL_TOKEN!,
 });
 
-const documents = await client.listDocuments({ per_page: 20 });
+const documents = await client.listCompanyDocuments(companies[0].id, { per_page: 20 });
 ```
 
 O pacote npm e publicado a partir do diretorio `typescript/`.

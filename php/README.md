@@ -22,22 +22,6 @@ $client = new NotaAgilClient(
 
 $companies = $client->companies();
 
-$document = $client->createDocument(
-    companyId: $companies[0]['id'],
-    payload: [
-        'external_id' => 'erp-0001',
-        'document_type' => 'nfce',
-        'payload' => [
-            'type' => 'nfce',
-            'operation_profile_id' => 11,
-            'items' => [
-                ['description' => 'Produto', 'quantity' => 1, 'unit_price' => 10],
-            ],
-        ],
-    ],
-    idempotencyKey: 'erp-0001',
-);
-
 $snapshot = [
     'fiscal_environment' => 'homologacao',
     'document_direction' => 'saida',
@@ -56,7 +40,7 @@ $snapshot = [
     ],
 ];
 
-$preview = $client->previewDocumentByOperation('VENDA_BALCAO', [
+$preview = $client->previewDocumentByOperation($companies[0]['id'], 'VENDA_BALCAO', [
     'external_id' => 'erp-preview-0002',
     'document_type' => 'nfce',
     'snapshot' => $snapshot,
@@ -73,10 +57,10 @@ $documentByOperation = $client->createDocumentByOperation(
     idempotencyKey: 'erp-0002',
 );
 
-$authorized = $client->waitDocument('erp-0001');
+$authorized = $client->waitDocument('erp-0002', $companies[0]['id']);
 if (($authorized['fiscal_status'] ?? null) === 'authorized') {
-    $xml = $client->downloadDocumentXml('erp-0001');
-    $pdf = $client->downloadDocumentPdf('erp-0001');
+    $xml = $client->downloadDocumentXml('erp-0002', $companies[0]['id']);
+    $pdf = $client->downloadDocumentPdf('erp-0002', $companies[0]['id']);
 }
 ```
 
