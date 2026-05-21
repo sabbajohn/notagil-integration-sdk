@@ -44,6 +44,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getCompanyConfiguration"];
+        /** @description Updates company configuration fields for the selected company. */
         put: operations["updateCompanyConfiguration"];
         post?: never;
         delete?: never;
@@ -78,6 +79,7 @@ export interface paths {
         };
         get: operations["listCompanyCertificates"];
         put?: never;
+        /** @description Creates and stores a new certificate for the selected company. */
         post: operations["createCompanyCertificate"];
         delete?: never;
         options?: never;
@@ -98,6 +100,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** @description Updates mutable certificate attributes such as its lifecycle status. */
         patch: operations["updateCompanyCertificate"];
         trace?: never;
     };
@@ -110,6 +113,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Validates the stored certificate contents without changing the stored certificate record. */
         post: operations["validateCompanyCertificate"];
         delete?: never;
         options?: never;
@@ -142,6 +146,7 @@ export interface paths {
         };
         get: operations["listCompanyOnboardingImports"];
         put?: never;
+        /** @description Creates a new onboarding import payload for later review and promotion. */
         post: operations["createCompanyOnboardingImport"];
         delete?: never;
         options?: never;
@@ -174,6 +179,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Reviews the staged onboarding import and records the review outcome. */
         post: operations["reviewCompanyOnboardingImport"];
         delete?: never;
         options?: never;
@@ -190,6 +196,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Promotes the reviewed onboarding import into company master data. */
         post: operations["promoteCompanyOnboardingImport"];
         delete?: never;
         options?: never;
@@ -325,6 +332,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{company_id}/fiscal/emitter-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompanyFiscalEmitterProfiles"];
+        put?: never;
+        /** @description Creates a fiscal emitter profile for the selected company. */
+        post: operations["createCompanyFiscalEmitterProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/emitter-profiles/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Updates the selected fiscal emitter profile. */
+        put: operations["updateCompanyFiscalEmitterProfile"];
+        post?: never;
+        /** @description Deletes the selected fiscal emitter profile. */
+        delete: operations["deleteCompanyFiscalEmitterProfile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/companies/{company_id}/fiscal/operation-profiles": {
         parameters: {
             query?: never;
@@ -334,6 +376,7 @@ export interface paths {
         };
         get: operations["listCompanyFiscalOperationProfiles"];
         put?: never;
+        /** @description Creates a fiscal operation profile for the selected company. */
         post: operations["createCompanyFiscalOperationProfile"];
         delete?: never;
         options?: never;
@@ -349,9 +392,46 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        /** @description Updates the selected fiscal operation profile. */
         put: operations["updateCompanyFiscalOperationProfile"];
         post?: never;
+        /** @description Deletes the selected fiscal operation profile. */
         delete: operations["deleteCompanyFiscalOperationProfile"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/profile-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompanyFiscalProfileAssignments"];
+        put?: never;
+        /** @description Creates a fiscal profile assignment for the selected company. */
+        post: operations["createCompanyFiscalProfileAssignment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/profile-assignments/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Updates the selected fiscal profile assignment. */
+        put: operations["updateCompanyFiscalProfileAssignment"];
+        post?: never;
+        /** @description Deletes the selected fiscal profile assignment. */
+        delete: operations["deleteCompanyFiscalProfileAssignment"];
         options?: never;
         head?: never;
         patch?: never;
@@ -366,6 +446,7 @@ export interface paths {
         };
         get: operations["listCompanyFiscalRateReferences"];
         put?: never;
+        /** @description Creates a company-scoped fiscal rate reference override. */
         post: operations["createCompanyFiscalRateReference"];
         delete?: never;
         options?: never;
@@ -381,8 +462,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        /** @description Updates the selected company-scoped fiscal rate reference. */
         put: operations["updateCompanyFiscalRateReference"];
         post?: never;
+        /** @description Deletes the selected company-scoped fiscal rate reference. */
         delete: operations["deleteCompanyFiscalRateReference"];
         options?: never;
         head?: never;
@@ -398,6 +481,7 @@ export interface paths {
         };
         get: operations["listCompanyFiscalTaxRuleSets"];
         put?: never;
+        /** @description Creates a company-scoped fiscal tax rule set. */
         post: operations["createCompanyFiscalTaxRuleSet"];
         delete?: never;
         options?: never;
@@ -413,8 +497,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        /** @description Updates the selected company-scoped fiscal tax rule set. */
         put: operations["updateCompanyFiscalTaxRuleSet"];
         post?: never;
+        /** @description Deletes the selected company-scoped fiscal tax rule set. */
         delete: operations["deleteCompanyFiscalTaxRuleSet"];
         options?: never;
         head?: never;
@@ -430,7 +516,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Resolves the fiscal operation by code and previews a document from a snapshot-shaped input contract. */
+        /** @description Resolves the fiscal operation by code and previews a document from a snapshot-shaped input contract without persisting or queueing emission. */
         post: operations["previewCompanyDocumentByOperation"];
         delete?: never;
         options?: never;
@@ -463,7 +549,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract. */
+        /** @description Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract. Requires `Idempotency-Key` and returns `202 Accepted` when the document was queued instead of completed inline. */
         post: operations["createCompanyDocumentByOperation"];
         delete?: never;
         options?: never;
@@ -544,6 +630,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Triggers an on-demand provider query for the stored document and returns the refreshed local and remote state. Use POST because it may contact external providers and persist refreshed artifacts. */
         post: operations["queryCompanyDocument"];
         delete?: never;
         options?: never;
@@ -560,6 +647,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Requests fiscal cancellation for the stored document and persists the resulting state transition. */
         post: operations["cancelCompanyDocument"];
         delete?: never;
         options?: never;
@@ -576,6 +664,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Requests a correction event for the stored document and persists the resulting correction metadata. */
         post: operations["correctCompanyDocument"];
         delete?: never;
         options?: never;
@@ -592,6 +681,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. */
         post: operations["createCompanyDirectDocument"];
         delete?: never;
         options?: never;
@@ -608,6 +698,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Queues a direct XML transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the XML was queued for processing. */
         post: operations["transmitCompanyDirectXml"];
         delete?: never;
         options?: never;
@@ -640,6 +731,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Looks up a unified inbound or outbound document view without creating a new fiscal document. */
         post: operations["lookupCompanyUnifiedDocument"];
         delete?: never;
         options?: never;
@@ -704,6 +796,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Pulls inbound NFe events from SEFAZ, persists newly discovered documents and updates the sync cursor for the selected company. */
         post: operations["syncCompanyInboundNfe"];
         delete?: never;
         options?: never;
@@ -711,32 +804,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/stock/movements": {
+    "/companies/{company_id}/inbound/nfe/{document_id}/manifest": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["listCompanyStockMovements"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** @description Registers an inbound NFe manifestation event and persists the resulting manifestation history. */
+        post: operations["manifestCompanyInboundNfe"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/stock/balance": {
+    "/companies/{company_id}/inbound/nfe/{document_id}/download-xml": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getCompanyStockBalance"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** @description Downloads the inbound NFe XML from the provider when needed and persists the downloaded XML on the local record. */
+        post: operations["downloadCompanyInboundNfeXml"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Stores inbound entry bookkeeping decisions for the selected inbound NFe document. */
+        post: operations["updateCompanyInboundNfeEntryBookkeeping"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Confirms previously staged inbound entry bookkeeping decisions for the selected inbound NFe document. */
+        post: operations["confirmCompanyInboundNfeEntryBookkeeping"];
         delete?: never;
         options?: never;
         head?: never;
@@ -752,6 +881,7 @@ export interface paths {
         };
         get: operations["listCompanySchedules"];
         put?: never;
+        /** @description Creates a company schedule for future automated fiscal execution. */
         post: operations["createCompanySchedule"];
         delete?: never;
         options?: never;
@@ -767,8 +897,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        /** @description Updates the selected company schedule. */
         put: operations["updateCompanySchedule"];
         post?: never;
+        /** @description Deletes the selected company schedule. */
         delete: operations["deleteCompanySchedule"];
         options?: never;
         head?: never;
@@ -784,6 +916,7 @@ export interface paths {
         };
         get: operations["listProducts"];
         put?: never;
+        /** @description Creates a product for the selected company. */
         post: operations["createProduct"];
         delete?: never;
         options?: never;
@@ -799,8 +932,10 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getProduct"];
+        /** @description Updates the selected product. */
         put: operations["updateProduct"];
         post?: never;
+        /** @description Deletes the selected product. */
         delete: operations["deleteProduct"];
         options?: never;
         head?: never;
@@ -816,8 +951,27 @@ export interface paths {
         };
         get: operations["listTakers"];
         put?: never;
+        /** @description Creates a taker for the selected company. */
         post: operations["createTaker"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/takers/{taker_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTaker"];
+        /** @description Updates the selected taker. */
+        put: operations["updateTaker"];
+        post?: never;
+        /** @description Deletes the selected taker. */
+        delete: operations["deleteTaker"];
         options?: never;
         head?: never;
         patch?: never;
@@ -832,6 +986,7 @@ export interface paths {
         };
         get: operations["listWebhooks"];
         put?: never;
+        /** @description Creates a webhook endpoint and returns the secret exactly once in the response payload. */
         post: operations["createWebhook"];
         delete?: never;
         options?: never;
@@ -847,8 +1002,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        /** @description Updates the selected webhook endpoint configuration. */
         put: operations["updateWebhook"];
         post?: never;
+        /** @description Deletes the selected webhook endpoint. */
         delete: operations["deleteWebhook"];
         options?: never;
         head?: never;
@@ -864,6 +1021,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Rotates the webhook secret and returns the new secret exactly once in the response payload. */
         post: operations["rotateWebhookSecret"];
         delete?: never;
         options?: never;
@@ -880,6 +1038,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Queues a synthetic webhook delivery to validate reachability and signature handling for the selected endpoint. */
         post: operations["testWebhook"];
         delete?: never;
         options?: never;
@@ -1018,47 +1177,767 @@ export interface components {
         };
         /** @enum {string} */
         NfsePolicyField: "service.municipal_code" | "service.national_tax_code" | "service.nbs" | "service.cnae_code" | "service.activity_code" | "prestador.op_simp_nac";
+        ResourceResponse: {
+            data?: {
+                [key: string]: unknown;
+            };
+        };
+        CollectionResponse: {
+            data?: {
+                [key: string]: unknown;
+            }[];
+        };
+        PaginatedCollectionResponse: {
+            data?: {
+                [key: string]: unknown;
+            }[];
+            meta?: components["schemas"]["PaginationMeta"];
+        };
+        ErrorResponse: {
+            message?: string;
+            code?: string;
+            details?: {
+                [key: string]: unknown;
+            } | {
+                [key: string]: unknown;
+            }[];
+            meta?: {
+                [key: string]: unknown;
+            };
+            errors?: {
+                [key: string]: unknown;
+            };
+            data?: {
+                [key: string]: unknown;
+            };
+            metadata?: {
+                [key: string]: unknown;
+            };
+            ok?: boolean;
+            error?: string | null;
+            error_code?: string;
+        };
+        DeleteResponse: {
+            data?: {
+                /** @constant */
+                deleted?: true;
+            };
+        };
+        PaginationMeta: {
+            current_page?: number;
+            last_page?: number;
+            per_page?: number;
+            total?: number;
+        };
+        Company: {
+            id?: string;
+            account_id?: string;
+            name?: string;
+            status?: string;
+            cnpj?: string | null;
+            razao_social?: string | null;
+            nome_fantasia?: string | null;
+            email?: string;
+            telefone?: string;
+            logradouro?: string;
+            numero?: string;
+            complemento?: string;
+            bairro?: string;
+            cep?: string;
+            municipio?: string;
+            uf?: string;
+            codigo_ibge?: string;
+            regime_tributario?: string;
+            crt?: string;
+            cnae_principal?: string;
+            company_size?: string;
+            icms_taxpayer_type?: string;
+            iss_taxpayer?: boolean;
+            ie_indicator?: string;
+            im_indicator?: string;
+            legal_nature?: string;
+            special_regime_code?: string;
+            country_code?: string;
+            is_mei?: boolean;
+            is_me?: boolean;
+            is_epp?: boolean;
+            is_simple_national?: boolean;
+            is_real_profit?: boolean;
+            is_presumed_profit?: boolean;
+            inscricao_estadual?: string;
+            inscricao_municipal?: string;
+            logo_url?: string | null;
+            lote_prefixo?: string;
+            lote_sincrono?: boolean;
+            default_fiscal_emitter_profile_id?: string | null;
+            default_fiscal_emitter_profile?: null | {
+                id?: string;
+                name?: string;
+            };
+            layout_cupom?: null | {
+                [key: string]: unknown;
+            };
+            nfse?: null | {
+                [key: string]: unknown;
+            };
+            created_at?: string | null;
+            updated_at?: string | null;
+        };
+        Certificate: {
+            id?: string;
+            empresa_id?: string;
+            name?: string;
+            numero_serie?: string | null;
+            data_validade?: string | null;
+            status?: string;
+            cnpj_cpf?: string | null;
+            sujeito?: string | null;
+            emissor?: string | null;
+            valido_desde?: string | null;
+            dias_restantes?: number | null;
+            certificate_size?: number | null;
+            valid?: boolean | null;
+            has_private_content?: boolean;
+            created_at?: string | null;
+            updated_at?: string | null;
+        };
+        CertificateValidationData: {
+            valid?: boolean;
+            certificate_size?: number;
+            password_length?: number;
+        };
+        Product: {
+            id?: string;
+            empresa_id?: string;
+            tipo?: string;
+            codigo_interno?: string | null;
+            descricao?: string;
+            unidade?: string;
+            gtin?: string | null;
+            codigo_servico_municipal?: string | null;
+            valor_padrao?: number;
+            ativo?: boolean;
+            ncm?: string | null;
+            cest?: string | null;
+            origin_code?: string | null;
+            benefit_code?: string | null;
+            tax_classification_code?: string | null;
+            ibs_cbs_classification_code?: string | null;
+            codigo_tributacao_nacional?: string | null;
+            codigo_nbs?: string | null;
+            codigo_cnae?: string | null;
+            codigo_atividade?: string | null;
+            st_applicable?: boolean;
+            monophase_applicable?: boolean;
+            created_at?: string | null;
+            updated_at?: string | null;
+        };
+        Taker: {
+            id?: string;
+            empresa_id?: string;
+            tipo?: string;
+            person_type?: string;
+            documento?: string;
+            nome?: string;
+            email?: string | null;
+            logradouro?: string | null;
+            numero?: string | null;
+            complemento?: string | null;
+            bairro?: string | null;
+            cep?: string | null;
+            municipio?: string | null;
+            uf?: string | null;
+            codigo_ibge?: string | null;
+            indicador_ie?: string | null;
+            inscricao_estadual?: string | null;
+            inscricao_municipal?: string | null;
+            suframa?: string | null;
+            party_classification?: string | null;
+            final_consumer?: boolean | null;
+            legal_nature_code?: string | null;
+            nonprofit_entity?: boolean | null;
+            public_entity?: boolean | null;
+            producer_rural?: boolean | null;
+            foreign_party?: boolean | null;
+            country_code?: string | null;
+            taxpayer_iss?: boolean | null;
+            caepf?: string | null;
+            tax_regime?: string | null;
+            regime_tributario?: string | null;
+            classification_source?: string | null;
+            review_status?: string | null;
+            confidence_score?: number | null;
+            ativo?: boolean;
+            created_at?: string | null;
+            updated_at?: string | null;
+        };
+        WebhookEndpoint: {
+            id?: string;
+            integration_client_id?: string;
+            url?: string;
+            description?: string | null;
+            status?: string;
+            environment?: string | null;
+            events?: string[];
+            last_success_at?: string | null;
+            last_failure_at?: string | null;
+            created_at?: string | null;
+            updated_at?: string | null;
+            secret?: string | null;
+        };
+        WebhookDelivery: {
+            id?: string;
+            webhook_endpoint_id?: string;
+            fiscal_document_id?: string | null;
+            event_name?: string;
+            delivery_id?: string;
+            status?: string;
+            attempts?: number;
+            response_status?: number | null;
+            error_message?: string | null;
+            next_attempt_at?: string | null;
+            delivered_at?: string | null;
+            created_at?: string | null;
+        };
+        QueuedDocument: {
+            id?: number | string;
+            external_id?: string | null;
+            operational_status?: string | null;
+            fiscal_status?: string | null;
+            fiscal_snapshot_id?: number | string | null;
+            resolution_status?: string | null;
+            idempotent_replay?: boolean;
+        };
+        DirectQueuedDocument: components["schemas"]["QueuedDocument"] & {
+            direct_transmission?: boolean;
+            direct_transmission_mode?: string;
+        };
+        PreviewDocument: {
+            resolution_status?: string | null;
+            emission_allowed?: boolean | null;
+            blocking_issues?: {
+                [key: string]: unknown;
+            }[];
+            warnings?: {
+                [key: string]: unknown;
+            }[];
+            snapshot_preview?: null | {
+                [key: string]: unknown;
+            };
+            tax_resolution?: null | {
+                [key: string]: unknown;
+            };
+            resolved_profiles?: null | {
+                [key: string]: unknown;
+            };
+        };
+        DocumentListItem: {
+            id?: string;
+            external_id?: string | null;
+            type?: string | null;
+            operational_status?: string | null;
+            fiscal_status?: string | null;
+            document_key?: string | null;
+            protocol?: string | null;
+            last_error?: string | null;
+            created_at?: string | null;
+            updated_at?: string | null;
+        };
+        DocumentDetail: {
+            id?: string;
+            external_id?: string | null;
+            document_type?: string | null;
+            operational_status?: string | null;
+            fiscal_status?: string | null;
+            print_status?: string | null;
+            document_key?: string | null;
+            protocol?: string | null;
+            last_error?: string | null;
+            snapshot?: {
+                [key: string]: unknown;
+            };
+            applied_rates?: {
+                [key: string]: unknown;
+            }[];
+            events?: {
+                [key: string]: unknown;
+            }[];
+            metadata?: {
+                [key: string]: unknown;
+            };
+            created_at?: string | null;
+            updated_at?: string | null;
+        };
+        DocumentSnapshotData: {
+            external_id?: string | null;
+            document_id?: string;
+            snapshot?: null | {
+                [key: string]: unknown;
+            };
+        };
+        DocumentQueryData: {
+            document?: {
+                [key: string]: unknown;
+            };
+            remote?: null | {
+                [key: string]: unknown;
+            };
+        };
+        InboundNfeCursor: {
+            ult_nsu?: string | null;
+            max_nsu?: string | null;
+        };
+        InboundNfePagination: {
+            current_page?: number;
+            per_page?: number;
+            total?: number;
+            last_page?: number;
+        };
+        InboundNfeDocument: {
+            id?: string;
+            empresa_id?: string;
+            fiscal_environment?: string;
+            chave?: string | null;
+            nsu?: string | null;
+            schema?: string | null;
+            cnpj_emitente?: string | null;
+            nome_emitente?: string | null;
+            numero?: string | null;
+            serie?: string | null;
+            data_emissao?: string | null;
+            valor_total?: number;
+            sefaz_cstat?: string | null;
+            sefaz_xmotivo?: string | null;
+            distribution_status?: string | null;
+            manifestation_status?: string | null;
+            document_status?: string | null;
+            has_full_xml?: boolean;
+            xml_available?: boolean;
+            raw_payload?: {
+                [key: string]: unknown;
+            };
+            latest_event_type?: string | null;
+            latest_event_at?: string | null;
+            has_cancellation?: boolean;
+            has_correction?: boolean;
+            created_at?: string | null;
+            updated_at?: string | null;
+            last_synced_at?: string | null;
+            items?: {
+                [key: string]: unknown;
+            }[];
+            manifestations?: {
+                [key: string]: unknown;
+            }[];
+            events?: {
+                [key: string]: unknown;
+            }[];
+        };
+        InboundNfeListData: {
+            cursor?: components["schemas"]["InboundNfeCursor"];
+            items?: components["schemas"]["InboundNfeDocument"][];
+            pagination?: components["schemas"]["InboundNfePagination"];
+        };
+        InboundNfeSyncData: {
+            cursor?: components["schemas"]["InboundNfeCursor"];
+            documents?: components["schemas"]["InboundNfeDocument"][];
+        };
+        InboundNfeManifestData: {
+            document?: components["schemas"]["InboundNfeDocument"];
+            manifestation?: {
+                [key: string]: unknown;
+            };
+        };
+        InboundNfeDownloadXmlData: {
+            document?: components["schemas"]["InboundNfeDocument"];
+            xml?: string | null;
+        };
     };
     responses: {
-        /** @description JSON resource response. */
+        /** @description Canonical JSON resource response. */
+        ResourceResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ResourceResponse"];
+            };
+        };
+        /** @description Canonical JSON collection response. */
+        CollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CollectionResponse"];
+            };
+        };
+        /** @description Canonical paginated JSON collection response. */
+        PaginatedCollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PaginatedCollectionResponse"];
+            };
+        };
+        /** @description Canonical JSON error response. */
+        ErrorResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Canonical delete confirmation response. */
+        DeleteResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DeleteResponse"];
+            };
+        };
+        /** @description Generic JSON resource response. */
         Resource: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": {
-                    data?: {
-                        [key: string]: unknown;
-                    };
-                };
+                "application/json": components["schemas"]["ResourceResponse"];
             };
         };
-        /** @description JSON collection response. */
+        /** @description Generic JSON collection response. */
         Collection: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": {
-                    data?: {
-                        [key: string]: unknown;
-                    }[];
-                };
+                "application/json": components["schemas"]["CollectionResponse"];
             };
         };
-        /** @description Paginated JSON collection response. */
+        /** @description Generic paginated JSON collection response. */
         PaginatedCollection: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
+                "application/json": components["schemas"]["PaginatedCollectionResponse"];
+            };
+        };
+        /** @description Company resource response. */
+        CompanyResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
                 "application/json": {
-                    data?: {
-                        [key: string]: unknown;
-                    }[];
+                    data?: components["schemas"]["Company"];
+                };
+            };
+        };
+        /** @description Company collection response. */
+        CompanyCollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["Company"][];
+                };
+            };
+        };
+        /** @description Certificate resource response. */
+        CertificateResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["Certificate"];
                     meta?: {
                         [key: string]: unknown;
                     };
+                    metadata?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        /** @description Certificate collection response. */
+        CertificateCollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["Certificate"][];
+                };
+            };
+        };
+        /** @description Certificate validation response. */
+        CertificateValidationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["CertificateValidationData"];
+                    meta?: {
+                        [key: string]: unknown;
+                    };
+                    metadata?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        /** @description NFSe provider info response. */
+        NfseProviderInfoResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["NfseProviderInfo"];
+                    meta?: {
+                        [key: string]: unknown;
+                    };
+                    metadata?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        /** @description Product resource response. */
+        ProductResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["Product"];
+                };
+            };
+        };
+        /** @description Product collection response. */
+        ProductCollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["Product"][];
+                };
+            };
+        };
+        /** @description Taker resource response. */
+        TakerResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["Taker"];
+                };
+            };
+        };
+        /** @description Taker collection response. */
+        TakerCollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["Taker"][];
+                };
+            };
+        };
+        /** @description Webhook endpoint resource response. */
+        WebhookResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["WebhookEndpoint"];
+                };
+            };
+        };
+        /** @description Webhook endpoint collection response. */
+        WebhookCollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["WebhookEndpoint"][];
+                };
+            };
+        };
+        /** @description Webhook delivery resource response. */
+        WebhookDeliveryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["WebhookDelivery"];
+                };
+            };
+        };
+        /** @description Webhook delivery collection response. */
+        WebhookDeliveryCollectionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["WebhookDelivery"][];
+                };
+            };
+        };
+        /** @description Queued document response. */
+        DocumentAcceptedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["QueuedDocument"];
+                };
+            };
+        };
+        /** @description Queued direct transmission response. */
+        DirectDocumentAcceptedResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["DirectQueuedDocument"];
+                };
+            };
+        };
+        /** @description Preview response for snapshot-based document resolution. */
+        DocumentPreviewResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["PreviewDocument"];
+                };
+            };
+        };
+        /** @description Paginated document list response. */
+        DocumentListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["DocumentListItem"][];
+                    meta?: components["schemas"]["PaginationMeta"];
+                };
+            };
+        };
+        /** @description Document detail response. */
+        DocumentDetailResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["DocumentDetail"];
+                };
+            };
+        };
+        /** @description Document snapshot response. */
+        DocumentSnapshotResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["DocumentSnapshotData"];
+                };
+            };
+        };
+        /** @description On-demand document query response. */
+        DocumentQueryResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["DocumentQueryData"];
+                };
+            };
+        };
+        /** @description Inbound NFe list response. */
+        InboundNfeListResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["InboundNfeListData"];
+                    ok?: boolean;
+                    error?: string | null;
+                };
+            };
+        };
+        /** @description Inbound NFe sync response. */
+        InboundNfeSyncResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["InboundNfeSyncData"];
+                    ok?: boolean;
+                    error?: string | null;
+                };
+            };
+        };
+        /** @description Inbound NFe document response. */
+        InboundNfeDocumentResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["InboundNfeDocument"];
+                    ok?: boolean;
+                    error?: string | null;
+                };
+            };
+        };
+        /** @description Inbound NFe manifestation response. */
+        InboundNfeManifestResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["InboundNfeManifestData"];
+                    ok?: boolean;
+                    error?: string | null;
+                };
+            };
+        };
+        /** @description Inbound NFe XML download response. */
+        InboundNfeDownloadXmlResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data?: components["schemas"]["InboundNfeDownloadXmlData"];
+                    ok?: boolean;
+                    error?: string | null;
                 };
             };
         };
@@ -1067,6 +1946,7 @@ export interface components {
         CompanyId: string;
         ExternalId: string;
         OperationCode: string;
+        /** @description Idempotency key required by queued create and direct transmission endpoints. */
         IdempotencyKey: string;
         DocumentTypeQuery: "nfe" | "nfce" | "nfse";
         MunicipioQuery: string;
@@ -1114,7 +1994,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["CompanyCollectionResponse"];
         };
     };
     getCompany: {
@@ -1128,7 +2008,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["CompanyResponse"];
         };
     };
     getCompanyConfiguration: {
@@ -1142,7 +2022,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["CompanyResponse"];
         };
     };
     updateCompanyConfiguration: {
@@ -1156,7 +2036,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["CompanyResponse"];
         };
     };
     getCompanyNfseProviderInfo: {
@@ -1173,17 +2053,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description NFSe provider metadata and form policy. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data?: components["schemas"]["NfseProviderInfo"];
-                    };
-                };
-            };
+            200: components["responses"]["NfseProviderInfoResponse"];
         };
     };
     listCompanyCertificates: {
@@ -1197,7 +2067,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["CertificateCollectionResponse"];
         };
     };
     createCompanyCertificate: {
@@ -1211,7 +2081,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            201: components["responses"]["Resource"];
+            201: components["responses"]["CertificateResponse"];
         };
     };
     updateCompanyCertificate: {
@@ -1226,7 +2096,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["CertificateResponse"];
         };
     };
     validateCompanyCertificate: {
@@ -1241,7 +2111,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["CertificateValidationResponse"];
         };
     };
     getCompanyReadiness: {
@@ -1446,6 +2316,64 @@ export interface operations {
             200: components["responses"]["Resource"];
         };
     };
+    listCompanyFiscalEmitterProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompanyFiscalEmitterProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["Resource"];
+        };
+    };
+    updateCompanyFiscalEmitterProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    deleteCompanyFiscalEmitterProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
     listCompanyFiscalOperationProfiles: {
         parameters: {
             query?: never;
@@ -1496,6 +2424,64 @@ export interface operations {
             path: {
                 company_id: components["parameters"]["CompanyId"];
                 profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    listCompanyFiscalProfileAssignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompanyFiscalProfileAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["Resource"];
+        };
+    };
+    updateCompanyFiscalProfileAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+        };
+    };
+    deleteCompanyFiscalProfileAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                assignment_id: string;
             };
             cookie?: never;
         };
@@ -1632,7 +2618,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["OperationDocumentPreview"];
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["DocumentPreviewResponse"];
         };
     };
     listCompanyDocuments: {
@@ -1648,13 +2634,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["PaginatedCollection"];
+            200: components["responses"]["DocumentListResponse"];
         };
     };
     createCompanyDocumentByOperation: {
         parameters: {
             query?: never;
             header: {
+                /** @description Idempotency key required by queued create and direct transmission endpoints. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path: {
@@ -1665,7 +2652,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["OperationDocumentSubmit"];
         responses: {
-            202: components["responses"]["Resource"];
+            202: components["responses"]["DocumentAcceptedResponse"];
         };
     };
     getCompanyDocument: {
@@ -1680,7 +2667,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["DocumentDetailResponse"];
         };
     };
     downloadCompanyDocumentXml: {
@@ -1737,7 +2724,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["DocumentSnapshotResponse"];
         };
     };
     queryCompanyDocument: {
@@ -1754,7 +2741,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["DocumentQueryResponse"];
         };
     };
     cancelCompanyDocument: {
@@ -1791,6 +2778,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
+                /** @description Idempotency key required by queued create and direct transmission endpoints. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path: {
@@ -1800,13 +2788,14 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["DocumentSubmit"];
         responses: {
-            202: components["responses"]["Resource"];
+            202: components["responses"]["DirectDocumentAcceptedResponse"];
         };
     };
     transmitCompanyDirectXml: {
         parameters: {
             query?: never;
             header: {
+                /** @description Idempotency key required by queued create and direct transmission endpoints. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path: {
@@ -1816,7 +2805,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            202: components["responses"]["Resource"];
+            202: components["responses"]["DirectDocumentAcceptedResponse"];
         };
     };
     listCompanyUnifiedDocuments: {
@@ -1902,7 +2891,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["InboundNfeListResponse"];
         };
     };
     syncCompanyInboundNfe: {
@@ -1916,35 +2905,67 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["InboundNfeSyncResponse"];
         };
     };
-    listCompanyStockMovements: {
+    manifestCompanyInboundNfe: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 company_id: components["parameters"]["CompanyId"];
+                document_id: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["InboundNfeManifestResponse"];
         };
     };
-    getCompanyStockBalance: {
+    downloadCompanyInboundNfeXml: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 company_id: components["parameters"]["CompanyId"];
+                document_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["InboundNfeDownloadXmlResponse"];
+        };
+    };
+    updateCompanyInboundNfeEntryBookkeeping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["InboundNfeDocumentResponse"];
+        };
+    };
+    confirmCompanyInboundNfeEntryBookkeeping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["InboundNfeDocumentResponse"];
         };
     };
     listCompanySchedules: {
@@ -2016,7 +3037,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["ProductCollectionResponse"];
         };
     };
     createProduct: {
@@ -2030,7 +3051,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            201: components["responses"]["Resource"];
+            201: components["responses"]["ProductResponse"];
         };
     };
     getProduct: {
@@ -2045,7 +3066,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["ProductResponse"];
         };
     };
     updateProduct: {
@@ -2060,7 +3081,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["ProductResponse"];
         };
     };
     deleteProduct: {
@@ -2075,7 +3096,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["DeleteResponse"];
         };
     };
     listTakers: {
@@ -2089,7 +3110,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["TakerCollectionResponse"];
         };
     };
     createTaker: {
@@ -2103,7 +3124,52 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            201: components["responses"]["Resource"];
+            201: components["responses"]["TakerResponse"];
+        };
+    };
+    getTaker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                taker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["TakerResponse"];
+        };
+    };
+    updateTaker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                taker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["TakerResponse"];
+        };
+    };
+    deleteTaker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+                taker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeleteResponse"];
         };
     };
     listWebhooks: {
@@ -2115,7 +3181,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["WebhookCollectionResponse"];
         };
     };
     createWebhook: {
@@ -2127,7 +3193,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            201: components["responses"]["Resource"];
+            201: components["responses"]["WebhookResponse"];
         };
     };
     updateWebhook: {
@@ -2141,7 +3207,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["WebhookResponse"];
         };
     };
     deleteWebhook: {
@@ -2155,7 +3221,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["DeleteResponse"];
         };
     };
     rotateWebhookSecret: {
@@ -2169,7 +3235,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["WebhookResponse"];
         };
     };
     testWebhook: {
@@ -2183,7 +3249,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["WebhookDeliveryResponse"];
         };
     };
     listWebhookDeliveries: {
@@ -2197,7 +3263,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Collection"];
+            200: components["responses"]["WebhookDeliveryCollectionResponse"];
         };
     };
     getIntegrationMetrics: {

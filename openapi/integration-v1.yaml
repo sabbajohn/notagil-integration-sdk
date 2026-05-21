@@ -36,7 +36,7 @@ paths:
       operationId: listCompanies
       x-required-scopes: ["companies:read"]
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
+        "200": { $ref: "#/components/responses/CompanyCollectionResponse" }
   /companies/{company_id}:
     get:
       tags: [Companies]
@@ -44,7 +44,7 @@ paths:
       x-required-scopes: ["companies:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/CompanyResponse" }
   /companies/{company_id}/configuration:
     get:
       tags: [Configuration]
@@ -52,15 +52,16 @@ paths:
       x-required-scopes: ["configuration:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/CompanyResponse" }
     put:
       tags: [Configuration]
       operationId: updateCompanyConfiguration
+      description: Updates company configuration fields for the selected company.
       x-required-scopes: ["configuration:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/CompanyResponse" }
   /companies/{company_id}/nfse/provider-info:
     get:
       tags: [Configuration]
@@ -72,14 +73,7 @@ paths:
         - $ref: "#/components/parameters/MunicipioQuery"
         - $ref: "#/components/parameters/FiscalEnvironmentQuery"
       responses:
-        "200":
-          description: NFSe provider metadata and form policy.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data: { $ref: "#/components/schemas/NfseProviderInfo" }
+        "200": { $ref: "#/components/responses/NfseProviderInfoResponse" }
   /companies/{company_id}/certificates:
     get:
       tags: [Configuration]
@@ -87,19 +81,21 @@ paths:
       x-required-scopes: ["certificates:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
+        "200": { $ref: "#/components/responses/CertificateCollectionResponse" }
     post:
       tags: [Configuration]
       operationId: createCompanyCertificate
+      description: Creates and stores a new certificate for the selected company.
       x-required-scopes: ["certificates:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "201": { $ref: "#/components/responses/Resource" }
+        "201": { $ref: "#/components/responses/CertificateResponse" }
   /companies/{company_id}/certificates/{certificate_id}:
     patch:
       tags: [Configuration]
       operationId: updateCompanyCertificate
+      description: Updates mutable certificate attributes such as its lifecycle status.
       x-required-scopes: ["certificates:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -109,11 +105,12 @@ paths:
           schema: { type: string }
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/CertificateResponse" }
   /companies/{company_id}/certificates/{certificate_id}/validate:
     post:
       tags: [Configuration]
       operationId: validateCompanyCertificate
+      description: Validates the stored certificate contents without changing the stored certificate record.
       x-required-scopes: ["certificates:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -122,7 +119,7 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/CertificateValidationResponse" }
   /companies/{company_id}/readiness:
     get:
       tags: [Configuration]
@@ -142,6 +139,7 @@ paths:
     post:
       tags: [Configuration]
       operationId: createCompanyOnboardingImport
+      description: Creates a new onboarding import payload for later review and promotion.
       x-required-scopes: ["onboarding:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
@@ -164,6 +162,7 @@ paths:
     post:
       tags: [Configuration]
       operationId: reviewCompanyOnboardingImport
+      description: Reviews the staged onboarding import and records the review outcome.
       x-required-scopes: ["onboarding:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -178,6 +177,7 @@ paths:
     post:
       tags: [Configuration]
       operationId: promoteCompanyOnboardingImport
+      description: Promotes the reviewed onboarding import into company master data.
       x-required-scopes: ["onboarding:promote"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -267,6 +267,51 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/emitter-profiles:
+    get:
+      tags: [Fiscal Operations]
+      operationId: listCompanyFiscalEmitterProfiles
+      x-required-scopes: ["fiscal:profiles:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Fiscal Operations]
+      operationId: createCompanyFiscalEmitterProfile
+      description: Creates a fiscal emitter profile for the selected company.
+      x-required-scopes: ["fiscal:profiles:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/emitter-profiles/{profile_id}:
+    put:
+      tags: [Fiscal Operations]
+      operationId: updateCompanyFiscalEmitterProfile
+      description: Updates the selected fiscal emitter profile.
+      x-required-scopes: ["fiscal:profiles:write"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: profile_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Fiscal Operations]
+      operationId: deleteCompanyFiscalEmitterProfile
+      description: Deletes the selected fiscal emitter profile.
+      x-required-scopes: ["fiscal:profiles:write"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: profile_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
   /companies/{company_id}/fiscal/operation-profiles:
     get:
       tags: [Fiscal Operations]
@@ -278,6 +323,7 @@ paths:
     post:
       tags: [Fiscal Operations]
       operationId: createCompanyFiscalOperationProfile
+      description: Creates a fiscal operation profile for the selected company.
       x-required-scopes: ["fiscal:operations:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
@@ -287,6 +333,7 @@ paths:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalOperationProfile
+      description: Updates the selected fiscal operation profile.
       x-required-scopes: ["fiscal:operations:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -300,10 +347,56 @@ paths:
     delete:
       tags: [Fiscal Operations]
       operationId: deleteCompanyFiscalOperationProfile
+      description: Deletes the selected fiscal operation profile.
       x-required-scopes: ["fiscal:operations:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: profile_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/profile-assignments:
+    get:
+      tags: [Fiscal Operations]
+      operationId: listCompanyFiscalProfileAssignments
+      x-required-scopes: ["fiscal:profiles:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Fiscal Operations]
+      operationId: createCompanyFiscalProfileAssignment
+      description: Creates a fiscal profile assignment for the selected company.
+      x-required-scopes: ["fiscal:profiles:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/profile-assignments/{assignment_id}:
+    put:
+      tags: [Fiscal Operations]
+      operationId: updateCompanyFiscalProfileAssignment
+      description: Updates the selected fiscal profile assignment.
+      x-required-scopes: ["fiscal:profiles:write"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: assignment_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+    delete:
+      tags: [Fiscal Operations]
+      operationId: deleteCompanyFiscalProfileAssignment
+      description: Deletes the selected fiscal profile assignment.
+      x-required-scopes: ["fiscal:profiles:write"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: assignment_id
           in: path
           required: true
           schema: { type: string }
@@ -320,6 +413,7 @@ paths:
     post:
       tags: [Fiscal Rates]
       operationId: createCompanyFiscalRateReference
+      description: Creates a company-scoped fiscal rate reference override.
       x-required-scopes: ["fiscal:rates:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
@@ -329,6 +423,7 @@ paths:
     put:
       tags: [Fiscal Rates]
       operationId: updateCompanyFiscalRateReference
+      description: Updates the selected company-scoped fiscal rate reference.
       x-required-scopes: ["fiscal:rates:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -342,6 +437,7 @@ paths:
     delete:
       tags: [Fiscal Rates]
       operationId: deleteCompanyFiscalRateReference
+      description: Deletes the selected company-scoped fiscal rate reference.
       x-required-scopes: ["fiscal:rates:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -362,6 +458,7 @@ paths:
     post:
       tags: [Fiscal Rules]
       operationId: createCompanyFiscalTaxRuleSet
+      description: Creates a company-scoped fiscal tax rule set.
       x-required-scopes: ["fiscal:rules:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
@@ -371,6 +468,7 @@ paths:
     put:
       tags: [Fiscal Rules]
       operationId: updateCompanyFiscalTaxRuleSet
+      description: Updates the selected company-scoped fiscal tax rule set.
       x-required-scopes: ["fiscal:rules:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -384,6 +482,7 @@ paths:
     delete:
       tags: [Fiscal Rules]
       operationId: deleteCompanyFiscalTaxRuleSet
+      description: Deletes the selected company-scoped fiscal tax rule set.
       x-required-scopes: ["fiscal:rules:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -397,14 +496,14 @@ paths:
     post:
       tags: [Documents]
       operationId: previewCompanyDocumentByOperation
-      description: Resolves the fiscal operation by code and previews a document from a snapshot-shaped input contract.
+      description: Resolves the fiscal operation by code and previews a document from a snapshot-shaped input contract without persisting or queueing emission.
       x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/OperationCode"
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentPreview" }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/DocumentPreviewResponse" }
   /companies/{company_id}/documents:
     get:
       tags: [Documents]
@@ -414,12 +513,12 @@ paths:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/DocumentTypeQuery"
       responses:
-        "200": { $ref: "#/components/responses/PaginatedCollection" }
+        "200": { $ref: "#/components/responses/DocumentListResponse" }
   /companies/{company_id}/documents/{operation_code}:
     post:
       tags: [Documents]
       operationId: createCompanyDocumentByOperation
-      description: Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract.
+      description: Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract. Requires `Idempotency-Key` and returns `202 Accepted` when the document was queued instead of completed inline.
       x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -427,7 +526,7 @@ paths:
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentSubmit" }
       responses:
-        "202": { $ref: "#/components/responses/Resource" }
+        "202": { $ref: "#/components/responses/DocumentAcceptedResponse" }
   /companies/{company_id}/documents/{external_id}:
     get:
       tags: [Documents]
@@ -437,7 +536,7 @@ paths:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/ExternalId"
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/DocumentDetailResponse" }
   /companies/{company_id}/documents/{external_id}/xml:
     get:
       tags: [Documents]
@@ -467,11 +566,12 @@ paths:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/ExternalId"
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/DocumentSnapshotResponse" }
   /companies/{company_id}/documents/{external_id}/query:
     post:
       tags: [Documents]
       operationId: queryCompanyDocument
+      description: Triggers an on-demand provider query for the stored document and returns the refreshed local and remote state. Use POST because it may contact external providers and persist refreshed artifacts.
       x-required-scopes: ["documents:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -481,11 +581,12 @@ paths:
           required: false
           schema: { type: boolean }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/DocumentQueryResponse" }
   /companies/{company_id}/documents/{external_id}/cancel:
     post:
       tags: [Documents]
       operationId: cancelCompanyDocument
+      description: Requests fiscal cancellation for the stored document and persists the resulting state transition.
       x-required-scopes: ["documents:cancel"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -497,6 +598,7 @@ paths:
     post:
       tags: [Documents]
       operationId: correctCompanyDocument
+      description: Requests a correction event for the stored document and persists the resulting correction metadata.
       x-required-scopes: ["documents:correct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -508,24 +610,26 @@ paths:
     post:
       tags: [Documents]
       operationId: createCompanyDirectDocument
+      description: Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing.
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
       responses:
-        "202": { $ref: "#/components/responses/Resource" }
+        "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
   /companies/{company_id}/direct/documents/xml:
     post:
       tags: [Documents]
       operationId: transmitCompanyDirectXml
+      description: Queues a direct XML transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the XML was queued for processing.
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "202": { $ref: "#/components/responses/Resource" }
+        "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
   /companies/{company_id}/consulta-notas:
     get:
       tags: [Documents]
@@ -538,6 +642,7 @@ paths:
     post:
       tags: [Documents]
       operationId: lookupCompanyUnifiedDocument
+      description: Looks up a unified inbound or outbound document view without creating a new fiscal document.
       x-required-scopes: ["documents:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
@@ -584,32 +689,75 @@ paths:
       x-required-scopes: ["inbound:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/InboundNfeListResponse" }
   /companies/{company_id}/inbound/nfe/sync:
     post:
       tags: [Documents]
       operationId: syncCompanyInboundNfe
+      description: Pulls inbound NFe events from SEFAZ, persists newly discovered documents and updates the sync cursor for the selected company.
       x-required-scopes: ["inbound:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/stock/movements:
-    get:
-      tags: [Stock]
-      operationId: listCompanyStockMovements
-      x-required-scopes: ["stock:read"]
-      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+        "200": { $ref: "#/components/responses/InboundNfeSyncResponse" }
+  /companies/{company_id}/inbound/nfe/{document_id}/manifest:
+    post:
+      tags: [Documents]
+      operationId: manifestCompanyInboundNfe
+      description: Registers an inbound NFe manifestation event and persists the resulting manifestation history.
+      x-required-scopes: ["inbound:manifest"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: document_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/stock/balance:
-    get:
-      tags: [Stock]
-      operationId: getCompanyStockBalance
-      x-required-scopes: ["stock:read"]
-      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+        "200": { $ref: "#/components/responses/InboundNfeManifestResponse" }
+  /companies/{company_id}/inbound/nfe/{document_id}/download-xml:
+    post:
+      tags: [Documents]
+      operationId: downloadCompanyInboundNfeXml
+      description: Downloads the inbound NFe XML from the provider when needed and persists the downloaded XML on the local record.
+      x-required-scopes: ["inbound:read"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: document_id
+          in: path
+          required: true
+          schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
+        "200": { $ref: "#/components/responses/InboundNfeDownloadXmlResponse" }
+  /companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping:
+    post:
+      tags: [Documents]
+      operationId: updateCompanyInboundNfeEntryBookkeeping
+      description: Stores inbound entry bookkeeping decisions for the selected inbound NFe document.
+      x-required-scopes: ["inbound:write"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: document_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/InboundNfeDocumentResponse" }
+  /companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm:
+    post:
+      tags: [Documents]
+      operationId: confirmCompanyInboundNfeEntryBookkeeping
+      description: Confirms previously staged inbound entry bookkeeping decisions for the selected inbound NFe document.
+      x-required-scopes: ["inbound:write"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: document_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/InboundNfeDocumentResponse" }
   /companies/{company_id}/schedules:
     get:
       tags: [Schedules]
@@ -621,6 +769,7 @@ paths:
     post:
       tags: [Schedules]
       operationId: createCompanySchedule
+      description: Creates a company schedule for future automated fiscal execution.
       x-required-scopes: ["schedules:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
@@ -630,6 +779,7 @@ paths:
     put:
       tags: [Schedules]
       operationId: updateCompanySchedule
+      description: Updates the selected company schedule.
       x-required-scopes: ["schedules:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -643,6 +793,7 @@ paths:
     delete:
       tags: [Schedules]
       operationId: deleteCompanySchedule
+      description: Deletes the selected company schedule.
       x-required-scopes: ["schedules:delete"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -659,15 +810,16 @@ paths:
       x-required-scopes: ["products:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
+        "200": { $ref: "#/components/responses/ProductCollectionResponse" }
     post:
       tags: [Products]
       operationId: createProduct
+      description: Creates a product for the selected company.
       x-required-scopes: ["products:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "201": { $ref: "#/components/responses/Resource" }
+        "201": { $ref: "#/components/responses/ProductResponse" }
   /companies/{company_id}/products/{product_id}:
     get:
       tags: [Products]
@@ -680,10 +832,11 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/ProductResponse" }
     put:
       tags: [Products]
       operationId: updateProduct
+      description: Updates the selected product.
       x-required-scopes: ["products:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -693,10 +846,11 @@ paths:
           schema: { type: string }
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/ProductResponse" }
     delete:
       tags: [Products]
       operationId: deleteProduct
+      description: Deletes the selected product.
       x-required-scopes: ["products:delete"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -705,7 +859,7 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/DeleteResponse" }
   /companies/{company_id}/takers:
     get:
       tags: [Takers]
@@ -713,33 +867,76 @@ paths:
       x-required-scopes: ["takers:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
+        "200": { $ref: "#/components/responses/TakerCollectionResponse" }
     post:
       tags: [Takers]
       operationId: createTaker
+      description: Creates a taker for the selected company.
       x-required-scopes: ["takers:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "201": { $ref: "#/components/responses/Resource" }
+        "201": { $ref: "#/components/responses/TakerResponse" }
+  /companies/{company_id}/takers/{taker_id}:
+    get:
+      tags: [Takers]
+      operationId: getTaker
+      x-required-scopes: ["takers:read"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: taker_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/TakerResponse" }
+    put:
+      tags: [Takers]
+      operationId: updateTaker
+      description: Updates the selected taker.
+      x-required-scopes: ["takers:write"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: taker_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/TakerResponse" }
+    delete:
+      tags: [Takers]
+      operationId: deleteTaker
+      description: Deletes the selected taker.
+      x-required-scopes: ["takers:delete"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: taker_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
   /webhooks:
     get:
       tags: [Webhooks]
       operationId: listWebhooks
       x-required-scopes: ["webhooks:read"]
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
+        "200": { $ref: "#/components/responses/WebhookCollectionResponse" }
     post:
       tags: [Webhooks]
       operationId: createWebhook
+      description: Creates a webhook endpoint and returns the secret exactly once in the response payload.
       x-required-scopes: ["webhooks:write", "webhooks:manage"]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "201": { $ref: "#/components/responses/Resource" }
+        "201": { $ref: "#/components/responses/WebhookResponse" }
   /webhooks/{webhook_id}:
     put:
       tags: [Webhooks]
       operationId: updateWebhook
+      description: Updates the selected webhook endpoint configuration.
       x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
@@ -748,10 +945,11 @@ paths:
           schema: { type: string }
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/WebhookResponse" }
     delete:
       tags: [Webhooks]
       operationId: deleteWebhook
+      description: Deletes the selected webhook endpoint.
       x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
@@ -759,11 +957,12 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/DeleteResponse" }
   /webhooks/{webhook_id}/rotate-secret:
     post:
       tags: [Webhooks]
       operationId: rotateWebhookSecret
+      description: Rotates the webhook secret and returns the new secret exactly once in the response payload.
       x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
@@ -771,11 +970,12 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/WebhookResponse" }
   /webhooks/{webhook_id}/test:
     post:
       tags: [Webhooks]
       operationId: testWebhook
+      description: Queues a synthetic webhook delivery to validate reachability and signature handling for the selected endpoint.
       x-required-scopes: ["webhooks:write", "webhooks:manage"]
       parameters:
         - name: webhook_id
@@ -783,7 +983,7 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/WebhookDeliveryResponse" }
   /webhooks/{webhook_id}/deliveries:
     get:
       tags: [Webhooks]
@@ -795,7 +995,7 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        "200": { $ref: "#/components/responses/Collection" }
+        "200": { $ref: "#/components/responses/WebhookDeliveryCollectionResponse" }
   /metrics:
     get:
       tags: [Metrics]
@@ -835,6 +1035,7 @@ components:
       name: Idempotency-Key
       in: header
       required: true
+      description: Idempotency key required by queued create and direct transmission endpoints.
       schema: { type: string }
     DocumentTypeQuery:
       name: document_type
@@ -892,26 +1093,65 @@ components:
                 properties:
                   external_id: { type: string }
   responses:
+    ResourceResponse:
+      description: Canonical JSON resource response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ResourceResponse"
+    CollectionResponse:
+      description: Canonical JSON collection response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CollectionResponse"
+    PaginatedCollectionResponse:
+      description: Canonical paginated JSON collection response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PaginatedCollectionResponse"
+    ErrorResponse:
+      description: Canonical JSON error response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    DeleteResponse:
+      description: Canonical delete confirmation response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DeleteResponse"
     Resource:
-      description: JSON resource response.
+      description: Generic JSON resource response.
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              data: { type: object, additionalProperties: true }
+            $ref: "#/components/schemas/ResourceResponse"
     Collection:
-      description: JSON collection response.
+      description: Generic JSON collection response.
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              data:
-                type: array
-                items: { type: object, additionalProperties: true }
+            $ref: "#/components/schemas/CollectionResponse"
     PaginatedCollection:
-      description: Paginated JSON collection response.
+      description: Generic paginated JSON collection response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PaginatedCollectionResponse"
+    CompanyResponse:
+      description: Company resource response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/Company"
+    CompanyCollectionResponse:
+      description: Company collection response.
       content:
         application/json:
           schema:
@@ -919,10 +1159,276 @@ components:
             properties:
               data:
                 type: array
-                items: { type: object, additionalProperties: true }
+                items:
+                  $ref: "#/components/schemas/Company"
+    CertificateResponse:
+      description: Certificate resource response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/Certificate"
               meta:
                 type: object
                 additionalProperties: true
+              metadata:
+                type: object
+                additionalProperties: true
+    CertificateCollectionResponse:
+      description: Certificate collection response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Certificate"
+    CertificateValidationResponse:
+      description: Certificate validation response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/CertificateValidationData"
+              meta:
+                type: object
+                additionalProperties: true
+              metadata:
+                type: object
+                additionalProperties: true
+    NfseProviderInfoResponse:
+      description: NFSe provider info response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/NfseProviderInfo"
+              meta:
+                type: object
+                additionalProperties: true
+              metadata:
+                type: object
+                additionalProperties: true
+    ProductResponse:
+      description: Product resource response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/Product"
+    ProductCollectionResponse:
+      description: Product collection response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    TakerResponse:
+      description: Taker resource response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/Taker"
+    TakerCollectionResponse:
+      description: Taker collection response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Taker"
+    WebhookResponse:
+      description: Webhook endpoint resource response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/WebhookEndpoint"
+    WebhookCollectionResponse:
+      description: Webhook endpoint collection response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WebhookEndpoint"
+    WebhookDeliveryResponse:
+      description: Webhook delivery resource response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/WebhookDelivery"
+    WebhookDeliveryCollectionResponse:
+      description: Webhook delivery collection response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WebhookDelivery"
+    DocumentAcceptedResponse:
+      description: Queued document response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/QueuedDocument"
+    DirectDocumentAcceptedResponse:
+      description: Queued direct transmission response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/DirectQueuedDocument"
+    DocumentPreviewResponse:
+      description: Preview response for snapshot-based document resolution.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/PreviewDocument"
+    DocumentListResponse:
+      description: Paginated document list response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentListItem"
+              meta:
+                $ref: "#/components/schemas/PaginationMeta"
+    DocumentDetailResponse:
+      description: Document detail response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/DocumentDetail"
+    DocumentSnapshotResponse:
+      description: Document snapshot response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/DocumentSnapshotData"
+    DocumentQueryResponse:
+      description: On-demand document query response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/DocumentQueryData"
+    InboundNfeListResponse:
+      description: Inbound NFe list response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/InboundNfeListData"
+              ok:
+                type: boolean
+              error:
+                type: [string, "null"]
+    InboundNfeSyncResponse:
+      description: Inbound NFe sync response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/InboundNfeSyncData"
+              ok:
+                type: boolean
+              error:
+                type: [string, "null"]
+    InboundNfeDocumentResponse:
+      description: Inbound NFe document response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/InboundNfeDocument"
+              ok:
+                type: boolean
+              error:
+                type: [string, "null"]
+    InboundNfeManifestResponse:
+      description: Inbound NFe manifestation response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/InboundNfeManifestData"
+              ok:
+                type: boolean
+              error:
+                type: [string, "null"]
+    InboundNfeDownloadXmlResponse:
+      description: Inbound NFe XML download response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/InboundNfeDownloadXmlData"
+              ok:
+                type: boolean
+              error:
+                type: [string, "null"]
   schemas:
     DocumentRequest:
       type: object
@@ -1032,3 +1538,466 @@ components:
         - service.cnae_code
         - service.activity_code
         - prestador.op_simp_nac
+    ResourceResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+    CollectionResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    PaginatedCollectionResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+    ErrorResponse:
+      type: object
+      properties:
+        message: { type: string }
+        code: { type: string }
+        details:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+        errors:
+          type: object
+          additionalProperties: true
+        data:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+        ok:
+          type: boolean
+        error:
+          oneOf:
+            - type: string
+            - type: "null"
+        error_code:
+          type: string
+    DeleteResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            deleted:
+              type: boolean
+              const: true
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer }
+        last_page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+    Company:
+      type: object
+      properties:
+        id: { type: string }
+        account_id: { type: string }
+        name: { type: string }
+        status: { type: string }
+        cnpj: { type: [string, "null"] }
+        razao_social: { type: [string, "null"] }
+        nome_fantasia: { type: [string, "null"] }
+        email: { type: string }
+        telefone: { type: string }
+        logradouro: { type: string }
+        numero: { type: string }
+        complemento: { type: string }
+        bairro: { type: string }
+        cep: { type: string }
+        municipio: { type: string }
+        uf: { type: string }
+        codigo_ibge: { type: string }
+        regime_tributario: { type: string }
+        crt: { type: string }
+        cnae_principal: { type: string }
+        company_size: { type: string }
+        icms_taxpayer_type: { type: string }
+        iss_taxpayer: { type: boolean }
+        ie_indicator: { type: string }
+        im_indicator: { type: string }
+        legal_nature: { type: string }
+        special_regime_code: { type: string }
+        country_code: { type: string }
+        is_mei: { type: boolean }
+        is_me: { type: boolean }
+        is_epp: { type: boolean }
+        is_simple_national: { type: boolean }
+        is_real_profit: { type: boolean }
+        is_presumed_profit: { type: boolean }
+        inscricao_estadual: { type: string }
+        inscricao_municipal: { type: string }
+        logo_url: { type: [string, "null"] }
+        lote_prefixo: { type: string }
+        lote_sincrono: { type: boolean }
+        default_fiscal_emitter_profile_id: { type: [string, "null"] }
+        default_fiscal_emitter_profile:
+          oneOf:
+            - type: "null"
+            - type: object
+              properties:
+                id: { type: string }
+                name: { type: string }
+        layout_cupom:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: true
+        nfse:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: true
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+    Certificate:
+      type: object
+      properties:
+        id: { type: string }
+        empresa_id: { type: string }
+        name: { type: string }
+        numero_serie: { type: [string, "null"] }
+        data_validade: { type: [string, "null"] }
+        status: { type: string }
+        cnpj_cpf: { type: [string, "null"] }
+        sujeito: { type: [string, "null"] }
+        emissor: { type: [string, "null"] }
+        valido_desde: { type: [string, "null"] }
+        dias_restantes: { type: [integer, "null"] }
+        certificate_size: { type: [integer, "null"] }
+        valid: { type: [boolean, "null"] }
+        has_private_content: { type: boolean }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+    CertificateValidationData:
+      type: object
+      properties:
+        valid: { type: boolean }
+        certificate_size: { type: integer }
+        password_length: { type: integer }
+    Product:
+      type: object
+      properties:
+        id: { type: string }
+        empresa_id: { type: string }
+        tipo: { type: string }
+        codigo_interno: { type: [string, "null"] }
+        descricao: { type: string }
+        unidade: { type: string }
+        gtin: { type: [string, "null"] }
+        codigo_servico_municipal: { type: [string, "null"] }
+        valor_padrao: { type: number }
+        ativo: { type: boolean }
+        ncm: { type: [string, "null"] }
+        cest: { type: [string, "null"] }
+        origin_code: { type: [string, "null"] }
+        benefit_code: { type: [string, "null"] }
+        tax_classification_code: { type: [string, "null"] }
+        ibs_cbs_classification_code: { type: [string, "null"] }
+        codigo_tributacao_nacional: { type: [string, "null"] }
+        codigo_nbs: { type: [string, "null"] }
+        codigo_cnae: { type: [string, "null"] }
+        codigo_atividade: { type: [string, "null"] }
+        st_applicable: { type: boolean }
+        monophase_applicable: { type: boolean }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+    Taker:
+      type: object
+      properties:
+        id: { type: string }
+        empresa_id: { type: string }
+        tipo: { type: string }
+        person_type: { type: string }
+        documento: { type: string }
+        nome: { type: string }
+        email: { type: [string, "null"] }
+        logradouro: { type: [string, "null"] }
+        numero: { type: [string, "null"] }
+        complemento: { type: [string, "null"] }
+        bairro: { type: [string, "null"] }
+        cep: { type: [string, "null"] }
+        municipio: { type: [string, "null"] }
+        uf: { type: [string, "null"] }
+        codigo_ibge: { type: [string, "null"] }
+        indicador_ie: { type: [string, "null"] }
+        inscricao_estadual: { type: [string, "null"] }
+        inscricao_municipal: { type: [string, "null"] }
+        suframa: { type: [string, "null"] }
+        party_classification: { type: [string, "null"] }
+        final_consumer: { type: [boolean, "null"] }
+        legal_nature_code: { type: [string, "null"] }
+        nonprofit_entity: { type: [boolean, "null"] }
+        public_entity: { type: [boolean, "null"] }
+        producer_rural: { type: [boolean, "null"] }
+        foreign_party: { type: [boolean, "null"] }
+        country_code: { type: [string, "null"] }
+        taxpayer_iss: { type: [boolean, "null"] }
+        caepf: { type: [string, "null"] }
+        tax_regime: { type: [string, "null"] }
+        regime_tributario: { type: [string, "null"] }
+        classification_source: { type: [string, "null"] }
+        review_status: { type: [string, "null"] }
+        confidence_score: { type: [number, "null"] }
+        ativo: { type: boolean }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+    WebhookEndpoint:
+      type: object
+      properties:
+        id: { type: string }
+        integration_client_id: { type: string }
+        url: { type: string }
+        description: { type: [string, "null"] }
+        status: { type: string }
+        environment: { type: [string, "null"] }
+        events:
+          type: array
+          items: { type: string }
+        last_success_at: { type: [string, "null"] }
+        last_failure_at: { type: [string, "null"] }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+        secret: { type: [string, "null"] }
+    WebhookDelivery:
+      type: object
+      properties:
+        id: { type: string }
+        webhook_endpoint_id: { type: string }
+        fiscal_document_id: { type: [string, "null"] }
+        event_name: { type: string }
+        delivery_id: { type: string }
+        status: { type: string }
+        attempts: { type: integer }
+        response_status: { type: [integer, "null"] }
+        error_message: { type: [string, "null"] }
+        next_attempt_at: { type: [string, "null"] }
+        delivered_at: { type: [string, "null"] }
+        created_at: { type: [string, "null"] }
+    QueuedDocument:
+      type: object
+      properties:
+        id: { type: [integer, string] }
+        external_id: { type: [string, "null"] }
+        operational_status: { type: [string, "null"] }
+        fiscal_status: { type: [string, "null"] }
+        fiscal_snapshot_id: { type: [integer, string, "null"] }
+        resolution_status: { type: [string, "null"] }
+        idempotent_replay: { type: boolean }
+    DirectQueuedDocument:
+      allOf:
+        - $ref: "#/components/schemas/QueuedDocument"
+        - type: object
+          properties:
+            direct_transmission: { type: boolean }
+            direct_transmission_mode: { type: string }
+    PreviewDocument:
+      type: object
+      properties:
+        resolution_status: { type: [string, "null"] }
+        emission_allowed: { type: [boolean, "null"] }
+        blocking_issues:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        warnings:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        snapshot_preview:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: true
+        tax_resolution:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: true
+        resolved_profiles:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: true
+    DocumentListItem:
+      type: object
+      properties:
+        id: { type: string }
+        external_id: { type: [string, "null"] }
+        type: { type: [string, "null"] }
+        operational_status: { type: [string, "null"] }
+        fiscal_status: { type: [string, "null"] }
+        document_key: { type: [string, "null"] }
+        protocol: { type: [string, "null"] }
+        last_error: { type: [string, "null"] }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+    DocumentDetail:
+      type: object
+      properties:
+        id: { type: string }
+        external_id: { type: [string, "null"] }
+        document_type: { type: [string, "null"] }
+        operational_status: { type: [string, "null"] }
+        fiscal_status: { type: [string, "null"] }
+        print_status: { type: [string, "null"] }
+        document_key: { type: [string, "null"] }
+        protocol: { type: [string, "null"] }
+        last_error: { type: [string, "null"] }
+        snapshot:
+          type: object
+          additionalProperties: true
+        applied_rates:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+    DocumentSnapshotData:
+      type: object
+      properties:
+        external_id: { type: [string, "null"] }
+        document_id: { type: string }
+        snapshot:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: true
+    DocumentQueryData:
+      type: object
+      properties:
+        document:
+          type: object
+          additionalProperties: true
+        remote:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: true
+    InboundNfeCursor:
+      type: object
+      properties:
+        ult_nsu: { type: [string, "null"] }
+        max_nsu: { type: [string, "null"] }
+    InboundNfePagination:
+      type: object
+      properties:
+        current_page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+        last_page: { type: integer }
+    InboundNfeDocument:
+      type: object
+      properties:
+        id: { type: string }
+        empresa_id: { type: string }
+        fiscal_environment: { type: string }
+        chave: { type: [string, "null"] }
+        nsu: { type: [string, "null"] }
+        schema: { type: [string, "null"] }
+        cnpj_emitente: { type: [string, "null"] }
+        nome_emitente: { type: [string, "null"] }
+        numero: { type: [string, "null"] }
+        serie: { type: [string, "null"] }
+        data_emissao: { type: [string, "null"] }
+        valor_total: { type: number }
+        sefaz_cstat: { type: [string, "null"] }
+        sefaz_xmotivo: { type: [string, "null"] }
+        distribution_status: { type: [string, "null"] }
+        manifestation_status: { type: [string, "null"] }
+        document_status: { type: [string, "null"] }
+        has_full_xml: { type: boolean }
+        xml_available: { type: boolean }
+        raw_payload:
+          type: object
+          additionalProperties: true
+        latest_event_type: { type: [string, "null"] }
+        latest_event_at: { type: [string, "null"] }
+        has_cancellation: { type: boolean }
+        has_correction: { type: boolean }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+        last_synced_at: { type: [string, "null"] }
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        manifestations:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    InboundNfeListData:
+      type: object
+      properties:
+        cursor:
+          $ref: "#/components/schemas/InboundNfeCursor"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/InboundNfeDocument"
+        pagination:
+          $ref: "#/components/schemas/InboundNfePagination"
+    InboundNfeSyncData:
+      type: object
+      properties:
+        cursor:
+          $ref: "#/components/schemas/InboundNfeCursor"
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/InboundNfeDocument"
+    InboundNfeManifestData:
+      type: object
+      properties:
+        document:
+          $ref: "#/components/schemas/InboundNfeDocument"
+        manifestation:
+          type: object
+          additionalProperties: true
+    InboundNfeDownloadXmlData:
+      type: object
+      properties:
+        document:
+          $ref: "#/components/schemas/InboundNfeDocument"
+        xml: { type: [string, "null"] }

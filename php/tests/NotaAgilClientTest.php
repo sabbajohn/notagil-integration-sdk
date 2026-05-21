@@ -78,28 +78,43 @@ class NotaAgilClientTest extends TestCase
         $history = [];
         $client = $this->client([
             new Response(200, [], json_encode(['data' => [['id' => 'rate-1']]])),
+            new Response(200, [], json_encode(['data' => [['id' => 'emitter-1']]])),
             new Response(201, [], json_encode(['data' => ['id' => 'rule-1']])),
+            new Response(201, [], json_encode(['data' => ['id' => 'assignment-1']])),
+            new Response(200, [], json_encode(['data' => ['deleted' => true]])),
             new Response(200, [], json_encode(['data' => ['deleted' => true]])),
         ], $history);
 
         $rates = $client->rateReferences('10', ['tax_type' => 'ibs', 'uf' => 'SC']);
+        $emitters = $client->emitterProfiles('10');
         $rule = $client->createTaxRuleSet('10', [
             'code' => 'IBS-SC',
             'name' => 'IBS SC',
             'rule_scope_type' => 'product',
             'valid_from' => '2026-01-01',
         ]);
+        $assignment = $client->createProfileAssignment('10', [
+            'profile_id' => '11',
+            'operation_profile_id' => '12',
+        ]);
         $deleted = $client->deleteOperationProfile('10', '99');
+        $deletedEmitter = $client->deleteEmitterProfile('10', '77');
 
         $this->assertSame([['id' => 'rate-1']], $rates);
+        $this->assertSame([['id' => 'emitter-1']], $emitters);
         $this->assertSame(['id' => 'rule-1'], $rule);
+        $this->assertSame(['id' => 'assignment-1'], $assignment);
         $this->assertSame(['deleted' => true], $deleted);
+        $this->assertSame(['deleted' => true], $deletedEmitter);
         $this->assertSame('/api/v1/integrations/companies/10/fiscal/rate-references', $history[0]['request']->getUri()->getPath());
         $this->assertSame('tax_type=ibs&uf=SC', $history[0]['request']->getUri()->getQuery());
-        $this->assertSame('POST', $history[1]['request']->getMethod());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/tax-rule-sets', $history[1]['request']->getUri()->getPath());
-        $this->assertSame('DELETE', $history[2]['request']->getMethod());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/operation-profiles/99', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/emitter-profiles', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('POST', $history[2]['request']->getMethod());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/tax-rule-sets', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/profile-assignments', $history[3]['request']->getUri()->getPath());
+        $this->assertSame('DELETE', $history[4]['request']->getMethod());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/operation-profiles/99', $history[4]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/emitter-profiles/77', $history[5]['request']->getUri()->getPath());
     }
 
     public function test_document_download_and_operational_helpers_use_public_paths(): void
@@ -129,6 +144,31 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame('/api/v1/integrations/companies/10/readiness', $history[1]['request']->getUri()->getPath());
         $this->assertSame('/api/v1/integrations/companies/10/fiscal/cfops', $history[2]['request']->getUri()->getPath());
         $this->assertSame('/api/v1/integrations/companies/10/schedules', $history[3]['request']->getUri()->getPath());
+    }
+
+    public function test_inbound_nfe_company_first_aliases_use_expected_paths(): void
+    {
+        $history = [];
+        $client = $this->client([
+            new Response(200, [], json_encode(['data' => ['document' => ['id' => 'doc-1']], 'ok' => true, 'error' => null])),
+            new Response(200, [], json_encode(['data' => ['xml' => '<nfe />'], 'ok' => true, 'error' => null])),
+            new Response(200, [], json_encode(['data' => ['id' => 'doc-1'], 'ok' => true, 'error' => null])),
+            new Response(200, [], json_encode(['data' => ['id' => 'doc-1'], 'ok' => true, 'error' => null])),
+        ], $history);
+
+        $manifest = $client->manifestCompanyInboundNfe('10', '22', ['event_type' => 'ciencia']);
+        $download = $client->downloadCompanyInboundNfeXml('10', '22');
+        $updated = $client->updateCompanyInboundNfeEntryBookkeeping('10', '22', ['cfop' => '1102']);
+        $confirmed = $client->confirmCompanyInboundNfeEntryBookkeeping('10', '22');
+
+        $this->assertTrue((bool) ($manifest['ok'] ?? false));
+        $this->assertTrue((bool) ($download['ok'] ?? false));
+        $this->assertTrue((bool) ($updated['ok'] ?? false));
+        $this->assertTrue((bool) ($confirmed['ok'] ?? false));
+        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/manifest', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/download-xml', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/entry-bookkeeping', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/entry-bookkeeping/confirm', $history[3]['request']->getUri()->getPath());
     }
 
     public function test_webhook_signature_helper_matches_hmac_contract(): void

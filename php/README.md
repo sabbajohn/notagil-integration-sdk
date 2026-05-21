@@ -7,7 +7,7 @@ Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padr
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:0.1.0-beta.3
+composer require notagil/integration-sdk:0.1.0-beta.4
 ```
 
 ## Uso Basico
@@ -67,7 +67,7 @@ if (($authorized['fiscal_status'] ?? null) === 'authorized') {
 ## Superficies Disponiveis
 
 - Empresas e configuracao fiscal.
-- Perfis de operacao, referencias de aliquota e regras fiscais por empresa.
+- Perfis de emissor, perfis de operacao, atribuicoes de perfil, referencias de aliquota e regras fiscais por empresa.
 - Preview fiscal antes da emissao.
 - Criacao, listagem, consulta, cancelamento e correcao de documentos.
 - Envio direto de payload fiscal completo.

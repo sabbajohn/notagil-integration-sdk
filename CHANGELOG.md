@@ -4,6 +4,19 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-beta.4] - 2026-05-21
+
+### Added
+- Metodos PHP e TypeScript para perfis fiscais de emissor e atribuicoes de perfil por empresa.
+- Aliases company-first para manifestacao, download XML e escrituracao da superficie de entrada NF-e.
+
+### Changed
+- Contrato OpenAPI sincronizado com a versao atual publicada pela API publica de integracao.
+- Tipos TypeScript regenerados a partir do contrato novo, incluindo responses tipados para documentos, certificados, takers e NF-e de entrada.
+
+### Notes
+- Breaking beta: os aliases sem `companyId` e os fluxos de emissao por `payload` legado foram removidos. Use sempre metodos company-scoped e o envelope `snapshot`.
+
 ## [0.1.0-beta.3] - 2026-05-20
 
 ### Added
@@ -11,8 +24,6 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as ve
 
 ### Changed
 - OpenAPI de integracao revisado para a superficie de emissao por `operation_code`.
-- Breaking beta: removidos aliases de empresa padrao e metodos de preview/emissao por `payload` legado.
-- SDKs PHP e TypeScript passam a exigir `companyId` para documentos, configuracoes, catalogos, onboarding, estoque e agendamentos.
 
 ## [0.1.0-beta.2] - 2026-05-20
 

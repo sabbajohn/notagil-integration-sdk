@@ -109,30 +109,33 @@ export interface DirectXmlSubmitRequest {
 }
 
 export interface PreviewResult {
-  resolution_status: ResolutionStatus;
-  emission_allowed: boolean;
+  resolution_status: ResolutionStatus | string | null;
+  emission_allowed: boolean | null;
   payload?: Record<string, unknown>;
   resolved_profiles?: Record<string, unknown>;
   snapshot_preview?: Record<string, unknown>;
   tax_resolution?: Record<string, unknown>;
-  blocking_issues?: Array<Record<string, unknown>>;
-  warnings?: string[];
+  blocking_issues?: Array<Record<string, unknown> | string>;
+  warnings?: Array<Record<string, unknown> | string>;
 }
 
 export interface DocumentAccepted {
   id: string | number;
-  external_id: string;
-  operational_status: string;
-  fiscal_status: string;
+  external_id?: string | null;
+  operational_status?: string | null;
+  fiscal_status?: string | null;
   fiscal_snapshot_id?: string | number | null;
   resolution_status?: ResolutionStatus | string | null;
   idempotent_replay: boolean;
+  direct_transmission?: boolean;
+  direct_transmission_mode?: string | null;
 }
 
 export interface DocumentStatus {
   id: string | number;
   external_id: string;
-  type: DocumentType;
+  type?: DocumentType | string | null;
+  document_type?: DocumentType | string | null;
   operational_status: string;
   fiscal_status: string;
   document_key?: string | null;
@@ -167,6 +170,17 @@ export interface PaginatedDocumentList {
   };
 }
 
+export interface DocumentSnapshotResult {
+  external_id?: string | null;
+  document_id: string | number;
+  snapshot?: Record<string, unknown> | null;
+}
+
+export interface DocumentQueryResult {
+  document: Record<string, unknown>;
+  remote?: Record<string, unknown> | null;
+}
+
 export interface CompanyConfigurationPayload {
   [key: string]: unknown;
 }
@@ -189,6 +203,16 @@ export interface WebhookPayload {
 }
 
 export interface FiscalOperationProfilePayload {
+  id?: string | number;
+  [key: string]: unknown;
+}
+
+export interface FiscalEmitterProfilePayload {
+  id?: string | number;
+  [key: string]: unknown;
+}
+
+export interface FiscalProfileAssignmentPayload {
   id?: string | number;
   [key: string]: unknown;
 }
@@ -369,14 +393,14 @@ export class NotagilIntegrationClient {
     return this.download(this.documentArtifactPath(externalId, 'pdf', companyId));
   }
 
-  getDocumentSnapshot(externalId: string, companyId: string | number): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>(this.documentArtifactPath(externalId, 'snapshot', companyId), {
+  getDocumentSnapshot(externalId: string, companyId: string | number): Promise<DocumentSnapshotResult> {
+    return this.request<DocumentSnapshotResult>(this.documentArtifactPath(externalId, 'snapshot', companyId), {
       method: 'GET',
     });
   }
 
-  queryDocument(externalId: string, companyId: string | number, forceRemote = false): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>(this.withQuery(this.documentArtifactPath(externalId, 'query', companyId), { force_remote: forceRemote ? 1 : undefined }), {
+  queryDocument(externalId: string, companyId: string | number, forceRemote = false): Promise<DocumentQueryResult> {
+    return this.request<DocumentQueryResult>(this.withQuery(this.documentArtifactPath(externalId, 'query', companyId), { force_remote: forceRemote ? 1 : undefined }), {
       method: 'POST',
     });
   }
@@ -623,6 +647,32 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>(this.withQuery(this.companyPath(`/fiscal/tax-situations/${encodeURIComponent(String(situation))}/consequence-template`, companyId), params), { method: 'GET' });
   }
 
+  listEmitterProfiles(companyId: string | number): Promise<FiscalEmitterProfilePayload[]> {
+    return this.request<FiscalEmitterProfilePayload[]>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/emitter-profiles`, {
+      method: 'GET',
+    });
+  }
+
+  createEmitterProfile(companyId: string | number, payload: FiscalEmitterProfilePayload): Promise<FiscalEmitterProfilePayload> {
+    return this.request<FiscalEmitterProfilePayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/emitter-profiles`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateEmitterProfile(companyId: string | number, profileId: string | number, payload: FiscalEmitterProfilePayload): Promise<FiscalEmitterProfilePayload> {
+    return this.request<FiscalEmitterProfilePayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/emitter-profiles/${encodeURIComponent(String(profileId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteEmitterProfile(companyId: string | number, profileId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/emitter-profiles/${encodeURIComponent(String(profileId))}`, {
+      method: 'DELETE',
+    });
+  }
+
   listOperationProfiles(companyId: string | number): Promise<FiscalOperationProfilePayload[]> {
     return this.request<FiscalOperationProfilePayload[]>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/operation-profiles`, {
       method: 'GET',
@@ -645,6 +695,32 @@ export class NotagilIntegrationClient {
 
   deleteOperationProfile(companyId: string | number, profileId: string | number): Promise<DeleteResult> {
     return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/operation-profiles/${encodeURIComponent(String(profileId))}`, {
+      method: 'DELETE',
+    });
+  }
+
+  listProfileAssignments(companyId: string | number): Promise<FiscalProfileAssignmentPayload[]> {
+    return this.request<FiscalProfileAssignmentPayload[]>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/profile-assignments`, {
+      method: 'GET',
+    });
+  }
+
+  createProfileAssignment(companyId: string | number, payload: FiscalProfileAssignmentPayload): Promise<FiscalProfileAssignmentPayload> {
+    return this.request<FiscalProfileAssignmentPayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/profile-assignments`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  updateProfileAssignment(companyId: string | number, assignmentId: string | number, payload: FiscalProfileAssignmentPayload): Promise<FiscalProfileAssignmentPayload> {
+    return this.request<FiscalProfileAssignmentPayload>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/profile-assignments/${encodeURIComponent(String(assignmentId))}`, {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  deleteProfileAssignment(companyId: string | number, assignmentId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/companies/${encodeURIComponent(String(companyId))}/fiscal/profile-assignments/${encodeURIComponent(String(assignmentId))}`, {
       method: 'DELETE',
     });
   }
@@ -730,16 +806,32 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/manifest`, companyId), { method: 'POST', body: payload, unwrapData: false });
   }
 
+  manifestCompanyInboundNfe(companyId: string | number, documentId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.manifestInboundNfe(documentId, payload, companyId);
+  }
+
   downloadInboundNfeXml(documentId: string | number, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/download-xml`, companyId), { method: 'POST', unwrapData: false });
+  }
+
+  downloadCompanyInboundNfeXml(companyId: string | number, documentId: string | number): Promise<Record<string, unknown>> {
+    return this.downloadInboundNfeXml(documentId, companyId);
   }
 
   updateInboundNfeEntryBookkeeping(documentId: string | number, payload: Record<string, unknown>, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/entry-bookkeeping`, companyId), { method: 'POST', body: payload, unwrapData: false });
   }
 
+  updateCompanyInboundNfeEntryBookkeeping(companyId: string | number, documentId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.updateInboundNfeEntryBookkeeping(documentId, payload, companyId);
+  }
+
   confirmInboundNfeEntryBookkeeping(documentId: string | number, companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath(`/inbound/nfe/${encodeURIComponent(String(documentId))}/entry-bookkeeping/confirm`, companyId), { method: 'POST', unwrapData: false });
+  }
+
+  confirmCompanyInboundNfeEntryBookkeeping(companyId: string | number, documentId: string | number): Promise<Record<string, unknown>> {
+    return this.confirmInboundNfeEntryBookkeeping(documentId, companyId);
   }
 
   listStockMovements(companyId: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {

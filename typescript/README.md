@@ -5,7 +5,7 @@ TypeScript beta SDK for the NotaAgil public integration API documented in `../op
 See [docs/payload-emissao.md](https://github.com/sabbajohn/notagil-integration-sdk/blob/main/docs/payload-emissao.md) for the normalized fiscal emission payload based on `operation_code` and `snapshot`.
 
 ```bash
-npm install @notagil/integration-sdk@0.1.0-beta.3
+npm install @notagil/integration-sdk@0.1.0-beta.4
 ```
 
 ```ts
@@ -169,7 +169,9 @@ await client.transmitCompanyDirectXml(
 Manage company fiscal configuration through the company-scoped fiscal endpoints:
 
 ```ts
+const emitterProfiles = await client.listEmitterProfiles(10);
 const operationProfiles = await client.listOperationProfiles(10);
+const profileAssignments = await client.listProfileAssignments(10);
 
 await client.createRateReference(10, {
   code: 'IBS-SC-2026',

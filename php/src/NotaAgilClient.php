@@ -324,6 +324,26 @@ class NotaAgilClient
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-situations/'.$situation.'/consequence-template', $companyId), $filters));
     }
 
+    public function emitterProfiles(string|int $companyId): array
+    {
+        return $this->request('GET', "/companies/{$companyId}/fiscal/emitter-profiles");
+    }
+
+    public function createEmitterProfile(string|int $companyId, array $payload): array
+    {
+        return $this->request('POST', "/companies/{$companyId}/fiscal/emitter-profiles", ['json' => $payload]);
+    }
+
+    public function updateEmitterProfile(string|int $companyId, string|int $profileId, array $payload): array
+    {
+        return $this->request('PUT', "/companies/{$companyId}/fiscal/emitter-profiles/{$profileId}", ['json' => $payload]);
+    }
+
+    public function deleteEmitterProfile(string|int $companyId, string|int $profileId): array
+    {
+        return $this->request('DELETE', "/companies/{$companyId}/fiscal/emitter-profiles/{$profileId}");
+    }
+
     public function operationProfiles(string|int $companyId): array
     {
         return $this->request('GET', "/companies/{$companyId}/fiscal/operation-profiles");
@@ -342,6 +362,26 @@ class NotaAgilClient
     public function deleteOperationProfile(string|int $companyId, string|int $profileId): array
     {
         return $this->request('DELETE', "/companies/{$companyId}/fiscal/operation-profiles/{$profileId}");
+    }
+
+    public function profileAssignments(string|int $companyId): array
+    {
+        return $this->request('GET', "/companies/{$companyId}/fiscal/profile-assignments");
+    }
+
+    public function createProfileAssignment(string|int $companyId, array $payload): array
+    {
+        return $this->request('POST', "/companies/{$companyId}/fiscal/profile-assignments", ['json' => $payload]);
+    }
+
+    public function updateProfileAssignment(string|int $companyId, string|int $assignmentId, array $payload): array
+    {
+        return $this->request('PUT', "/companies/{$companyId}/fiscal/profile-assignments/{$assignmentId}", ['json' => $payload]);
+    }
+
+    public function deleteProfileAssignment(string|int $companyId, string|int $assignmentId): array
+    {
+        return $this->request('DELETE', "/companies/{$companyId}/fiscal/profile-assignments/{$assignmentId}");
     }
 
     public function rateReferences(string|int $companyId, array $filters = []): array
@@ -419,9 +459,19 @@ class NotaAgilClient
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/manifest', $companyId), ['json' => $payload], unwrapData: false);
     }
 
+    public function manifestCompanyInboundNfe(string|int $companyId, string|int $documentId, array $payload): array
+    {
+        return $this->manifestInboundNfe($documentId, $payload, $companyId);
+    }
+
     public function downloadInboundNfeXml(string|int $documentId, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/download-xml', $companyId), unwrapData: false);
+    }
+
+    public function downloadCompanyInboundNfeXml(string|int $companyId, string|int $documentId): array
+    {
+        return $this->downloadInboundNfeXml($documentId, $companyId);
     }
 
     public function updateInboundNfeEntryBookkeeping(string|int $documentId, array $payload, string|int $companyId): array
@@ -429,9 +479,19 @@ class NotaAgilClient
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/entry-bookkeeping', $companyId), ['json' => $payload], unwrapData: false);
     }
 
+    public function updateCompanyInboundNfeEntryBookkeeping(string|int $companyId, string|int $documentId, array $payload): array
+    {
+        return $this->updateInboundNfeEntryBookkeeping($documentId, $payload, $companyId);
+    }
+
     public function confirmInboundNfeEntryBookkeeping(string|int $documentId, string|int $companyId): array
     {
         return $this->request('POST', $this->companyPath('/inbound/nfe/'.$documentId.'/entry-bookkeeping/confirm', $companyId), unwrapData: false);
+    }
+
+    public function confirmCompanyInboundNfeEntryBookkeeping(string|int $companyId, string|int $documentId): array
+    {
+        return $this->confirmInboundNfeEntryBookkeeping($documentId, $companyId);
     }
 
     public function stockMovements(string|int $companyId, array $filters = []): array
