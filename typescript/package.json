@@ -1,6 +1,6 @@
 {
   "name": "@notagil/integration-sdk",
-  "version": "0.1.0-beta.4",
+  "version": "0.1.0-beta.5",
   "description": "TypeScript SDK for the NotaAgil Integration API beta.",
   "type": "module",
   "license": "MIT",
@@ -44,6 +44,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "generate:types": "openapi-typescript ../openapi/integration-v1.yaml -o src/openapi-types.ts",
+    "test": "npm run build && node --test ./tests/smoke.test.mjs",
     "prepack": "npm run build",
     "pack:dry-run": "npm pack --dry-run"
   },

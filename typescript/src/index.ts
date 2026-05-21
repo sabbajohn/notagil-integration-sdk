@@ -133,15 +133,15 @@ export interface DocumentAccepted {
 
 export interface DocumentStatus {
   id: string | number;
-  external_id: string;
+  external_id: string | null;
   type?: DocumentType | string | null;
   document_type?: DocumentType | string | null;
-  operational_status: string;
-  fiscal_status: string;
+  operational_status: string | null;
+  fiscal_status: string | null;
   document_key?: string | null;
   protocol?: string | null;
   last_error?: string | null;
-  snapshot?: Record<string, unknown>;
+  snapshot?: Record<string, unknown> | null;
   applied_rates?: Array<Record<string, unknown>>;
   events?: Array<Record<string, unknown>>;
   metadata?: Record<string, unknown> | null;
@@ -860,14 +860,15 @@ export class NotagilIntegrationClient {
 
   static async webhookSignature(secret: string, deliveryId: string, timestamp: string, body: string): Promise<string> {
     const payload = `${deliveryId}.${timestamp}.${body}`;
-    const key = await crypto.subtle.importKey(
+    const cryptoApi = await this.cryptoApi();
+    const key = await cryptoApi.subtle.importKey(
       'raw',
       new TextEncoder().encode(secret),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign'],
     );
-    const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+    const signature = await cryptoApi.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
 
     return Array.from(new Uint8Array(signature)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
   }
@@ -903,7 +904,7 @@ export class NotagilIntegrationClient {
 
     if (!response.ok) {
       const text = await response.text();
-      const parsed = text === '' ? null : JSON.parse(text);
+      const parsed = this.parseResponseBody(text);
       throw new NotagilApiError(response.status, parsed);
     }
 
@@ -941,7 +942,7 @@ export class NotagilIntegrationClient {
     });
 
     const text = await response.text();
-    const parsed = text === '' ? null : JSON.parse(text);
+    const parsed = this.parseResponseBody(text);
 
     if (!response.ok) {
       throw new NotagilApiError(response.status, parsed);
@@ -952,5 +953,25 @@ export class NotagilIntegrationClient {
     }
 
     return (parsed && typeof parsed === 'object' && 'data' in parsed ? (parsed as { data: T }).data : parsed) as T;
+  }
+
+  private parseResponseBody(text: string): unknown {
+    if (text === '') {
+      return null;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { raw: text };
+    }
+  }
+
+  private static async cryptoApi(): Promise<Crypto> {
+    if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.subtle !== 'undefined') {
+      return globalThis.crypto;
+    }
+
+    throw new Error('Web Crypto API is unavailable in this runtime.');
   }
 }

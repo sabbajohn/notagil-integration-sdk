@@ -4,6 +4,15 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-beta.5] - 2026-05-21
+
+### Added
+- Smoke tests do SDK TypeScript executados sobre o build publicado em `dist/`.
+
+### Changed
+- Tratamento de erro do SDK TypeScript endurecido para respostas nao-JSON, preservando `NotagilApiError` com `body.raw`.
+- Helper de assinatura de webhook TypeScript agora falha com mensagem explicita quando a Web Crypto API nao estiver disponivel.
+
 ## [0.1.0-beta.4] - 2026-05-21
 
 ### Added

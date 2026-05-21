@@ -13,7 +13,7 @@ A estrutura recomendada para preview e emissao fiscal por `operation_code` esta 
 
 ## Release Atual
 
-`v0.1.0-beta.4` sincroniza o SDK com a versao atual da API publica.
+`v0.1.0-beta.5` sincroniza o SDK com a versao atual da API publica e adiciona smoke tests do pacote TypeScript.
 
 Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais de emissor, perfis de operacao, atribuicoes de perfil, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por `operation_code` com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto escopado por empresa, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
 
@@ -22,7 +22,7 @@ Breaking beta: os aliases sem `companyId` e a emissao por `payload` legado foram
 ## Instalacao PHP
 
 ```sh
-composer require notagil/integration-sdk:0.1.0-beta.4
+composer require notagil/integration-sdk:0.1.0-beta.5
 ```
 
 ```php
@@ -41,7 +41,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ## Instalacao TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@0.1.0-beta.4
+npm install @notagil/integration-sdk@0.1.0-beta.5
 ```
 
 ```ts
@@ -67,6 +67,7 @@ cd typescript
 npm ci
 npm run generate:types
 npm run build
+npm test
 npm run pack:dry-run
 ```
 
@@ -92,8 +93,8 @@ composer test
 4. Crie a tag semver, por exemplo:
 
 ```sh
-git tag v0.1.0-beta.4
-git push origin v0.1.0-beta.4
+git tag v0.1.0-beta.5
+git push origin v0.1.0-beta.5
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.
