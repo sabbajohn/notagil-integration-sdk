@@ -52,6 +52,8 @@ Campos do envelope:
 
 O `snapshot` enviado pelo cliente e uma estrutura de entrada. Ele nao deve conter campos calculados pelo motor fiscal.
 
+Use `snapshot.counterparty` para destinatario, tomador, consumidor ou contraparte. As chaves legadas `snapshot.customer` e `snapshot.complementary` nao fazem parte do contrato por `operation_code`.
+
 ```json
 {
   "fiscal_environment": "homologacao",
@@ -106,8 +108,10 @@ Campos do `snapshot`:
 
 Nas rotas por `operation_code`, nao envie `snapshot.operation_profile_id`. A operacao ja e definida pela URL.
 
-Tambem nao envie campos gerados pelo motor fiscal ou pelo snapshot persistido:
+Tambem nao envie campos gerados pelo motor fiscal, pelo snapshot persistido ou aliases legados:
 
+- `customer`
+- `complementary`
 - `context_hash`
 - `signature_hash`
 - `profiles_json`
@@ -116,6 +120,15 @@ Tambem nao envie campos gerados pelo motor fiscal ou pelo snapshot persistido:
 - `blocking_issues`
 - `totals`
 - `tax_totals`
+- `items[*].codigo`
+- `items[*].nome`
+- `items[*].descricao`
+- `items[*].quantidade`
+- `items[*].valor_unitario`
+- `items[*].valorUnitario`
+- `items[*].valor_total`
+- `items[*].valorTotal`
+- `items[*].cfop`
 - `items[*].taxes`
 - `items[*].tax_calculations`
 
@@ -155,7 +168,7 @@ Esses campos sao resolvidos pela NotaAgil durante o preview ou a emissao.
 | `taxpayer_icms` | Indica contribuinte de ICMS. |
 | `taxpayer_iss` | Indica contribuinte de ISS. |
 | `final_consumer` | Indica consumidor final. |
-| `buyer_identified` | Indica se o comprador foi identificado. |
+| `buyer_identified` | Informativo. A API considera o comprador identificado quando `documento`/CPF/CNPJ esta presente. |
 | `public_entity` | Indica orgao ou entidade publica. |
 | `country_code` | Codigo do pais quando aplicavel. |
 

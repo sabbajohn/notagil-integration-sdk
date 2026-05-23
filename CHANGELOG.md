@@ -4,6 +4,13 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-05-23
+
+### Changed
+- Contrato de emissao por `operation_code` padronizado em `snapshot.counterparty` e `snapshot.document_data`.
+- Tipos TypeScript marcam `snapshot.customer`, `snapshot.complementary`, `snapshot.totals`, `snapshot.tax_totals` e aliases legados de item como proibidos.
+- Documentacao deixa claro que `buyer_identified` e informativo e que a identificacao fiscal depende de documento/CPF/CNPJ presente.
+
 ## [0.1.0-beta.5] - 2026-05-21
 
 ### Added

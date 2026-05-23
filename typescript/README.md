@@ -5,7 +5,7 @@ TypeScript beta SDK for the NotaAgil public integration API documented in `../op
 See [docs/payload-emissao.md](https://github.com/sabbajohn/notagil-integration-sdk/blob/main/docs/payload-emissao.md) for the normalized fiscal emission payload based on `operation_code` and `snapshot`.
 
 ```bash
-npm install @notagil/integration-sdk@0.1.0-beta.5
+npm install @notagil/integration-sdk@0.1.1
 ```
 
 ```ts

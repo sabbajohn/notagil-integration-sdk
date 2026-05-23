@@ -48,6 +48,15 @@ export interface OperationDocumentSnapshotItem extends Record<string, unknown> {
   quantity: number;
   unit_price: number;
   gross_amount?: number;
+  codigo?: never;
+  nome?: never;
+  descricao?: never;
+  quantidade?: never;
+  valor_unitario?: never;
+  valorUnitario?: never;
+  valor_total?: never;
+  valorTotal?: never;
+  cfop?: never;
   codigo_servico_municipal?: string;
   codigo_cnae?: string;
   codigoCnae?: string;
@@ -69,6 +78,10 @@ export interface OperationDocumentSnapshot {
   reference_date?: string;
   document_data?: Record<string, unknown>;
   counterparty?: Record<string, unknown>;
+  customer?: never;
+  complementary?: never;
+  totals?: never;
+  tax_totals?: never;
   document_references?: Array<Record<string, unknown>>;
   items: OperationDocumentSnapshotItem[];
   [key: string]: unknown;

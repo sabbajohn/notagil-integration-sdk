@@ -7,7 +7,7 @@ Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padr
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:0.1.0-beta.5
+composer require notagil/integration-sdk:0.1.1
 ```
 
 ## Uso Basico
