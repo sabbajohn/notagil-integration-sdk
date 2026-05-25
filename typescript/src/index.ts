@@ -252,6 +252,10 @@ export interface IntegrationCompany {
   [key: string]: unknown;
 }
 
+export interface CompanyListFilters {
+  cnpj?: string;
+}
+
 export interface ProductPayload {
   [key: string]: unknown;
 }
@@ -358,8 +362,8 @@ export class NotagilIntegrationClient {
     this.fetcher = options.fetch ?? fetch;
   }
 
-  listCompanies(): Promise<IntegrationCompany[]> {
-    return this.request<IntegrationCompany[]>('/companies', {
+  listCompanies(filters: CompanyListFilters = {}): Promise<IntegrationCompany[]> {
+    return this.request<IntegrationCompany[]>(this.withQuery('/companies', filters), {
       method: 'GET',
     });
   }

@@ -1,6 +1,6 @@
 {
   "name": "@notagil/integration-sdk",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "TypeScript SDK for the NotaAgil Integration API beta.",
   "type": "module",
   "license": "MIT",

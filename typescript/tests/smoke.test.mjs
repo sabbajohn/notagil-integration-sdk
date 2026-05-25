@@ -61,6 +61,27 @@ test('manifestCompanyInboundNfe alias uses the company-scoped inbound path', asy
   assert.equal(history[0].init.method, 'POST');
 });
 
+test('listCompanies can filter companies by CNPJ', async () => {
+  const history = [];
+  const client = new NotagilIntegrationClient({
+    baseUrl: 'https://api.test/api/v1/integrations',
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      return new Response(JSON.stringify({ data: [{ id: '10' }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  const companies = await client.listCompanies({ cnpj: '12345678000199' });
+
+  assert.deepEqual(companies, [{ id: '10' }]);
+  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/companies?cnpj=12345678000199');
+  assert.equal(history[0].init.method, 'GET');
+});
+
 test('request errors with non-JSON body still throw NotagilApiError', async () => {
   const client = new NotagilIntegrationClient({
     baseUrl: 'https://api.test/api/v1/integrations',

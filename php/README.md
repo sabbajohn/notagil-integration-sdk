@@ -7,7 +7,7 @@ Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padr
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:0.1.1
+composer require notagil/integration-sdk:0.1.5
 ```
 
 ## Uso Basico
@@ -20,7 +20,7 @@ $client = new NotaAgilClient(
     token: getenv('NOTAGIL_TOKEN'),
 );
 
-$companies = $client->companies();
+$companies = $client->companies(['cnpj' => '12345678000199']);
 
 $snapshot = [
     'fiscal_environment' => 'homologacao',

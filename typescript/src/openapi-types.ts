@@ -2069,7 +2069,10 @@ export type $defs = Record<string, never>;
 export interface operations {
     listCompanies: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filters companies by CNPJ. Send digits only when possible. */
+                cnpj?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

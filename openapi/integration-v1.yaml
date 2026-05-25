@@ -35,6 +35,12 @@ paths:
       tags: [Companies]
       operationId: listCompanies
       x-required-scopes: ["companies:read"]
+      parameters:
+        - name: cnpj
+          in: query
+          required: false
+          description: Filters companies by CNPJ. Send digits only when possible.
+          schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/CompanyCollectionResponse" }
   /companies/{company_id}:

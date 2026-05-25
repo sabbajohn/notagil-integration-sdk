@@ -13,7 +13,7 @@ A estrutura recomendada para preview e emissao fiscal por `operation_code` esta 
 
 ## Release Atual
 
-`v0.1.1` padroniza a emissao por `operation_code` no contrato canonico `snapshot.counterparty`, rejeitando aliases legados de destinatario, documento e itens nas definicoes do SDK.
+`v0.1.5` adiciona busca de empresas por CNPJ em `/companies`, preserva os metadados fiscais/autorizacao e os downloads de XML/PDF para emissao fiscal.
 
 Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais de emissor, perfis de operacao, atribuicoes de perfil, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por `operation_code` com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto escopado por empresa, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
 
@@ -22,7 +22,7 @@ Breaking beta: os aliases sem `companyId` e a emissao por `payload` legado foram
 ## Instalacao PHP
 
 ```sh
-composer require notagil/integration-sdk:0.1.1
+composer require notagil/integration-sdk:0.1.5
 ```
 
 ```php
@@ -33,7 +33,7 @@ $client = new NotaAgilClient(
     token: getenv('NOTAGIL_TOKEN'),
 );
 
-$companies = $client->companies();
+$companies = $client->companies(['cnpj' => '12345678000199']);
 ```
 
 O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src`.
@@ -41,7 +41,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ## Instalacao TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@0.1.1
+npm install @notagil/integration-sdk@0.1.5
 ```
 
 ```ts
@@ -52,7 +52,7 @@ const client = new NotagilIntegrationClient({
   token: process.env.NOTAGIL_TOKEN!,
 });
 
-const companies = await client.listCompanies();
+const companies = await client.listCompanies({ cnpj: '12345678000199' });
 const documents = await client.listCompanyDocuments(companies[0].id, { per_page: 20 });
 const authorized = await client.waitDocument('pdv-sale-0001', { companyId: companies[0].id });
 
@@ -136,8 +136,8 @@ composer test
 4. Crie a tag semver, por exemplo:
 
 ```sh
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.5
+git push origin v0.1.5
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.

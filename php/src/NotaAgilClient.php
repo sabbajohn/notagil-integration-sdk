@@ -19,9 +19,9 @@ class NotaAgilClient
         $this->http = $http ?? new Client(['timeout' => 30]);
     }
 
-    public function companies(): array
+    public function companies(array $filters = []): array
     {
-        return $this->request('GET', '/companies');
+        return $this->request('GET', $this->withQuery('/companies', $filters));
     }
 
     public function company(string|int $companyId): array
