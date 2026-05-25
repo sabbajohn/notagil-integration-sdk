@@ -54,6 +54,16 @@ const client = new NotagilIntegrationClient({
 
 const companies = await client.listCompanies();
 const documents = await client.listCompanyDocuments(companies[0].id, { per_page: 20 });
+const authorized = await client.waitDocument('pdv-sale-0001', { companyId: companies[0].id });
+
+if (authorized.fiscal_status === 'authorized') {
+  const xml = await client.downloadDocumentXml('pdv-sale-0001', companies[0].id);
+  const pdf = await client.downloadDocumentPdf('pdv-sale-0001', companies[0].id);
+
+  console.log(authorized.access_key, authorized.protocol, authorized.authorized_at);
+  console.log(xml.content); // XML autorizado completo em texto puro.
+  console.log(pdf.base64); // PDF/DANFE em base64 sem data URI.
+}
 ```
 
 O pacote npm e publicado a partir do diretorio `typescript/`.
@@ -75,6 +85,39 @@ npm run pack:dry-run
 composer install
 composer validate --strict
 composer test
+```
+
+O comando `composer test` (ou `composer test:sdk`) e o switch de validacao completa:
+
+- `SDK_TEST_SWITCH=on` (padrao): roda testes PHP + TypeScript.
+- `SDK_TEST_SWITCH=off`: pula a validacao e encerra com sucesso.
+- `SDK_E2E_SWITCH=on`: inclui teste ponta a ponta em homologacao (chamadas reais).
+- `SDK_E2E_SWITCH=off` (padrao): nao executa E2E.
+
+Exemplo:
+
+```sh
+SDK_TEST_SWITCH=off composer test:sdk
+```
+
+E2E em homologacao:
+
+```sh
+SDK_E2E_SWITCH=on NOTAGIL_TOKEN=seu_token composer test
+```
+
+Detalhes completos de payload, variaveis e fluxo em [docs/e2e-homologacao.md](docs/e2e-homologacao.md).
+
+Se quiser rodar apenas o teste PHP a partir da raiz:
+
+```sh
+composer test:php
+```
+
+Se quiser rodar apenas E2E:
+
+```sh
+composer test:e2e
 ```
 
 Tambem e possivel trabalhar somente no pacote PHP isolado:

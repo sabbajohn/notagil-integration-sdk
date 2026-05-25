@@ -1,0 +1,36 @@
+{
+  "operation_code": "VENDA_BALCAO",
+  "document_type": "nfce",
+  "municipio": "Sao Paulo",
+  "metadata": {
+    "source": "sdk-e2e"
+  },
+  "snapshot": {
+    "fiscal_environment": "homologacao",
+    "document_direction": "saida",
+    "reference_date": "2026-05-24",
+    "document_data": {
+      "serie": "1",
+      "numero": "900001",
+      "data_emissao": "2026-05-24T10:00:00-03:00",
+      "natureza_operacao": "Emissao de homologacao via SDK"
+    },
+    "counterparty": {
+      "nome": "Consumidor Teste Homologacao",
+      "documento": "12345678909",
+      "person_type": "pf",
+      "uf": "SP",
+      "codigo_ibge": "3550308",
+      "indicador_ie": "9",
+      "final_consumer": true
+    },
+    "items": [
+      {
+        "description": "Item de homologacao",
+        "quantity": 1,
+        "unit_price": 10,
+        "gross_amount": 10
+      }
+    ]
+  }
+}

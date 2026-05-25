@@ -65,12 +65,23 @@ class NotaAgilClientTest extends TestCase
     public function test_api_errors_throw_typed_exception(): void
     {
         $history = [];
-        $client = $this->client([new Response(403, [], json_encode(['message' => 'Escopo insuficiente.']))], $history);
+        $payload = [
+            'message' => 'Escopo insuficiente.',
+            'rejection_reason' => 'Duplicidade de NF-e',
+            'errors' => [['code' => '539', 'message' => 'Duplicidade de NF-e']],
+        ];
+        $client = $this->client([new Response(403, [], json_encode($payload))], $history);
 
-        $this->expectException(NotaAgilApiException::class);
-        $this->expectExceptionMessage('Escopo insuficiente.');
-
-        $client->companies();
+        try {
+            $client->companies();
+            $this->fail('Expected NotaAgilApiException.');
+        } catch (NotaAgilApiException $exception) {
+            $this->assertSame(403, $exception->statusCode);
+            $this->assertSame($payload, $exception->payload);
+            $this->assertSame($payload['errors'], $exception->errors);
+            $this->assertSame('Duplicidade de NF-e', $exception->rejectionReason);
+            $this->assertSame('Escopo insuficiente.', $exception->getMessage());
+        }
     }
 
     public function test_fiscal_management_methods_use_company_scoped_paths(): void
@@ -125,25 +136,36 @@ class NotaAgilClientTest extends TestCase
                 'Content-Type' => 'application/xml',
                 'Content-Disposition' => 'attachment; filename="nfce.xml"',
             ], '<xml />'),
+            new Response(200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="nfce.pdf"',
+            ], 'pdf-binary'),
             new Response(200, [], json_encode(['data' => ['status' => 'blocked']])),
             new Response(200, [], json_encode(['data' => [['id' => 'cfop-1']]])),
             new Response(201, [], json_encode(['data' => ['id' => 'schedule-1']])),
         ], $history);
 
         $download = $client->downloadDocumentXml('erp-1', '10');
+        $pdf = $client->downloadDocumentPdf('erp-1', '10');
         $readiness = $client->readiness('10');
         $cfops = $client->cfops('10');
         $schedule = $client->createSchedule(['tipo' => 'unica', 'proxima_execucao' => '2026-01-01T00:00:00Z'], '10');
 
         $this->assertSame('<xml />', $download['content']);
+        $this->assertSame('application/xml', $download['mime_type']);
         $this->assertSame('nfce.xml', $download['filename']);
+        $this->assertSame('pdf-binary', $pdf['content']);
+        $this->assertSame('cGRmLWJpbmFyeQ==', $pdf['base64']);
+        $this->assertSame('application/pdf', $pdf['mime_type']);
+        $this->assertSame('nfce.pdf', $pdf['filename']);
         $this->assertSame(['status' => 'blocked'], $readiness);
         $this->assertSame([['id' => 'cfop-1']], $cfops);
         $this->assertSame(['id' => 'schedule-1'], $schedule);
         $this->assertSame('/api/v1/integrations/companies/10/documents/erp-1/xml', $history[0]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/readiness', $history[1]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/cfops', $history[2]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/schedules', $history[3]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/documents/erp-1/pdf', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/readiness', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/fiscal/cfops', $history[3]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/companies/10/schedules', $history[4]['request']->getUri()->getPath());
     }
 
     public function test_inbound_nfe_company_first_aliases_use_expected_paths(): void

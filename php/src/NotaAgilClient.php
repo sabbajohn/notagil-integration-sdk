@@ -551,12 +551,17 @@ class NotaAgilClient
         } catch (RequestException $exception) {
             $response = $exception->getResponse();
             $payload = $response ? $this->decode((string) $response->getBody()) : ['message' => $exception->getMessage()];
-            throw new NotaAgilApiException($response?->getStatusCode() ?? 0, $payload);
+            throw $this->apiException($response?->getStatusCode() ?? 0, $payload);
         }
 
+        $content = (string) $response->getBody();
+        $contentType = $response->getHeaderLine('Content-Type') ?: null;
+
         return [
-            'content' => (string) $response->getBody(),
-            'content_type' => $response->getHeaderLine('Content-Type') ?: null,
+            'content' => $content,
+            'base64' => str_contains((string) $contentType, 'application/pdf') ? base64_encode($content) : null,
+            'mime_type' => $contentType,
+            'content_type' => $contentType,
             'filename' => $this->filenameFromDisposition($response->getHeaderLine('Content-Disposition')),
         ];
     }
@@ -589,13 +594,13 @@ class NotaAgilClient
         } catch (RequestException $exception) {
             $response = $exception->getResponse();
             $payload = $response ? $this->decode((string) $response->getBody()) : ['message' => $exception->getMessage()];
-            throw new NotaAgilApiException($response?->getStatusCode() ?? 0, $payload);
+            throw $this->apiException($response?->getStatusCode() ?? 0, $payload);
         }
 
         $payload = $this->decode((string) $response->getBody());
 
         if ($response->getStatusCode() >= 400) {
-            throw new NotaAgilApiException($response->getStatusCode(), $payload);
+            throw $this->apiException($response->getStatusCode(), $payload);
         }
 
         return $unwrapData && is_array($payload) && array_key_exists('data', $payload)
@@ -612,5 +617,15 @@ class NotaAgilClient
         $decoded = json_decode($body, true);
 
         return json_last_error() === JSON_ERROR_NONE ? $decoded : ['raw' => $body];
+    }
+
+    private function apiException(int $statusCode, mixed $payload): NotaAgilApiException
+    {
+        $errors = is_array($payload) ? ($payload['errors'] ?? null) : null;
+        $rejectionReason = is_array($payload) && isset($payload['rejection_reason'])
+            ? (string) $payload['rejection_reason']
+            : null;
+
+        return new NotaAgilApiException($statusCode, $payload, $errors, $rejectionReason);
     }
 }

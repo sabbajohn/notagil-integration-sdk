@@ -135,24 +135,73 @@ export interface PreviewResult {
 export interface DocumentAccepted {
   id: string | number;
   external_id?: string | null;
+  status?: string | null;
   operational_status?: string | null;
+  status_operacional?: string | null;
   fiscal_status?: string | null;
+  status_fiscal?: string | null;
   fiscal_snapshot_id?: string | number | null;
   resolution_status?: ResolutionStatus | string | null;
   idempotent_replay: boolean;
+  document_type?: DocumentType | string | null;
+  series?: string | null;
+  serie?: string | null;
+  number?: number | string | null;
+  numero?: number | string | null;
+  access_key?: string | null;
+  chave_acesso?: string | null;
+  document_key?: string | null;
+  protocol?: string | null;
+  protocolo?: string | null;
+  authorized_at?: string | null;
+  autorizado_em?: string | null;
+  artifacts?: DocumentArtifacts | null;
+  message?: string | null;
+  rejection_reason?: string | null;
+  errors?: Array<Record<string, unknown> | string>;
   direct_transmission?: boolean;
   direct_transmission_mode?: string | null;
+}
+
+export interface DocumentArtifacts {
+  xml_available?: boolean;
+  pdf_available?: boolean;
+  xml_status?: 'available' | 'processing' | 'unavailable' | string;
+  pdf_status?: 'available' | 'processing' | 'unavailable' | string;
+  processing?: boolean;
+  xml_mime_type?: string | null;
+  pdf_mime_type?: string | null;
+  xml_url?: string | null;
+  pdf_url?: string | null;
+  [key: string]: unknown;
 }
 
 export interface DocumentStatus {
   id: string | number;
   external_id: string | null;
+  status?: string | null;
+  legacy_status?: string | null;
   type?: DocumentType | string | null;
   document_type?: DocumentType | string | null;
+  series?: string | null;
+  serie?: string | null;
+  number?: number | string | null;
+  numero?: number | string | null;
   operational_status: string | null;
+  status_operacional?: string | null;
   fiscal_status: string | null;
+  status_fiscal?: string | null;
+  access_key?: string | null;
+  chave_acesso?: string | null;
   document_key?: string | null;
   protocol?: string | null;
+  protocolo?: string | null;
+  authorized_at?: string | null;
+  autorizado_em?: string | null;
+  artifacts?: DocumentArtifacts | null;
+  message?: string | null;
+  rejection_reason?: string | null;
+  errors?: Array<Record<string, unknown> | string>;
   last_error?: string | null;
   snapshot?: Record<string, unknown> | null;
   applied_rates?: Array<Record<string, unknown>>;
@@ -254,8 +303,11 @@ export interface DeleteResult {
 }
 
 export interface DownloadResult {
-  content: ArrayBuffer;
+  content: string | ArrayBuffer;
+  base64?: string;
+  mime_type: string | null;
   contentType: string | null;
+  content_type: string | null;
   filename: string | null;
 }
 
@@ -275,13 +327,23 @@ export interface NotagilClientOptions {
 
 export class NotagilApiError extends Error {
   readonly status: number;
+  readonly statusCode: number;
   readonly body: unknown;
+  readonly payload: unknown;
+  readonly errors: unknown;
+  readonly rejectionReason: unknown;
+  readonly rejection_reason: unknown;
 
   constructor(status: number, body: unknown) {
     super(typeof body === 'object' && body !== null && 'message' in body ? String((body as { message?: unknown }).message) : `NotaAgil API error ${status}`);
     this.name = 'NotagilApiError';
     this.status = status;
+    this.statusCode = status;
     this.body = body;
+    this.payload = body;
+    this.errors = typeof body === 'object' && body !== null && 'errors' in body ? (body as { errors?: unknown }).errors : undefined;
+    this.rejectionReason = typeof body === 'object' && body !== null && 'rejection_reason' in body ? (body as { rejection_reason?: unknown }).rejection_reason : undefined;
+    this.rejection_reason = this.rejectionReason;
   }
 }
 
@@ -399,11 +461,11 @@ export class NotagilIntegrationClient {
   }
 
   downloadDocumentXml(externalId: string, companyId: string | number): Promise<DownloadResult> {
-    return this.download(this.documentArtifactPath(externalId, 'xml', companyId));
+    return this.download(this.documentArtifactPath(externalId, 'xml', companyId), 'text');
   }
 
   downloadDocumentPdf(externalId: string, companyId: string | number): Promise<DownloadResult> {
-    return this.download(this.documentArtifactPath(externalId, 'pdf', companyId));
+    return this.download(this.documentArtifactPath(externalId, 'pdf', companyId), 'base64');
   }
 
   getDocumentSnapshot(externalId: string, companyId: string | number): Promise<DocumentSnapshotResult> {
@@ -800,11 +862,11 @@ export class NotagilIntegrationClient {
   }
 
   downloadUnifiedDocumentXml(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number): Promise<DownloadResult> {
-    return this.download(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/xml`, companyId));
+    return this.download(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/xml`, companyId), 'text');
   }
 
   downloadUnifiedDocumentPdf(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number): Promise<DownloadResult> {
-    return this.download(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/pdf`, companyId));
+    return this.download(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/pdf`, companyId), 'base64');
   }
 
   syncInboundNfe(companyId: string | number, payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
@@ -906,7 +968,7 @@ export class NotagilIntegrationClient {
     return this.companyPath(`/documents/${encodeURIComponent(externalId)}/${artifact}`, companyId);
   }
 
-  private async download(path: string): Promise<DownloadResult> {
+  private async download(path: string, mode: 'arrayBuffer' | 'text' | 'base64' = 'arrayBuffer'): Promise<DownloadResult> {
     const response = await this.fetcher(`${this.baseUrl}${path}`, {
       method: 'GET',
       headers: {
@@ -921,11 +983,31 @@ export class NotagilIntegrationClient {
       throw new NotagilApiError(response.status, parsed);
     }
 
+    const contentType = response.headers.get('content-type');
+    const buffer = await response.arrayBuffer();
+    const content = mode === 'text'
+      ? new TextDecoder().decode(buffer)
+      : buffer;
+    const base64 = mode === 'base64' ? this.arrayBufferToBase64(buffer) : undefined;
+
     return {
-      content: await response.arrayBuffer(),
-      contentType: response.headers.get('content-type'),
+      content: mode === 'base64' ? (base64 ?? '') : content,
+      base64,
+      mime_type: contentType,
+      contentType,
+      content_type: contentType,
       filename: this.filenameFromDisposition(response.headers.get('content-disposition')),
     };
+  }
+
+  private arrayBufferToBase64(buffer: ArrayBuffer): string {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (const byte of bytes) {
+      binary += String.fromCharCode(byte);
+    }
+
+    return btoa(binary);
   }
 
   private filenameFromDisposition(disposition: string | null): string | null {

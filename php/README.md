@@ -59,8 +59,19 @@ $documentByOperation = $client->createDocumentByOperation(
 
 $authorized = $client->waitDocument('erp-0002', $companies[0]['id']);
 if (($authorized['fiscal_status'] ?? null) === 'authorized') {
+    echo $authorized['access_key'] . PHP_EOL;
+    echo $authorized['protocol'] . PHP_EOL;
+
     $xml = $client->downloadDocumentXml('erp-0002', $companies[0]['id']);
     $pdf = $client->downloadDocumentPdf('erp-0002', $companies[0]['id']);
+
+    // XML autorizado completo em texto puro para DANFC-e/NF-e.
+    echo $xml['content'];
+
+    // PDF/DANFE em base64, sem prefixo data URI.
+    echo $pdf['base64'];
+} elseif (($authorized['fiscal_status'] ?? null) === 'rejected') {
+    var_dump($authorized['rejection_reason'] ?? $authorized['message'] ?? null, $authorized['errors'] ?? []);
 }
 ```
 

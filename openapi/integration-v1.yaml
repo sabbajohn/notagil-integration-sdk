@@ -546,7 +546,16 @@ paths:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/ExternalId"
       responses:
-        "200": { description: XML artifact. }
+        "200":
+          description: XML autorizado completo, preferencialmente `nfeProc` para NF-e/NFC-e.
+          content:
+            application/xml:
+              schema: { type: string }
+        "409":
+          description: Artefato fiscal ainda em processamento.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArtifactProcessingError" }
   /companies/{company_id}/documents/{external_id}/pdf:
     get:
       tags: [Documents]
@@ -556,7 +565,18 @@ paths:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/ExternalId"
       responses:
-        "200": { description: PDF artifact. }
+        "200":
+          description: PDF/DANFE/DANFC-e quando aplicável.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "409":
+          description: Artefato fiscal ainda em processamento.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArtifactProcessingError" }
   /companies/{company_id}/documents/{external_id}/snapshot:
     get:
       tags: [Documents]
@@ -1802,11 +1822,56 @@ components:
       properties:
         id: { type: [integer, string] }
         external_id: { type: [string, "null"] }
+        status: { type: [string, "null"] }
         operational_status: { type: [string, "null"] }
+        status_operacional: { type: [string, "null"] }
         fiscal_status: { type: [string, "null"] }
+        status_fiscal: { type: [string, "null"] }
+        document_type: { type: [string, "null"] }
+        series: { type: [string, "null"] }
+        serie: { type: [string, "null"] }
+        number: { type: [integer, string, "null"] }
+        numero: { type: [integer, string, "null"] }
+        access_key: { type: [string, "null"] }
+        chave_acesso: { type: [string, "null"] }
+        document_key: { type: [string, "null"] }
+        protocol: { type: [string, "null"] }
+        protocolo: { type: [string, "null"] }
+        authorized_at: { type: [string, "null"] }
+        autorizado_em: { type: [string, "null"] }
+        artifacts: { $ref: "#/components/schemas/DocumentArtifacts" }
+        message: { type: [string, "null"] }
+        rejection_reason: { type: [string, "null"] }
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
         fiscal_snapshot_id: { type: [integer, string, "null"] }
         resolution_status: { type: [string, "null"] }
         idempotent_replay: { type: boolean }
+    DocumentArtifacts:
+      type: object
+      properties:
+        xml_available: { type: boolean }
+        pdf_available: { type: boolean }
+        xml_status: { type: string, enum: [available, processing, unavailable] }
+        pdf_status: { type: string, enum: [available, processing, unavailable] }
+        processing: { type: boolean }
+        xml_mime_type: { type: [string, "null"] }
+        pdf_mime_type: { type: [string, "null"] }
+        xml_url: { type: [string, "null"] }
+        pdf_url: { type: [string, "null"] }
+    ArtifactProcessingError:
+      type: object
+      properties:
+        message: { type: string }
+        code: { type: string }
+        artifact_status: { type: string }
+        artifacts: { $ref: "#/components/schemas/DocumentArtifacts" }
+        document:
+          type: object
+          additionalProperties: true
     DirectQueuedDocument:
       allOf:
         - $ref: "#/components/schemas/QueuedDocument"
@@ -1849,12 +1914,34 @@ components:
       properties:
         id: { type: string }
         external_id: { type: [string, "null"] }
+        status: { type: [string, "null"] }
+        legacy_status: { type: [string, "null"] }
         type: { type: [string, "null"] }
+        document_type: { type: [string, "null"] }
+        series: { type: [string, "null"] }
+        serie: { type: [string, "null"] }
+        number: { type: [integer, string, "null"] }
+        numero: { type: [integer, string, "null"] }
         operational_status: { type: [string, "null"] }
+        status_operacional: { type: [string, "null"] }
         fiscal_status: { type: [string, "null"] }
+        status_fiscal: { type: [string, "null"] }
+        access_key: { type: [string, "null"] }
+        chave_acesso: { type: [string, "null"] }
         document_key: { type: [string, "null"] }
         protocol: { type: [string, "null"] }
+        protocolo: { type: [string, "null"] }
+        authorized_at: { type: [string, "null"] }
+        autorizado_em: { type: [string, "null"] }
+        artifacts: { $ref: "#/components/schemas/DocumentArtifacts" }
         last_error: { type: [string, "null"] }
+        message: { type: [string, "null"] }
+        rejection_reason: { type: [string, "null"] }
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
         created_at: { type: [string, "null"] }
         updated_at: { type: [string, "null"] }
     DocumentDetail:
@@ -1862,13 +1949,34 @@ components:
       properties:
         id: { type: string }
         external_id: { type: [string, "null"] }
+        status: { type: [string, "null"] }
+        legacy_status: { type: [string, "null"] }
         document_type: { type: [string, "null"] }
+        series: { type: [string, "null"] }
+        serie: { type: [string, "null"] }
+        number: { type: [integer, string, "null"] }
+        numero: { type: [integer, string, "null"] }
         operational_status: { type: [string, "null"] }
+        status_operacional: { type: [string, "null"] }
         fiscal_status: { type: [string, "null"] }
+        status_fiscal: { type: [string, "null"] }
         print_status: { type: [string, "null"] }
         document_key: { type: [string, "null"] }
+        access_key: { type: [string, "null"] }
+        chave_acesso: { type: [string, "null"] }
         protocol: { type: [string, "null"] }
+        protocolo: { type: [string, "null"] }
+        authorized_at: { type: [string, "null"] }
+        autorizado_em: { type: [string, "null"] }
         last_error: { type: [string, "null"] }
+        message: { type: [string, "null"] }
+        rejection_reason: { type: [string, "null"] }
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        artifacts: { $ref: "#/components/schemas/DocumentArtifacts" }
         snapshot:
           type: object
           additionalProperties: true

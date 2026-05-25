@@ -1402,11 +1402,54 @@ export interface components {
         QueuedDocument: {
             id?: number | string;
             external_id?: string | null;
+            status?: string | null;
             operational_status?: string | null;
+            status_operacional?: string | null;
             fiscal_status?: string | null;
+            status_fiscal?: string | null;
+            document_type?: string | null;
+            series?: string | null;
+            serie?: string | null;
+            number?: number | string | null;
+            numero?: number | string | null;
+            access_key?: string | null;
+            chave_acesso?: string | null;
+            document_key?: string | null;
+            protocol?: string | null;
+            protocolo?: string | null;
+            authorized_at?: string | null;
+            autorizado_em?: string | null;
+            artifacts?: components["schemas"]["DocumentArtifacts"];
+            message?: string | null;
+            rejection_reason?: string | null;
+            errors?: {
+                [key: string]: unknown;
+            }[];
             fiscal_snapshot_id?: number | string | null;
             resolution_status?: string | null;
             idempotent_replay?: boolean;
+        };
+        DocumentArtifacts: {
+            xml_available?: boolean;
+            pdf_available?: boolean;
+            /** @enum {string} */
+            xml_status?: "available" | "processing" | "unavailable";
+            /** @enum {string} */
+            pdf_status?: "available" | "processing" | "unavailable";
+            processing?: boolean;
+            xml_mime_type?: string | null;
+            pdf_mime_type?: string | null;
+            xml_url?: string | null;
+            pdf_url?: string | null;
+        };
+        ArtifactProcessingError: {
+            message?: string;
+            code?: string;
+            artifact_status?: string;
+            artifacts?: components["schemas"]["DocumentArtifacts"];
+            document?: {
+                [key: string]: unknown;
+            };
         };
         DirectQueuedDocument: components["schemas"]["QueuedDocument"] & {
             direct_transmission?: boolean;
@@ -1434,25 +1477,64 @@ export interface components {
         DocumentListItem: {
             id?: string;
             external_id?: string | null;
+            status?: string | null;
+            legacy_status?: string | null;
             type?: string | null;
+            document_type?: string | null;
+            series?: string | null;
+            serie?: string | null;
+            number?: number | string | null;
+            numero?: number | string | null;
             operational_status?: string | null;
+            status_operacional?: string | null;
             fiscal_status?: string | null;
+            status_fiscal?: string | null;
+            access_key?: string | null;
+            chave_acesso?: string | null;
             document_key?: string | null;
             protocol?: string | null;
+            protocolo?: string | null;
+            authorized_at?: string | null;
+            autorizado_em?: string | null;
+            artifacts?: components["schemas"]["DocumentArtifacts"];
             last_error?: string | null;
+            message?: string | null;
+            rejection_reason?: string | null;
+            errors?: {
+                [key: string]: unknown;
+            }[];
             created_at?: string | null;
             updated_at?: string | null;
         };
         DocumentDetail: {
             id?: string;
             external_id?: string | null;
+            status?: string | null;
+            legacy_status?: string | null;
             document_type?: string | null;
+            series?: string | null;
+            serie?: string | null;
+            number?: number | string | null;
+            numero?: number | string | null;
             operational_status?: string | null;
+            status_operacional?: string | null;
             fiscal_status?: string | null;
+            status_fiscal?: string | null;
             print_status?: string | null;
             document_key?: string | null;
+            access_key?: string | null;
+            chave_acesso?: string | null;
             protocol?: string | null;
+            protocolo?: string | null;
+            authorized_at?: string | null;
+            autorizado_em?: string | null;
             last_error?: string | null;
+            message?: string | null;
+            rejection_reason?: string | null;
+            errors?: {
+                [key: string]: unknown;
+            }[];
+            artifacts?: components["schemas"]["DocumentArtifacts"];
             snapshot?: {
                 [key: string]: unknown;
             };
@@ -2682,12 +2764,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description XML artifact. */
+            /** @description XML autorizado completo, preferencialmente `nfeProc` para NF-e/NFC-e. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/xml": string;
+                };
+            };
+            /** @description Artefato fiscal ainda em processamento. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactProcessingError"];
+                };
             };
         };
     };
@@ -2703,12 +2796,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description PDF artifact. */
+            /** @description PDF/DANFE/DANFC-e quando aplicável. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            /** @description Artefato fiscal ainda em processamento. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactProcessingError"];
+                };
             };
         };
     };

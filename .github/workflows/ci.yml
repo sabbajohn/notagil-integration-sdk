@@ -30,6 +30,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Run tests
+        run: node --test ./tests/smoke.test.mjs
+
       - name: Verify npm package contents
         run: npm run pack:dry-run
 

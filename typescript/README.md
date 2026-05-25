@@ -77,9 +77,18 @@ const history = await client.listCompanyDocuments(companyId, {
 
 const authorized = await client.waitDocument('pdv-operation-2026-0001', { companyId, timeoutMs: 120_000 });
 if (authorized.fiscal_status === 'authorized') {
+  console.log(authorized.access_key, authorized.protocol, authorized.authorized_at);
+
   const xml = await client.downloadDocumentXml('pdv-operation-2026-0001', companyId);
   const pdf = await client.downloadDocumentPdf('pdv-operation-2026-0001', companyId);
-  console.log(xml.filename, pdf.filename);
+
+  // XML vem como texto puro para renderizar DANFC-e/NF-e.
+  console.log(xml.content, xml.mime_type);
+
+  // PDF vem em base64 sem prefixo data URI.
+  console.log(pdf.base64, pdf.mime_type);
+} else if (authorized.fiscal_status === 'rejected') {
+  console.error(authorized.rejection_reason ?? authorized.message, authorized.errors);
 }
 
 const companyConfig = await client.getCompanyConfiguration(companyId);
@@ -211,3 +220,11 @@ npm test
 npm run build
 npm run pack:dry-run
 ```
+
+Run the homologation E2E workflow (real API calls for preview, issue, query, correction and cancellation):
+
+```bash
+NOTAGIL_TOKEN=seu_token npm run test:e2e
+```
+
+Use `tests/fixtures/e2e-operation-request.sample.json` as a starting point and adjust it for your company setup.

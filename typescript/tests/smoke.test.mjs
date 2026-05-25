@@ -103,6 +103,70 @@ test('download errors with non-JSON body still throw NotagilApiError', async () 
   );
 });
 
+test('document artifact downloads expose XML text and PDF base64 helpers', async () => {
+  const responses = [
+    new Response('<nfeProc><NFe /></nfeProc>', {
+      status: 200,
+      headers: {
+        'content-type': 'application/xml; charset=utf-8',
+        'content-disposition': 'attachment; filename="nfce.xml"',
+      },
+    }),
+    new Response('pdf-binary', {
+      status: 200,
+      headers: {
+        'content-type': 'application/pdf',
+        'content-disposition': 'attachment; filename="nfce.pdf"',
+      },
+    }),
+  ];
+  const client = new NotagilIntegrationClient({
+    baseUrl: 'https://api.test/api/v1/integrations',
+    token: 'test-token',
+    fetch: async () => responses.shift(),
+  });
+
+  const xml = await client.downloadDocumentXml('erp-1', '10');
+  const pdf = await client.downloadDocumentPdf('erp-1', '10');
+
+  assert.equal(xml.content, '<nfeProc><NFe /></nfeProc>');
+  assert.equal(xml.mime_type, 'application/xml; charset=utf-8');
+  assert.equal(xml.content_type, 'application/xml; charset=utf-8');
+  assert.equal(xml.filename, 'nfce.xml');
+  assert.equal(pdf.base64, 'cGRmLWJpbmFyeQ==');
+  assert.equal(pdf.content, 'cGRmLWJpbmFyeQ==');
+  assert.equal(pdf.mime_type, 'application/pdf');
+  assert.equal(pdf.filename, 'nfce.pdf');
+});
+
+test('API errors expose statusCode, payload, errors and rejection details', async () => {
+  const body = {
+    message: 'Documento rejeitado.',
+    rejection_reason: 'Duplicidade de NF-e',
+    errors: [{ code: '539', message: 'Duplicidade de NF-e' }],
+  };
+  const client = new NotagilIntegrationClient({
+    baseUrl: 'https://api.test/api/v1/integrations',
+    token: 'test-token',
+    fetch: async () => new Response(JSON.stringify(body), {
+      status: 422,
+      headers: { 'content-type': 'application/json' },
+    }),
+  });
+
+  await assert.rejects(
+    () => client.getCompanyDocument('10', 'erp-rejected'),
+    (error) => {
+      assert.ok(error instanceof NotagilApiError);
+      assert.equal(error.statusCode, 422);
+      assert.deepEqual(error.payload, body);
+      assert.deepEqual(error.errors, body.errors);
+      assert.equal(error.rejectionReason, 'Duplicidade de NF-e');
+      return true;
+    },
+  );
+});
+
 test('webhookSignature matches the documented HMAC contract', async () => {
   const signature = await NotagilIntegrationClient.webhookSignature(
     'whsec_test',

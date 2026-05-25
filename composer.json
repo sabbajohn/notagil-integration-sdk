@@ -39,7 +39,10 @@
     }
   },
   "scripts": {
-    "test": "cd php && vendor/bin/phpunit"
+    "test": "bash scripts/test-switch.sh",
+    "test:php": "cd php && vendor/bin/phpunit",
+    "test:sdk": "bash scripts/test-switch.sh",
+    "test:e2e": "cd typescript && npm run test:e2e"
   },
   "minimum-stability": "stable"
 }
