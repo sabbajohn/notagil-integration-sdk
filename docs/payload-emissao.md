@@ -35,7 +35,7 @@ para `document_type = nfse` no ambiente nacional, padronize `payload` no contrat
     "id": "nfse-direct-2026-0001",
     "tpAmb": 2,
     "dhEmi": "2026-05-26T10:00:00-03:00",
-    "verAplic": "sdk-0.1.5",
+    "verAplic": "sdk-0.2.0",
     "serie": "1",
     "nDPS": "1001",
     "dCompet": "2026-05-26",

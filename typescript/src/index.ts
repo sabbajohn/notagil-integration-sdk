@@ -257,9 +257,10 @@ export function canonicalizeNfseProviderPolicy<T extends Record<string, unknown>
     ...visibleFields,
     ...Object.keys(schema).filter((field): field is NfsePolicyField => canonicalPolicyField(field) !== null),
   ]));
+  const allFields = [...NFSE_CANONICAL_POLICY_FIELDS];
   const labels = normalizePolicyFieldMap(policy.labels, activeFields) as Partial<Record<NfsePolicyField, string>>;
   const hints = normalizePolicyFieldMap(policy.hints, activeFields) as Partial<Record<NfsePolicyField, string>>;
-  const fieldSchema = activeFields.reduce<Partial<Record<NfsePolicyField, NfseFieldSchema>>>((acc, field) => {
+  const fieldSchema = allFields.reduce<Partial<Record<NfsePolicyField, NfseFieldSchema>>>((acc, field) => {
     const defaults = canonicalFieldDefaults(field);
     if (!defaults) {
       return acc;
@@ -269,14 +270,14 @@ export function canonicalizeNfseProviderPolicy<T extends Record<string, unknown>
       asRecord(schema[field]),
       defaults.label,
       defaults.control,
-      [field],
+      defaults.payloadPaths,
       defaults.options ?? [],
     );
 
-    if (!labels[field]) {
+    if (activeFields.includes(field) && !labels[field]) {
       labels[field] = defaults.label;
     }
-    if (!hints[field]) {
+    if (activeFields.includes(field) && !hints[field]) {
       hints[field] = canonicalFieldHint(field);
     }
 
@@ -721,24 +722,25 @@ function canonicalPolicyField(field: unknown): NfsePolicyField | null {
 
 function canonicalFieldDefaults(
   field: NfsePolicyField,
-): { label: string; control: string; options?: Array<{ value: string; label: string }> } | null {
+): { label: string; control: string; payloadPaths: string[]; options?: Array<{ value: string; label: string }> } | null {
   switch (field) {
     case 'servico.cTribMun':
-      return { label: 'Codigo Servico Municipal', control: 'text' };
+      return { label: 'Codigo Servico Municipal', control: 'text', payloadPaths: ['servico.cTribMun'] };
     case 'servico.cTribNac':
-      return { label: 'Codigo Tributacao Nacional', control: 'text' };
+      return { label: 'Codigo Tributacao Nacional', control: 'text', payloadPaths: ['servico.cTribNac'] };
     case 'servico.cNBS':
-      return { label: 'Codigo NBS', control: 'text' };
+      return { label: 'Codigo NBS', control: 'text', payloadPaths: ['servico.cNBS'] };
     case 'servico.codigoCnae':
-      return { label: 'CNAE do Servico', control: 'text' };
+      return { label: 'CNAE do Servico', control: 'text', payloadPaths: ['servico.codigoCnae'] };
     case 'servico.codigo_atividade':
-      return { label: 'Codigo de Atividade', control: 'text' };
+      return { label: 'Codigo de Atividade', control: 'text', payloadPaths: ['servico.codigo_atividade'] };
     case 'servico.benefit_code':
-      return { label: 'Codigo Beneficio Municipal', control: 'text' };
+      return { label: 'Codigo Beneficio Municipal', control: 'text', payloadPaths: ['servico.benefit_code'] };
     case 'prestador.opSimpNac':
       return {
         label: 'Simples Nacional',
         control: 'select',
+        payloadPaths: ['prestador.opSimpNac'],
         options: [
           { value: '1', label: '1 - Nao optante' },
           { value: '2', label: '2 - MEI' },
@@ -749,6 +751,7 @@ function canonicalFieldDefaults(
       return {
         label: 'Emitente MEI',
         control: 'select',
+        payloadPaths: ['prestador.mei'],
         options: [
           { value: 'false', label: 'Nao MEI' },
           { value: 'true', label: 'MEI' },

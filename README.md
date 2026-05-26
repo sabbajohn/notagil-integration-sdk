@@ -13,7 +13,7 @@ A estrutura recomendada para preview e emissao fiscal por `operation_code`, alem
 
 ## Release Atual
 
-`v0.1.5` adiciona busca de empresas por CNPJ em `/companies`, preserva os metadados fiscais/autorizacao e os downloads de XML/PDF para emissao fiscal.
+`v0.2.0` consolida o contrato canonico NFSe multi-provider na superficie publica, com `provider-info` em campos PT-BR canonicos e helpers de validacao local para o payload direto Nacional.
 
 Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais de emissor, perfis de operacao, atribuicoes de perfil, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por `operation_code` com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto escopado por empresa, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
 
@@ -22,7 +22,7 @@ Breaking beta: os aliases sem `companyId` e a emissao por `payload` legado foram
 ## Instalacao PHP
 
 ```sh
-composer require notagil/integration-sdk:0.1.5
+composer require notagil/integration-sdk:^0.2.0
 ```
 
 ```php
@@ -41,7 +41,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ## Instalacao TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@0.1.5
+npm install @notagil/integration-sdk@^0.2.0
 ```
 
 ```ts
@@ -136,8 +136,8 @@ composer test
 4. Crie a tag semver, por exemplo:
 
 ```sh
-git tag v0.1.5
-git push origin v0.1.5
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.

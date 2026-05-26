@@ -7,6 +7,28 @@ final class NfseNacionalCanonicalContract
     public const INVALID_MESSAGE = 'Payload invalido para NFSe Nacional. Use somente o contrato canonico PT-BR.';
 
     /**
+     * @var array<string,string>
+     */
+    private const POLICY_FIELDS = [
+        'service.municipal_code' => 'servico.cTribMun',
+        'service.national_tax_code' => 'servico.cTribNac',
+        'service.nbs' => 'servico.cNBS',
+        'service.cnae_code' => 'servico.codigoCnae',
+        'service.activity_code' => 'servico.codigo_atividade',
+        'service.benefit_code' => 'servico.benefit_code',
+        'prestador.op_simp_nac' => 'prestador.opSimpNac',
+        'prestador.mei' => 'prestador.mei',
+        'servico.cTribMun' => 'servico.cTribMun',
+        'servico.cTribNac' => 'servico.cTribNac',
+        'servico.cNBS' => 'servico.cNBS',
+        'servico.codigoCnae' => 'servico.codigoCnae',
+        'servico.codigo_atividade' => 'servico.codigo_atividade',
+        'servico.benefit_code' => 'servico.benefit_code',
+        'prestador.opSimpNac' => 'prestador.opSimpNac',
+        'prestador.mei' => 'prestador.mei',
+    ];
+
+    /**
      * @var array<string,mixed>
      */
     private const SCHEMA = [
@@ -58,16 +80,6 @@ final class NfseNacionalCanonicalContract
             'iss_retido' => true,
         ],
         'valor_servicos' => true,
-    ];
-
-    /**
-     * @var list<string>
-     */
-    private const POLICY_FIELDS = [
-        'service.municipal_code',
-        'service.national_tax_code',
-        'service.nbs',
-        'prestador.op_simp_nac',
     ];
 
     /**
@@ -138,49 +150,32 @@ final class NfseNacionalCanonicalContract
      */
     public static function canonicalizeProviderPolicy(array $policy): array
     {
-        $allowedFields = array_flip(self::POLICY_FIELDS);
+        $requiredFields = self::normalizePolicyFields((array) ($policy['required_fields'] ?? []));
+        $visibleFields = self::normalizePolicyFields((array) ($policy['visible_fields'] ?? []));
+        $schema = self::normalizePolicyMap((array) ($policy['field_schema'] ?? []));
+        $activeFields = array_values(array_unique([
+            ...$requiredFields,
+            ...$visibleFields,
+            ...array_keys($schema),
+        ]));
 
-        $policy['required_fields'] = array_values(array_filter(
-            array_map('strval', (array) ($policy['required_fields'] ?? [])),
-            static fn (string $field): bool => isset($allowedFields[$field])
-        ));
-        $policy['visible_fields'] = array_values(array_filter(
-            array_map('strval', (array) ($policy['visible_fields'] ?? [])),
-            static fn (string $field): bool => isset($allowedFields[$field])
-        ));
+        $policy['required_fields'] = $requiredFields;
+        $policy['visible_fields'] = $visibleFields;
+        $policy['field_schema'] = [];
+        foreach ($activeFields as $field) {
+            $defaults = self::fieldDefaults($field);
+            if ($defaults === null) {
+                continue;
+            }
 
-        $schema = (array) ($policy['field_schema'] ?? []);
-        $policy['field_schema'] = [
-            'service.municipal_code' => self::canonicalFieldEntry(
-                $schema['service.municipal_code'] ?? [],
-                'Codigo Servico Municipal',
-                'text',
-                ['servico.cTribMun']
-            ),
-            'service.national_tax_code' => self::canonicalFieldEntry(
-                $schema['service.national_tax_code'] ?? [],
-                'Codigo Tributacao Nacional',
-                'text',
-                ['servico.cTribNac']
-            ),
-            'service.nbs' => self::canonicalFieldEntry(
-                $schema['service.nbs'] ?? [],
-                'Codigo NBS',
-                'text',
-                ['servico.cNBS']
-            ),
-            'prestador.op_simp_nac' => self::canonicalFieldEntry(
-                $schema['prestador.op_simp_nac'] ?? [],
-                'Simples Nacional',
-                'select',
-                ['prestador.opSimpNac'],
-                [
-                    ['value' => '1', 'label' => '1 - Nao optante'],
-                    ['value' => '2', 'label' => '2 - MEI'],
-                    ['value' => '3', 'label' => '3 - ME/EPP'],
-                ]
-            ),
-        ];
+            $policy['field_schema'][$field] = self::canonicalFieldEntry(
+                (array) ($schema[$field] ?? []),
+                $defaults['label'],
+                $defaults['control'],
+                [$field],
+                $defaults['options'] ?? [],
+            );
+        }
 
         return $policy;
     }
@@ -228,6 +223,87 @@ final class NfseNacionalCanonicalContract
         }
 
         return $invalid;
+    }
+
+    /**
+     * @param list<mixed> $fields
+     * @return list<string>
+     */
+    private static function normalizePolicyFields(array $fields): array
+    {
+        $normalized = [];
+        foreach ($fields as $field) {
+            $canonical = self::canonicalField($field);
+            if ($canonical !== null && !in_array($canonical, $normalized, true)) {
+                $normalized[] = $canonical;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param array<string,mixed> $map
+     * @return array<string,mixed>
+     */
+    private static function normalizePolicyMap(array $map): array
+    {
+        $normalized = [];
+        foreach ($map as $field => $value) {
+            $canonical = self::canonicalField($field);
+            if ($canonical !== null) {
+                $normalized[$canonical] = $value;
+            }
+        }
+
+        return $normalized;
+    }
+
+    private static function canonicalField(mixed $field): ?string
+    {
+        if (!is_scalar($field)) {
+            return null;
+        }
+
+        $normalized = trim((string) $field);
+        if ($normalized === '') {
+            return null;
+        }
+
+        return self::POLICY_FIELDS[$normalized] ?? null;
+    }
+
+    /**
+     * @return array{label:string,control:string,options?:list<array{value:string,label:string}>}|null
+     */
+    private static function fieldDefaults(string $field): ?array
+    {
+        return match ($field) {
+            'servico.cTribMun' => ['label' => 'Codigo Servico Municipal', 'control' => 'text'],
+            'servico.cTribNac' => ['label' => 'Codigo Tributacao Nacional', 'control' => 'text'],
+            'servico.cNBS' => ['label' => 'Codigo NBS', 'control' => 'text'],
+            'servico.codigoCnae' => ['label' => 'CNAE do Servico', 'control' => 'text'],
+            'servico.codigo_atividade' => ['label' => 'Codigo de Atividade', 'control' => 'text'],
+            'servico.benefit_code' => ['label' => 'Codigo Beneficio Municipal', 'control' => 'text'],
+            'prestador.opSimpNac' => [
+                'label' => 'Simples Nacional',
+                'control' => 'select',
+                'options' => [
+                    ['value' => '1', 'label' => '1 - Nao optante'],
+                    ['value' => '2', 'label' => '2 - MEI'],
+                    ['value' => '3', 'label' => '3 - ME/EPP'],
+                ],
+            ],
+            'prestador.mei' => [
+                'label' => 'Emitente MEI',
+                'control' => 'select',
+                'options' => [
+                    ['value' => 'false', 'label' => 'Nao MEI'],
+                    ['value' => 'true', 'label' => 'MEI'],
+                ],
+            ],
+            default => null,
+        };
     }
 
     /**

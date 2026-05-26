@@ -36,11 +36,7 @@ paths:
       operationId: listCompanies
       x-required-scopes: ["companies:read"]
       parameters:
-        - name: cnpj
-          in: query
-          required: false
-          description: Filters companies by CNPJ. Send digits only when possible.
-          schema: { type: string }
+        - $ref: "#/components/parameters/CnpjQuery"
       responses:
         "200": { $ref: "#/components/responses/CompanyCollectionResponse" }
   /companies/{company_id}:
@@ -72,7 +68,7 @@ paths:
     get:
       tags: [Configuration]
       operationId: getCompanyNfseProviderInfo
-      description: Returns the dynamic NFSe form policy required by the resolved municipal provider.
+      description: Returns the dynamic NFSe form policy required by the resolved provider. The exposed `required_fields`, `visible_fields` and `payload_paths` reference only canonical public NFSe fields, never internal provider layouts. For `nfse_nacional`/`manaus`, direct NFSe payloads must use the canonical PT-BR root contract.
       x-required-scopes: ["configuration:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -636,7 +632,7 @@ paths:
     post:
       tags: [Documents]
       operationId: createCompanyDirectDocument
-      description: Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing.
+      description: Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. When `document_type=nfse` and the resolved provider is `nfse_nacional`/`manaus`, `payload` must use the canonical PT-BR contract at the root level; legacy aliases such as `amount`, `description`, `cpfCnpj`, `servicoItemLista`, `numero_dps` and `document_number` are rejected with `422`.
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -1082,6 +1078,11 @@ components:
       schema:
         type: string
         enum: [homologacao, producao, production, prod]
+    CnpjQuery:
+      name: cnpj
+      in: query
+      required: false
+      schema: { type: string, maxLength: 20 }
   requestBodies:
     JsonObject:
       required: true
@@ -1466,11 +1467,9 @@ components:
           enum: [nfe, nfce, nfse]
         municipio: { type: string }
         payload:
-          description: Full fiscal payload for direct transmission. For `document_type=nfse` in the national layout, prefer the canonical PT-BR schema documented in `NfseNacionalCanonicalPayload`.
-          oneOf:
-            - $ref: "#/components/schemas/NfseNacionalCanonicalPayload"
-            - type: object
-              additionalProperties: true
+          type: object
+          additionalProperties: true
+          description: Generic direct payload contract. For `document_type=nfse`, prefer the canonical NFSe payload shape and use `provider-info` to discover required canonical fields for the resolved provider. For `nfse_nacional`/`manaus`, use only the canonical PT-BR root fields `id`, `tpAmb`, `dhEmi`, `verAplic`, `serie`, `nDPS`, `dCompet`, `tpEmit`, `cLocEmi`, `prestador`, `tomador`, `servico` and `valor_servicos`.
         metadata:
           type: object
           additionalProperties: true
@@ -1516,75 +1515,6 @@ components:
             type: object
             additionalProperties: true
       additionalProperties: true
-    NfseNacionalCanonicalPayload:
-      type: object
-      description: Canonical PT-BR payload accepted by the NotaAgil NFSe Nacional direct emission surface. This schema documents allowed fields only; municipal/provider completeness rules may still require a subset of them depending on the scenario.
-      properties:
-        id: { type: string }
-        tpAmb: { type: [string, integer, number] }
-        dhEmi: { type: string }
-        verAplic: { type: string }
-        serie: { type: string }
-        nDPS: { type: [string, integer, number] }
-        dCompet: { type: string }
-        tpEmit: { type: [string, integer, number] }
-        cLocEmi: { type: string }
-        prestador:
-          $ref: "#/components/schemas/NfseNacionalPrestador"
-        tomador:
-          $ref: "#/components/schemas/NfseNacionalTomador"
-        servico:
-          $ref: "#/components/schemas/NfseNacionalServico"
-        valor_servicos: { type: [string, integer, number] }
-      additionalProperties: false
-    NfseNacionalPrestador:
-      type: object
-      properties:
-        cnpj: { type: string }
-        inscricaoMunicipal: { type: string }
-        razaoSocial: { type: string }
-        opSimpNac: { type: [string, integer, number] }
-        regEspTrib: { type: [string, integer, number] }
-        codigoMunicipio: { type: string }
-      additionalProperties: false
-    NfseNacionalTomador:
-      type: object
-      properties:
-        documento: { type: string }
-        razaoSocial: { type: string }
-        email: { type: string }
-        telefone: { type: string }
-        endereco:
-          $ref: "#/components/schemas/NfseNacionalEndereco"
-      additionalProperties: false
-    NfseNacionalEndereco:
-      type: object
-      properties:
-        logradouro: { type: string }
-        numero: { type: string }
-        complemento: { type: string }
-        bairro: { type: string }
-        cep: { type: string }
-        codigoMunicipio: { type: string }
-        uf: { type: string }
-        municipio: { type: string }
-      additionalProperties: false
-    NfseNacionalServico:
-      type: object
-      properties:
-        cLocPrestacao: { type: string }
-        cTribNac: { type: string }
-        cTribMun: { type: string }
-        cNBS: { type: string }
-        descricao: { type: string }
-        tribISSQN: { type: [string, integer, number] }
-        tpRetISSQN: { type: [string, integer, number] }
-        aliquota: { type: [string, integer, number] }
-        enviarPAliq: { type: [string, integer, number, boolean] }
-        valor_irrf: { type: [string, integer, number] }
-        valor_ir: { type: [string, integer, number] }
-        iss_retido: { type: [string, integer, number, boolean] }
-      additionalProperties: false
     NfseProviderInfo:
       type: object
       properties:
@@ -1627,13 +1557,30 @@ components:
         hints:
           type: object
           additionalProperties: { type: string }
+        enum_fields:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+        conditional_rules:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        extensions_supported:
+          type: array
+          items: { type: string }
     NfsePolicyField:
       type: string
       enum:
-        - service.municipal_code
-        - service.national_tax_code
-        - service.nbs
-        - prestador.op_simp_nac
+        - servico.cTribMun
+        - servico.cTribNac
+        - servico.cNBS
+        - servico.codigoCnae
+        - servico.codigo_atividade
+        - servico.benefit_code
+        - prestador.opSimpNac
+        - prestador.mei
     ResourceResponse:
       type: object
       properties:
@@ -1955,6 +1902,21 @@ components:
           properties:
             direct_transmission: { type: boolean }
             direct_transmission_mode: { type: string }
+            numero_dps:
+              type: [string, "null"]
+              description: Número da DPS gerado para NFS-e.
+            nDPS:
+              type: [string, "null"]
+              description: Alias do número da DPS no layout nacional.
+            id_dps:
+              type: [string, "null"]
+              description: Identificador completo da DPS, quando disponível.
+            dps:
+              type: [object, "null"]
+              properties:
+                numero: { type: string }
+                serie: { type: string }
+                id: { type: [string, "null"] }
     PreviewDocument:
       type: object
       properties:

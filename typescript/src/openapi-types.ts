@@ -60,7 +60,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Returns the dynamic NFSe form policy required by the resolved municipal provider. */
+        /** @description Returns the dynamic NFSe form policy required by the resolved provider. The exposed `required_fields`, `visible_fields` and `payload_paths` reference only canonical public NFSe fields, never internal provider layouts. For `nfse_nacional`/`manaus`, direct NFSe payloads must use the canonical PT-BR root contract. */
         get: operations["getCompanyNfseProviderInfo"];
         put?: never;
         post?: never;
@@ -681,7 +681,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. */
+        /** @description Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. When `document_type=nfse` and the resolved provider is `nfse_nacional`/`manaus`, `payload` must use the canonical PT-BR contract at the root level; legacy aliases such as `amount`, `description`, `cpfCnpj`, `servicoItemLista`, `numero_dps` and `document_number` are rejected with `422`. */
         post: operations["createCompanyDirectDocument"];
         delete?: never;
         options?: never;
@@ -1103,8 +1103,8 @@ export interface components {
             /** @enum {string} */
             document_type: "nfe" | "nfce" | "nfse";
             municipio?: string;
-            /** @description Full fiscal payload for direct transmission. For `document_type=nfse` in the national layout, prefer the canonical PT-BR schema documented in `NfseNacionalCanonicalPayload`. */
-            payload: components["schemas"]["NfseNacionalCanonicalPayload"] | {
+            /** @description Generic direct payload contract. For `document_type=nfse`, prefer the canonical NFSe payload shape and use `provider-info` to discover required canonical fields for the resolved provider. For `nfse_nacional`/`manaus`, use only the canonical PT-BR root fields `id`, `tpAmb`, `dhEmi`, `verAplic`, `serie`, `nDPS`, `dCompet`, `tpEmit`, `cLocEmi`, `prestador`, `tomador`, `servico` and `valor_servicos`. */
+            payload: {
                 [key: string]: unknown;
             };
             metadata?: {
@@ -1143,61 +1143,6 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** @description Canonical PT-BR payload accepted by the NotaAgil NFSe Nacional direct emission surface. This schema documents allowed fields only; municipal/provider completeness rules may still require a subset of them depending on the scenario. */
-        NfseNacionalCanonicalPayload: {
-            id?: string;
-            tpAmb?: string | number;
-            dhEmi?: string;
-            verAplic?: string;
-            serie?: string;
-            nDPS?: string | number;
-            dCompet?: string;
-            tpEmit?: string | number;
-            cLocEmi?: string;
-            prestador?: components["schemas"]["NfseNacionalPrestador"];
-            tomador?: components["schemas"]["NfseNacionalTomador"];
-            servico?: components["schemas"]["NfseNacionalServico"];
-            valor_servicos?: string | number;
-        };
-        NfseNacionalPrestador: {
-            cnpj?: string;
-            inscricaoMunicipal?: string;
-            razaoSocial?: string;
-            opSimpNac?: string | number;
-            regEspTrib?: string | number;
-            codigoMunicipio?: string;
-        };
-        NfseNacionalTomador: {
-            documento?: string;
-            razaoSocial?: string;
-            email?: string;
-            telefone?: string;
-            endereco?: components["schemas"]["NfseNacionalEndereco"];
-        };
-        NfseNacionalEndereco: {
-            logradouro?: string;
-            numero?: string;
-            complemento?: string;
-            bairro?: string;
-            cep?: string;
-            codigoMunicipio?: string;
-            uf?: string;
-            municipio?: string;
-        };
-        NfseNacionalServico: {
-            cLocPrestacao?: string;
-            cTribNac?: string;
-            cTribMun?: string;
-            cNBS?: string;
-            descricao?: string;
-            tribISSQN?: string | number;
-            tpRetISSQN?: string | number;
-            aliquota?: string | number;
-            enviarPAliq?: string | number | boolean;
-            valor_irrf?: string | number;
-            valor_ir?: string | number;
-            iss_retido?: string | number | boolean;
-        };
         NfseProviderInfo: {
             provider_key?: string | null;
             municipio?: string | null;
@@ -1230,9 +1175,16 @@ export interface components {
             hints?: {
                 [key: string]: string;
             };
+            enum_fields?: {
+                [key: string]: string[];
+            };
+            conditional_rules?: {
+                [key: string]: unknown;
+            }[];
+            extensions_supported?: string[];
         };
         /** @enum {string} */
-        NfsePolicyField: "service.municipal_code" | "service.national_tax_code" | "service.nbs" | "prestador.op_simp_nac";
+        NfsePolicyField: "servico.cTribMun" | "servico.cTribNac" | "servico.cNBS" | "servico.codigoCnae" | "servico.codigo_atividade" | "servico.benefit_code" | "prestador.opSimpNac" | "prestador.mei";
         ResourceResponse: {
             data?: {
                 [key: string]: unknown;
@@ -1510,6 +1462,17 @@ export interface components {
         DirectQueuedDocument: components["schemas"]["QueuedDocument"] & {
             direct_transmission?: boolean;
             direct_transmission_mode?: string;
+            /** @description Número da DPS gerado para NFS-e. */
+            numero_dps?: string | null;
+            /** @description Alias do número da DPS no layout nacional. */
+            nDPS?: string | null;
+            /** @description Identificador completo da DPS, quando disponível. */
+            id_dps?: string | null;
+            dps?: {
+                numero?: string;
+                serie?: string;
+                id?: string | null;
+            } | null;
         };
         PreviewDocument: {
             resolution_status?: string | null;
@@ -2089,6 +2052,7 @@ export interface components {
         DocumentTypeQuery: "nfe" | "nfce" | "nfse";
         MunicipioQuery: string;
         FiscalEnvironmentQuery: "homologacao" | "producao" | "production" | "prod";
+        CnpjQuery: string;
     };
     requestBodies: {
         JsonObject: {
@@ -2126,8 +2090,7 @@ export interface operations {
     listCompanies: {
         parameters: {
             query?: {
-                /** @description Filters companies by CNPJ. Send digits only when possible. */
-                cnpj?: string;
+                cnpj?: components["parameters"]["CnpjQuery"];
             };
             header?: never;
             path?: never;

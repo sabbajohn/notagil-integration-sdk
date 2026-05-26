@@ -258,9 +258,9 @@ test('canonicalizeNfseProviderPolicy keeps only canonical NFSe Nacional policy f
     },
   });
 
-  assert.deepEqual(policy.required_fields, ['service.nbs']);
-  assert.deepEqual(policy.visible_fields, ['service.national_tax_code']);
-  assert.equal(policy.field_schema['service.nbs'].label, 'NBS customizado');
-  assert.deepEqual(policy.field_schema['service.municipal_code'].payload_paths, ['servico.cTribMun']);
-  assert.equal(policy.field_schema['prestador.op_simp_nac'].control, 'select');
+  assert.deepEqual(policy.required_fields, ['servico.cNBS', 'servico.codigo_atividade']);
+  assert.deepEqual(policy.visible_fields, ['servico.cTribNac', 'servico.codigoCnae']);
+  assert.equal(policy.field_schema['servico.cNBS'].label, 'NBS customizado');
+  assert.deepEqual(policy.field_schema['servico.cTribNac'].payload_paths, ['servico.cTribNac']);
+  assert.equal(policy.field_schema['servico.codigoCnae'].control, 'text');
 });
