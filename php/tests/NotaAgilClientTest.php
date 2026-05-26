@@ -7,6 +7,8 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use NotaAgil\Integration\NfseNacionalCanonicalContract;
+use NotaAgil\Integration\NfseNacionalContractException;
 use NotaAgil\Integration\NotaAgilApiException;
 use NotaAgil\Integration\NotaAgilClient;
 use PHPUnit\Framework\TestCase;
@@ -211,6 +213,68 @@ class NotaAgilClientTest extends TestCase
             hash_hmac('sha256', 'delivery-1.2026-01-01T00:00:00Z.{"ok":true}', 'whsec_test'),
             NotaAgilClient::webhookSignature('whsec_test', 'delivery-1', '2026-01-01T00:00:00Z', '{"ok":true}')
         );
+    }
+
+    public function test_nfse_nacional_canonical_contract_accepts_only_expected_paths(): void
+    {
+        NfseNacionalCanonicalContract::assertCanonical([
+            'id' => 'nfse-1',
+            'tpAmb' => '2',
+            'prestador' => [
+                'cnpj' => '12345678000199',
+                'opSimpNac' => '1',
+            ],
+            'tomador' => [
+                'documento' => '12345678909',
+                'endereco' => [
+                    'logradouro' => 'Rua Exemplo',
+                ],
+            ],
+            'servico' => [
+                'cTribMun' => '0107',
+                'descricao' => 'Servico de teste',
+            ],
+            'valor_servicos' => 100,
+        ]);
+
+        $this->expectException(NfseNacionalContractException::class);
+
+        try {
+            NfseNacionalCanonicalContract::assertCanonical([
+                'prestador' => [
+                    'cnpj' => '12345678000199',
+                    'codigo_atividade' => '123',
+                ],
+                'servico' => [
+                    'codigo_servico_municipal' => '0107',
+                ],
+            ]);
+        } catch (NfseNacionalContractException $exception) {
+            $this->assertSame(
+                ['prestador.codigo_atividade', 'servico.codigo_servico_municipal'],
+                $exception->invalidFields
+            );
+            $this->assertContains('servico.cTribMun', $exception->expectedFields);
+
+            throw $exception;
+        }
+    }
+
+    public function test_nfse_nacional_provider_policy_is_canonicalized(): void
+    {
+        $policy = NfseNacionalCanonicalContract::canonicalizeProviderPolicy([
+            'required_fields' => ['service.nbs', 'service.activity_code'],
+            'visible_fields' => ['service.national_tax_code', 'service.cnae_code'],
+            'field_schema' => [
+                'service.nbs' => ['label' => 'NBS customizado'],
+            ],
+        ]);
+
+        $this->assertSame(['service.nbs'], $policy['required_fields']);
+        $this->assertSame(['service.national_tax_code'], $policy['visible_fields']);
+        $this->assertSame('NBS customizado', $policy['field_schema']['service.nbs']['label']);
+        $this->assertSame(['servico.cTribMun'], $policy['field_schema']['service.municipal_code']['payload_paths']);
+        $this->assertSame('select', $policy['field_schema']['prestador.op_simp_nac']['control']);
     }
 
     private function client(array $responses, array &$history): NotaAgilClient

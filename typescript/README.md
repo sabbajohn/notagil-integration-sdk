@@ -9,7 +9,11 @@ npm install @notagil/integration-sdk@0.1.5
 ```
 
 ```ts
-import { NotagilIntegrationClient } from '@notagil/integration-sdk';
+import {
+  NotagilIntegrationClient,
+  assertCanonicalNfseNacionalPayload,
+  type DirectNfseNacionalSubmitRequest,
+} from '@notagil/integration-sdk';
 
 const client = new NotagilIntegrationClient({
   baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
@@ -147,6 +151,64 @@ const expected = await NotagilIntegrationClient.webhookSignature(
 For clients that already assemble the complete fiscal form payload or XML, use the direct surface. This bypasses NotaAgil fiscal rule resolution and requires a token with `documents:direct`.
 
 ```ts
+const directNfse: DirectNfseNacionalSubmitRequest = {
+  external_id: 'nfse-direct-2026-0001',
+  document_type: 'nfse',
+  fiscal_environment: 'homologacao',
+  payload: {
+    id: 'nfse-direct-2026-0001',
+    tpAmb: 2,
+    dhEmi: '2026-05-26T10:00:00-03:00',
+    verAplic: 'sdk-0.1.5',
+    serie: '1',
+    nDPS: '1001',
+    dCompet: '2026-05-26',
+    tpEmit: 1,
+    cLocEmi: '3550308',
+    prestador: {
+      cnpj: '12345678000199',
+      inscricaoMunicipal: '123456',
+      razaoSocial: 'Empresa Exemplo LTDA',
+      opSimpNac: '1',
+      regEspTrib: '0',
+      codigoMunicipio: '3550308',
+    },
+    tomador: {
+      documento: '12345678909',
+      razaoSocial: 'Cliente Exemplo',
+      email: 'cliente@example.com',
+      telefone: '11999999999',
+      endereco: {
+        logradouro: 'Rua Exemplo',
+        numero: '100',
+        bairro: 'Centro',
+        cep: '01001000',
+        codigoMunicipio: '3550308',
+        uf: 'SP',
+        municipio: 'Sao Paulo',
+      },
+    },
+    servico: {
+      cLocPrestacao: '3550308',
+      cTribNac: '0107',
+      cTribMun: '0107',
+      cNBS: '1.0101.00.00',
+      descricao: 'Servico de exemplo',
+      tribISSQN: '1',
+      tpRetISSQN: '1',
+      aliquota: 0.02,
+      enviarPAliq: true,
+      valor_irrf: 0,
+      valor_ir: 0,
+      iss_retido: false,
+    },
+    valor_servicos: 100,
+  },
+};
+
+assertCanonicalNfseNacionalPayload(directNfse.payload);
+await client.createCompanyDirectDocument(companyId, directNfse, 'idem-direct-nfse-2026-0001');
+
 await client.createCompanyDirectDocument(
   companyId,
   {
@@ -174,6 +236,8 @@ await client.transmitCompanyDirectXml(
   'idem-direct-xml-2026-0001',
 );
 ```
+
+For the canonical NFSe Nacional direct payload, see [docs/payload-emissao.md](https://github.com/sabbajohn/notagil-integration-sdk/blob/main/docs/payload-emissao.md#nfse-nacional-direta).
 
 Manage company fiscal configuration through the company-scoped fiscal endpoints:
 

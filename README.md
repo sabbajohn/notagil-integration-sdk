@@ -9,7 +9,7 @@ Este repositorio publica dois pacotes a partir do mesmo codigo fonte:
 
 O contrato OpenAPI versionado fica em `openapi/integration-v1.yaml`.
 
-A estrutura recomendada para preview e emissao fiscal por `operation_code` esta documentada em [docs/payload-emissao.md](docs/payload-emissao.md).
+A estrutura recomendada para preview e emissao fiscal por `operation_code`, alem do payload canonico PT-BR para NFSe Nacional na superficie direta, esta documentada em [docs/payload-emissao.md](docs/payload-emissao.md).
 
 ## Release Atual
 

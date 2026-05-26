@@ -4,6 +4,15 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Contrato canonico de NFSe Nacional exposto nos SDKs PHP e TypeScript, com validacao local dos campos aceitos e normalizacao da `form_policy`.
+
+### Changed
+- OpenAPI e tipos gerados agora documentam o payload PT-BR de emissao direta de NFSe Nacional.
+- Campos legados `service.cnae_code` e `service.activity_code` foram removidos da policy publica de NFSe no SDK.
+
 ## [0.1.1] - 2026-05-23
 
 ### Changed

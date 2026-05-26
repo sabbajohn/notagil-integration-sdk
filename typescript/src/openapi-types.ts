@@ -1103,7 +1103,8 @@ export interface components {
             /** @enum {string} */
             document_type: "nfe" | "nfce" | "nfse";
             municipio?: string;
-            payload: {
+            /** @description Full fiscal payload for direct transmission. For `document_type=nfse` in the national layout, prefer the canonical PT-BR schema documented in `NfseNacionalCanonicalPayload`. */
+            payload: components["schemas"]["NfseNacionalCanonicalPayload"] | {
                 [key: string]: unknown;
             };
             metadata?: {
@@ -1142,6 +1143,61 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** @description Canonical PT-BR payload accepted by the NotaAgil NFSe Nacional direct emission surface. This schema documents allowed fields only; municipal/provider completeness rules may still require a subset of them depending on the scenario. */
+        NfseNacionalCanonicalPayload: {
+            id?: string;
+            tpAmb?: string | number;
+            dhEmi?: string;
+            verAplic?: string;
+            serie?: string;
+            nDPS?: string | number;
+            dCompet?: string;
+            tpEmit?: string | number;
+            cLocEmi?: string;
+            prestador?: components["schemas"]["NfseNacionalPrestador"];
+            tomador?: components["schemas"]["NfseNacionalTomador"];
+            servico?: components["schemas"]["NfseNacionalServico"];
+            valor_servicos?: string | number;
+        };
+        NfseNacionalPrestador: {
+            cnpj?: string;
+            inscricaoMunicipal?: string;
+            razaoSocial?: string;
+            opSimpNac?: string | number;
+            regEspTrib?: string | number;
+            codigoMunicipio?: string;
+        };
+        NfseNacionalTomador: {
+            documento?: string;
+            razaoSocial?: string;
+            email?: string;
+            telefone?: string;
+            endereco?: components["schemas"]["NfseNacionalEndereco"];
+        };
+        NfseNacionalEndereco: {
+            logradouro?: string;
+            numero?: string;
+            complemento?: string;
+            bairro?: string;
+            cep?: string;
+            codigoMunicipio?: string;
+            uf?: string;
+            municipio?: string;
+        };
+        NfseNacionalServico: {
+            cLocPrestacao?: string;
+            cTribNac?: string;
+            cTribMun?: string;
+            cNBS?: string;
+            descricao?: string;
+            tribISSQN?: string | number;
+            tpRetISSQN?: string | number;
+            aliquota?: string | number;
+            enviarPAliq?: string | number | boolean;
+            valor_irrf?: string | number;
+            valor_ir?: string | number;
+            iss_retido?: string | number | boolean;
+        };
         NfseProviderInfo: {
             provider_key?: string | null;
             municipio?: string | null;
@@ -1176,7 +1232,7 @@ export interface components {
             };
         };
         /** @enum {string} */
-        NfsePolicyField: "service.municipal_code" | "service.national_tax_code" | "service.nbs" | "service.cnae_code" | "service.activity_code" | "prestador.op_simp_nac";
+        NfsePolicyField: "service.municipal_code" | "service.national_tax_code" | "service.nbs" | "prestador.op_simp_nac";
         ResourceResponse: {
             data?: {
                 [key: string]: unknown;

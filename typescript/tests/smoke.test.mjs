@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { NotagilApiError, NotagilIntegrationClient } from '../dist/index.js';
+import {
+  NfseNacionalContractError,
+  NotagilApiError,
+  NotagilIntegrationClient,
+  assertCanonicalNfseNacionalPayload,
+  canonicalizeNfseProviderPolicy,
+} from '../dist/index.js';
 
 test('createCompanyDocumentByOperation sends bearer token, idempotency key and snapshot payload', async () => {
   const history = [];
@@ -197,4 +203,64 @@ test('webhookSignature matches the documented HMAC contract', async () => {
   );
 
   assert.equal(signature, '82c312bd5c5920d8c0654bdb14b369af9e27dd1828c99cb2713396670be52751');
+});
+
+test('assertCanonicalNfseNacionalPayload rejects legacy NFSe Nacional fields', () => {
+  assert.doesNotThrow(() => {
+    assertCanonicalNfseNacionalPayload({
+      id: 'nfse-1',
+      tpAmb: 2,
+      prestador: {
+        cnpj: '12345678000199',
+        opSimpNac: '1',
+      },
+      tomador: {
+        documento: '12345678909',
+        endereco: {
+          logradouro: 'Rua Exemplo',
+        },
+      },
+      servico: {
+        cTribMun: '0107',
+        descricao: 'Servico de teste',
+      },
+      valor_servicos: 100,
+    });
+  });
+
+  assert.throws(
+    () => {
+      assertCanonicalNfseNacionalPayload({
+        prestador: {
+          cnpj: '12345678000199',
+          codigo_atividade: '123',
+        },
+        servico: {
+          codigo_servico_municipal: '0107',
+        },
+      });
+    },
+    (error) => {
+      assert.ok(error instanceof NfseNacionalContractError);
+      assert.deepEqual(error.invalidFields, ['prestador.codigo_atividade', 'servico.codigo_servico_municipal']);
+      assert.ok(error.expectedFields.includes('servico.cTribMun'));
+      return true;
+    },
+  );
+});
+
+test('canonicalizeNfseProviderPolicy keeps only canonical NFSe Nacional policy fields', () => {
+  const policy = canonicalizeNfseProviderPolicy({
+    required_fields: ['service.nbs', 'service.activity_code'],
+    visible_fields: ['service.national_tax_code', 'service.cnae_code'],
+    field_schema: {
+      'service.nbs': { label: 'NBS customizado' },
+    },
+  });
+
+  assert.deepEqual(policy.required_fields, ['service.nbs']);
+  assert.deepEqual(policy.visible_fields, ['service.national_tax_code']);
+  assert.equal(policy.field_schema['service.nbs'].label, 'NBS customizado');
+  assert.deepEqual(policy.field_schema['service.municipal_code'].payload_paths, ['servico.cTribMun']);
+  assert.equal(policy.field_schema['prestador.op_simp_nac'].control, 'select');
 });
