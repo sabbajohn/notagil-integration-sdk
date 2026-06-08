@@ -35,7 +35,7 @@ para `document_type = nfse` no ambiente nacional, padronize `payload` no contrat
     "id": "nfse-direct-2026-0001",
     "tpAmb": 2,
     "dhEmi": "2026-05-26T10:00:00-03:00",
-    "verAplic": "sdk-0.2.0",
+    "verAplic": "sdk-0.3.0",
     "serie": "1",
     "nDPS": "1001",
     "dCompet": "2026-05-26",
@@ -376,7 +376,7 @@ Campos comuns de referencia:
 ## Exemplo Completo: Preview por Operacao
 
 ```bash
-curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO/preview" \
+curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO/preview" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -420,7 +420,7 @@ curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/docume
 ## Exemplo Completo: Emissao por Operacao
 
 ```bash
-curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO" \
+curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: erp-0001" \

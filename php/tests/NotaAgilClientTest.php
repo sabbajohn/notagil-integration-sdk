@@ -98,6 +98,57 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame('cnpj=12345678000199', $history[0]['request']->getUri()->getQuery());
     }
 
+    public function test_public_docs_methods_expose_openapi_and_swagger_urls(): void
+    {
+        $history = [];
+        $payload = json_encode([
+            'data' => [
+                'enabled' => true,
+                'openapi_url' => '/api/v1/integrations/openapi.yaml',
+                'swagger_url' => '/api/v1/integrations/docs',
+            ],
+        ]);
+        $client = $this->client([
+            new Response(200, [], $payload),
+            new Response(200, [], $payload),
+            new Response(200, [], $payload),
+        ], $history);
+
+        $docs = $client->publicDocs();
+
+        $this->assertTrue((bool) ($docs['enabled'] ?? false));
+        $this->assertSame('/api/v1/integrations/openapi.yaml', $docs['openapi_url']);
+        $this->assertSame('/api/v1/integrations/openapi.yaml', $client->publicOpenApiUrl());
+        $this->assertSame('/api/v1/integrations/docs', $client->publicSwaggerUrl());
+        $this->assertSame('/api/public/docs', $history[0]['request']->getUri()->getPath());
+    }
+
+    public function test_normalize_document_response_promotes_canonical_fields_from_legacy_aliases(): void
+    {
+        $normalized = NotaAgilClient::normalizeDocumentResponse([
+            'status' => 'authorized',
+            'legacy_aliases' => [
+                'type' => 'nfce',
+                'serie' => '5',
+                'numero' => '5001',
+                'chave_acesso' => 'CHAVE-5001',
+                'protocolo' => 'PROTO-5001',
+                'autorizado_em' => '2026-06-08T10:00:00-03:00',
+                'status_operacional' => 'completed',
+                'status_fiscal' => 'authorized',
+            ],
+        ]);
+
+        $this->assertSame('nfce', $normalized['document_type']);
+        $this->assertSame('5', $normalized['series']);
+        $this->assertSame('5001', $normalized['number']);
+        $this->assertSame('CHAVE-5001', $normalized['access_key']);
+        $this->assertSame('PROTO-5001', $normalized['protocol']);
+        $this->assertSame('2026-06-08T10:00:00-03:00', $normalized['authorized_at']);
+        $this->assertSame('completed', $normalized['operational_status']);
+        $this->assertSame('authorized', $normalized['fiscal_status']);
+    }
+
     public function test_fiscal_management_methods_use_company_scoped_paths(): void
     {
         $history = [];

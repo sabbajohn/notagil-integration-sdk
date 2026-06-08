@@ -7,6 +7,7 @@ import {
   NotagilIntegrationClient,
   assertCanonicalNfseNacionalPayload,
   canonicalizeNfseProviderPolicy,
+  normalizeDocumentResponse,
 } from '../dist/index.js';
 
 test('createCompanyDocumentByOperation sends bearer token, idempotency key and snapshot payload', async () => {
@@ -86,6 +87,61 @@ test('listCompanies can filter companies by CNPJ', async () => {
   assert.deepEqual(companies, [{ id: '10' }]);
   assert.equal(history[0].input, 'https://api.test/api/v1/integrations/companies?cnpj=12345678000199');
   assert.equal(history[0].init.method, 'GET');
+});
+
+test('public docs settings expose openapi and swagger urls', async () => {
+  const client = new NotagilIntegrationClient({
+    baseUrl: 'https://api.test/api/v1/integrations',
+    token: 'test-token',
+    fetch: async () => new Response(JSON.stringify({
+      data: {
+        enabled: true,
+        title: 'Docs',
+        intro: 'API publica',
+        sandbox_base_url: 'https://sandbox.test/api/v1/integrations',
+        production_base_url: 'https://api.test/api/v1/integrations',
+        sections: ['quickstart'],
+        featured_sdk: 'php',
+        changelog: 'v1',
+        openapi_url: '/api/v1/integrations/openapi.yaml',
+        swagger_url: '/api/v1/integrations/docs',
+      },
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }),
+  });
+
+  const docs = await client.getPublicDocsSettings();
+  assert.equal(docs.openapi_url, '/api/v1/integrations/openapi.yaml');
+  assert.equal(docs.swagger_url, '/api/v1/integrations/docs');
+  assert.equal(await client.getPublicOpenApiUrl(), '/api/v1/integrations/openapi.yaml');
+  assert.equal(await client.getPublicSwaggerUrl(), '/api/v1/integrations/docs');
+});
+
+test('normalizeDocumentResponse prefers canonical fields and keeps legacy fallback explicit', () => {
+  const normalized = normalizeDocumentResponse({
+    status: 'authorized',
+    legacy_aliases: {
+      type: 'nfce',
+      serie: '10',
+      numero: '101',
+      chave_acesso: 'CHAVE-1',
+      protocolo: 'PROTO-1',
+      autorizado_em: '2026-06-08T10:00:00-03:00',
+      status_operacional: 'completed',
+      status_fiscal: 'authorized',
+    },
+  });
+
+  assert.equal(normalized.document_type, 'nfce');
+  assert.equal(normalized.series, '10');
+  assert.equal(normalized.number, '101');
+  assert.equal(normalized.access_key, 'CHAVE-1');
+  assert.equal(normalized.protocol, 'PROTO-1');
+  assert.equal(normalized.authorized_at, '2026-06-08T10:00:00-03:00');
+  assert.equal(normalized.operational_status, 'completed');
+  assert.equal(normalized.fiscal_status, 'authorized');
 });
 
 test('request errors with non-JSON body still throw NotagilApiError', async () => {

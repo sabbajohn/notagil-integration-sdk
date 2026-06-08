@@ -6,7 +6,7 @@ import process from 'node:process';
 
 import { NotagilApiError, NotagilIntegrationClient } from '../dist/index.js';
 
-const DEFAULT_BASE_URL = 'https://api.notagil.com.br/api/v1/integrations';
+const DEFAULT_BASE_URL = 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations';
 const DEFAULT_REQUEST_FILE = './tests/fixtures/e2e-operation-request.sample.json';
 
 function env(name, fallback = undefined) {

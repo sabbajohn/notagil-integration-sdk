@@ -406,6 +406,32 @@ export interface PreviewResult {
   warnings?: Array<Record<string, unknown> | string>;
 }
 
+export interface LegacyDocumentAliases {
+  legacy_status?: string | null;
+  type?: string | null;
+  serie?: string | null;
+  numero?: number | string | null;
+  status_operacional?: string | null;
+  status_fiscal?: string | null;
+  chave_acesso?: string | null;
+  protocolo?: string | null;
+  autorizado_em?: string | null;
+  [key: string]: unknown;
+}
+
+export interface ResponseContractMeta {
+  version: string;
+  canonical_fields: string[];
+  legacy_aliases: string[];
+  deprecated_top_level_aliases?: string[];
+  compatibility_block?: string | null;
+}
+
+export interface IntegrationResponseMeta {
+  response_contract?: ResponseContractMeta;
+  [key: string]: unknown;
+}
+
 export interface DocumentAccepted {
   id: string | number;
   external_id?: string | null;
@@ -429,6 +455,7 @@ export interface DocumentAccepted {
   protocolo?: string | null;
   authorized_at?: string | null;
   autorizado_em?: string | null;
+  legacy_aliases?: LegacyDocumentAliases | null;
   artifacts?: DocumentArtifacts | null;
   message?: string | null;
   rejection_reason?: string | null;
@@ -472,6 +499,7 @@ export interface DocumentStatus {
   protocolo?: string | null;
   authorized_at?: string | null;
   autorizado_em?: string | null;
+  legacy_aliases?: LegacyDocumentAliases | null;
   artifacts?: DocumentArtifacts | null;
   message?: string | null;
   rejection_reason?: string | null;
@@ -503,7 +531,20 @@ export interface PaginatedDocumentList {
     last_page: number;
     per_page: number;
     total: number;
-  };
+  } & IntegrationResponseMeta;
+}
+
+export interface PublicDocsSettings {
+  enabled: boolean;
+  title: string;
+  intro: string;
+  sandbox_base_url: string;
+  production_base_url: string;
+  sections: string[];
+  featured_sdk: string;
+  changelog: string;
+  openapi_url: string;
+  swagger_url?: string;
 }
 
 export interface DocumentSnapshotResult {
@@ -595,6 +636,22 @@ export interface WaitDocumentOptions {
   timeoutMs?: number;
   terminalFiscalStatuses?: string[];
   terminalOperationalStatuses?: string[];
+}
+
+export function normalizeDocumentResponse<T extends Partial<DocumentAccepted & DocumentStatus>>(document: T): T {
+  const legacy = isRecord(document.legacy_aliases) ? document.legacy_aliases : {};
+
+  return {
+    ...document,
+    document_type: document.document_type ?? (legacy.type as string | undefined) ?? null,
+    series: document.series ?? (legacy.serie as string | undefined) ?? null,
+    number: document.number ?? (legacy.numero as string | number | undefined) ?? null,
+    access_key: document.access_key ?? (legacy.chave_acesso as string | undefined) ?? document.document_key ?? null,
+    protocol: document.protocol ?? (legacy.protocolo as string | undefined) ?? null,
+    authorized_at: document.authorized_at ?? (legacy.autorizado_em as string | undefined) ?? null,
+    operational_status: document.operational_status ?? (legacy.status_operacional as string | undefined) ?? null,
+    fiscal_status: document.fiscal_status ?? (legacy.status_fiscal as string | undefined) ?? document.status ?? null,
+  };
 }
 
 function legacyNfseNacionalFields(payload: Record<string, unknown>): string[] {
@@ -861,6 +918,22 @@ export class NotagilIntegrationClient {
     return this.request<IntegrationCompany>(`/companies/${encodeURIComponent(String(companyId))}`, {
       method: 'GET',
     });
+  }
+
+  getPublicDocsSettings(): Promise<PublicDocsSettings> {
+    return this.requestFromBase<PublicDocsSettings>(this.platformBaseUrl(), '/public/docs', {
+      method: 'GET',
+    });
+  }
+
+  async getPublicOpenApiUrl(): Promise<string> {
+    const docs = await this.getPublicDocsSettings();
+    return docs.openapi_url;
+  }
+
+  async getPublicSwaggerUrl(): Promise<string | null> {
+    const docs = await this.getPublicDocsSettings();
+    return typeof docs.swagger_url === 'string' && docs.swagger_url.trim() !== '' ? docs.swagger_url : null;
   }
 
   previewCompanyDocumentByOperation(
@@ -1518,7 +1591,16 @@ export class NotagilIntegrationClient {
     body?: unknown;
     unwrapData?: boolean;
   }): Promise<T> {
-    const response = await this.fetcher(`${this.baseUrl}${path}`, {
+    return this.requestFromBase<T>(this.baseUrl, path, options);
+  }
+
+  private async requestFromBase<T>(baseUrl: string, path: string, options: {
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    headers?: Record<string, string>;
+    body?: unknown;
+    unwrapData?: boolean;
+  }): Promise<T> {
+    const response = await this.fetcher(`${baseUrl}${path}`, {
       method: options.method,
       headers: {
         Accept: 'application/json',
@@ -1541,6 +1623,10 @@ export class NotagilIntegrationClient {
     }
 
     return (parsed && typeof parsed === 'object' && 'data' in parsed ? (parsed as { data: T }).data : parsed) as T;
+  }
+
+  private platformBaseUrl(): string {
+    return this.baseUrl.replace(/\/v1\/integrations$/, '');
   }
 
   private parseResponseBody(text: string): unknown {

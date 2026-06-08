@@ -5,23 +5,27 @@ TypeScript beta SDK for the NotaAgil public integration API documented in `../op
 See [docs/payload-emissao.md](https://github.com/sabbajohn/notagil-integration-sdk/blob/main/docs/payload-emissao.md) for the normalized fiscal emission payload based on `operation_code` and `snapshot`.
 
 ```bash
-npm install @notagil/integration-sdk@^0.2.0
+npm install @notagil/integration-sdk@^0.3.0
 ```
 
 ```ts
 import {
   NotagilIntegrationClient,
   assertCanonicalNfseNacionalPayload,
+  normalizeDocumentResponse,
   type DirectNfseNacionalSubmitRequest,
 } from '@notagil/integration-sdk';
 
 const client = new NotagilIntegrationClient({
-  baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
+  baseUrl: 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations',
   token: process.env.NOTAGIL_TOKEN!,
 });
 
 const companies = await client.listCompanies({ cnpj: '12345678000199' });
 const companyId = companies[0].id;
+const docs = await client.getPublicDocsSettings();
+
+console.log(docs.openapi_url, docs.swagger_url);
 
 const snapshot = {
   fiscal_environment: 'homologacao',
@@ -95,6 +99,9 @@ if (authorized.fiscal_status === 'authorized') {
   console.error(authorized.rejection_reason ?? authorized.message, authorized.errors);
 }
 
+const canonicalDocument = normalizeDocumentResponse(authorized);
+console.log(canonicalDocument.document_type, canonicalDocument.series, canonicalDocument.number);
+
 const companyConfig = await client.getCompanyConfiguration(companyId);
 
 await client.updateCompanyConfiguration(companyId, {
@@ -159,7 +166,7 @@ const directNfse: DirectNfseNacionalSubmitRequest = {
     id: 'nfse-direct-2026-0001',
     tpAmb: 2,
     dhEmi: '2026-05-26T10:00:00-03:00',
-    verAplic: 'sdk-0.2.0',
+    verAplic: 'sdk-0.3.0',
     serie: '1',
     nDPS: '1001',
     dCompet: '2026-05-26',

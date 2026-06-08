@@ -24,6 +24,27 @@ class NotaAgilClient
         return $this->request('GET', $this->withQuery('/companies', $filters));
     }
 
+    public function publicDocs(): array
+    {
+        return $this->request('GET', '/public/docs', [], true, $this->platformBaseUrl());
+    }
+
+    public function publicOpenApiUrl(): ?string
+    {
+        $docs = $this->publicDocs();
+        $url = $docs['openapi_url'] ?? null;
+
+        return is_string($url) && trim($url) !== '' ? trim($url) : null;
+    }
+
+    public function publicSwaggerUrl(): ?string
+    {
+        $docs = $this->publicDocs();
+        $url = $docs['swagger_url'] ?? null;
+
+        return is_string($url) && trim($url) !== '' ? trim($url) : null;
+    }
+
     public function company(string|int $companyId): array
     {
         return $this->request('GET', "/companies/{$companyId}");
@@ -529,9 +550,32 @@ class NotaAgilClient
         return hash_hmac('sha256', "{$deliveryId}.{$timestamp}.{$body}", $secret);
     }
 
+    public static function normalizeDocumentResponse(array $document): array
+    {
+        $legacy = isset($document['legacy_aliases']) && is_array($document['legacy_aliases'])
+            ? $document['legacy_aliases']
+            : [];
+
+        $document['document_type'] = $document['document_type'] ?? ($legacy['type'] ?? null);
+        $document['series'] = $document['series'] ?? ($legacy['serie'] ?? null);
+        $document['number'] = $document['number'] ?? ($legacy['numero'] ?? null);
+        $document['access_key'] = $document['access_key'] ?? ($legacy['chave_acesso'] ?? ($document['document_key'] ?? null));
+        $document['protocol'] = $document['protocol'] ?? ($legacy['protocolo'] ?? null);
+        $document['authorized_at'] = $document['authorized_at'] ?? ($legacy['autorizado_em'] ?? null);
+        $document['operational_status'] = $document['operational_status'] ?? ($legacy['status_operacional'] ?? null);
+        $document['fiscal_status'] = $document['fiscal_status'] ?? ($legacy['status_fiscal'] ?? ($document['status'] ?? null));
+
+        return $document;
+    }
+
     private function companyPath(string $path, string|int $companyId): string
     {
         return "/companies/{$companyId}{$path}";
+    }
+
+    private function platformBaseUrl(): string
+    {
+        return preg_replace('#/v1/integrations$#', '', $this->baseUrl) ?: $this->baseUrl;
     }
 
     private function documentArtifactPath(string $externalId, string $artifact, string|int $companyId): string
@@ -582,7 +626,7 @@ class NotaAgilClient
         return $query === '' ? $path : $path . '?' . $query;
     }
 
-    private function request(string $method, string $path, array $options = [], bool $unwrapData = true): array
+    private function request(string $method, string $path, array $options = [], bool $unwrapData = true, ?string $baseUrl = null): array
     {
         $options['headers'] = array_merge([
             'Accept' => 'application/json',
@@ -590,7 +634,7 @@ class NotaAgilClient
         ], $options['headers'] ?? []);
 
         try {
-            $response = $this->http->request($method, $this->baseUrl . $path, $options);
+            $response = $this->http->request($method, ($baseUrl ?? $this->baseUrl) . $path, $options);
         } catch (RequestException $exception) {
             $response = $exception->getResponse();
             $payload = $response ? $this->decode((string) $response->getBody()) : ['message' => $exception->getMessage()];

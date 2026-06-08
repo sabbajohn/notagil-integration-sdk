@@ -4,6 +4,18 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-08
+
+### Added
+- Metodos de descoberta de documentacao publica nos SDKs PHP e TypeScript, incluindo `openapi_url` e `swagger_url`.
+- Helpers `normalizeDocumentResponse` nos SDKs para promover campos canônicos a partir de `legacy_aliases` sem espalhar fallback manual nos clientes.
+- Tipos TypeScript para `legacy_aliases` e `response_contract`, alinhados ao contrato OpenAPI publico atual.
+
+### Changed
+- OpenAPI sincronizado com a superficie atual da API de integracao, incluindo bloco explicito de compatibilidade em respostas.
+- Documentacao, exemplos e homologacao dos SDKs agora apontam para `https://api_notagil.sabbasistemas.com.br/api/v1/integrations`.
+- Frontends e consumidores recomendados passam a priorizar `document_type`, `series`, `number`, `access_key`, `protocol` e `authorized_at`.
+
 ## [0.2.0] - 2026-05-26
 
 ### Added

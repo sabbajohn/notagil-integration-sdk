@@ -7,7 +7,7 @@ Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padr
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:^0.2.0
+composer require notagil/integration-sdk:^0.3.0
 ```
 
 ## Uso Basico
@@ -17,9 +17,13 @@ use NotaAgil\Integration\NotaAgilClient;
 use NotaAgil\Integration\NfseNacionalCanonicalContract;
 
 $client = new NotaAgilClient(
-    baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
+    baseUrl: 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations',
     token: getenv('NOTAGIL_TOKEN'),
 );
+
+$docs = $client->publicDocs();
+echo $docs['openapi_url'] . PHP_EOL;
+echo $docs['swagger_url'] . PHP_EOL;
 
 $companies = $client->companies(['cnpj' => '12345678000199']);
 
@@ -59,6 +63,7 @@ $documentByOperation = $client->createDocumentByOperation(
 );
 
 $authorized = $client->waitDocument('erp-0002', $companies[0]['id']);
+$authorized = NotaAgilClient::normalizeDocumentResponse($authorized);
 if (($authorized['fiscal_status'] ?? null) === 'authorized') {
     echo $authorized['access_key'] . PHP_EOL;
     echo $authorized['protocol'] . PHP_EOL;
@@ -83,7 +88,7 @@ $payload = [
     'id' => 'nfse-direct-2026-0001',
     'tpAmb' => 2,
     'dhEmi' => '2026-05-26T10:00:00-03:00',
-    'verAplic' => 'sdk-0.2.0',
+    'verAplic' => 'sdk-0.3.0',
     'serie' => '1',
     'nDPS' => '1001',
     'dCompet' => '2026-05-26',

@@ -37,7 +37,7 @@ Obrigatorias:
 
 Opcionais (mais usadas):
 
-- `NOTAGIL_BASE_URL` (padrao: `https://api.notagil.com.br/api/v1/integrations`)
+- `NOTAGIL_BASE_URL` (padrao: `https://api_notagil.sabbasistemas.com.br/api/v1/integrations`)
 - `NOTAGIL_E2E_REQUEST_FILE` (padrao: `./tests/fixtures/e2e-operation-request.sample.json` no pacote `typescript`)
 - `NOTAGIL_E2E_COMPANY_ID` (se ausente, usa a primeira empresa retornada por `/companies`)
 - `NOTAGIL_E2E_OPERATION_CODE` (sobrescreve o arquivo)
