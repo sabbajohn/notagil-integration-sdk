@@ -6,4 +6,4 @@ vendor/
 *.log
 *.tgz
 composer.lock
-scripts/release-local.sh
+scripts/release-local.shd
