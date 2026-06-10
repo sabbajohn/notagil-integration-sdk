@@ -28,7 +28,7 @@ class NotaAgilClientTest extends TestCase
         $request = $history[0]['request'];
         $this->assertSame('Bearer test-token', $request->getHeaderLine('Authorization'));
         $this->assertSame('idem-1', $request->getHeaderLine('Idempotency-Key'));
-        $this->assertSame('/api/v1/integrations/companies/10/documents/VENDA_BALCAO', $request->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/documents/VENDA_BALCAO', $request->getUri()->getPath());
     }
 
     public function test_operation_code_document_methods_use_snapshot_contract_paths(): void
@@ -56,8 +56,8 @@ class NotaAgilClientTest extends TestCase
 
         $this->assertSame(['resolution_status' => 'resolved'], $preview);
         $this->assertSame(['id' => '1'], $created);
-        $this->assertSame('/api/v1/integrations/companies/10/documents/VENDA_NORMAL/preview', $history[0]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/documents/VENDA_NORMAL', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/documents/VENDA_NORMAL/preview', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/documents/VENDA_NORMAL', $history[1]['request']->getUri()->getPath());
         $this->assertSame('idem-operation-1', $history[1]['request']->getHeaderLine('Idempotency-Key'));
         $this->assertStringContainsString('"snapshot"', (string) $history[1]['request']->getBody());
     }
@@ -92,7 +92,7 @@ class NotaAgilClientTest extends TestCase
         $companies = $client->companies(['cnpj' => '12345678000199']);
 
         $this->assertSame([['id' => '10']], $companies);
-        $this->assertSame('/api/v1/integrations/companies', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company', $history[0]['request']->getUri()->getPath());
         $this->assertSame('cnpj=12345678000199', $history[0]['request']->getUri()->getQuery());
     }
 
@@ -129,15 +129,15 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame(['id' => 'assignment-1'], $assignment);
         $this->assertSame(['deleted' => true], $deleted);
         $this->assertSame(['deleted' => true], $deletedEmitter);
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/rate-references', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/rate-references', $history[0]['request']->getUri()->getPath());
         $this->assertSame('tax_type=ibs&uf=SC', $history[0]['request']->getUri()->getQuery());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/emitter-profiles', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/emitter-profiles', $history[1]['request']->getUri()->getPath());
         $this->assertSame('POST', $history[2]['request']->getMethod());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/tax-rule-sets', $history[2]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/profile-assignments', $history[3]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/tax-rule-sets', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/profile-assignments', $history[3]['request']->getUri()->getPath());
         $this->assertSame('DELETE', $history[4]['request']->getMethod());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/operation-profiles/99', $history[4]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/emitter-profiles/77', $history[5]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/operation-profiles/99', $history[4]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/emitter-profiles/77', $history[5]['request']->getUri()->getPath());
     }
 
     public function test_document_download_and_operational_helpers_use_public_paths(): void
@@ -173,11 +173,11 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame(['status' => 'blocked'], $readiness);
         $this->assertSame([['id' => 'cfop-1']], $cfops);
         $this->assertSame(['id' => 'schedule-1'], $schedule);
-        $this->assertSame('/api/v1/integrations/companies/10/documents/erp-1/xml', $history[0]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/documents/erp-1/pdf', $history[1]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/readiness', $history[2]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/fiscal/cfops', $history[3]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/schedules', $history[4]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/documents/erp-1/xml', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/documents/erp-1/pdf', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/readiness', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/cfops', $history[3]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/schedules', $history[4]['request']->getUri()->getPath());
     }
 
     public function test_inbound_nfe_company_first_aliases_use_expected_paths(): void
@@ -199,10 +199,10 @@ class NotaAgilClientTest extends TestCase
         $this->assertTrue((bool) ($download['ok'] ?? false));
         $this->assertTrue((bool) ($updated['ok'] ?? false));
         $this->assertTrue((bool) ($confirmed['ok'] ?? false));
-        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/manifest', $history[0]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/download-xml', $history[1]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/entry-bookkeeping', $history[2]['request']->getUri()->getPath());
-        $this->assertSame('/api/v1/integrations/companies/10/inbound/nfe/22/entry-bookkeeping/confirm', $history[3]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/inbound/nfe/22/manifest', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/inbound/nfe/22/download-xml', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/inbound/nfe/22/entry-bookkeeping', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/inbound/nfe/22/entry-bookkeeping/confirm', $history[3]['request']->getUri()->getPath());
     }
 
     public function test_webhook_signature_helper_matches_hmac_contract(): void

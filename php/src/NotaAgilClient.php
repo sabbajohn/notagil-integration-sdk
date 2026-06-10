@@ -21,37 +21,37 @@ class NotaAgilClient
 
     public function companies(array $filters = []): array
     {
-        return $this->request('GET', $this->withQuery('/companies', $filters));
+        return $this->request('GET','/company');
     }
 
     public function company(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}");
+        return $this->request('GET', "/company/{$companyId}");
     }
 
     public function companyConfiguration(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/configuration");
+        return $this->request('GET', "/company/{$companyId}/configuration");
     }
 
     public function updateCompanyConfiguration(string|int $companyId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/configuration", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/configuration", ['json' => $payload]);
     }
 
     public function nfseProviderInfo(string|int $companyId, array $filters = []): array
     {
-        return $this->request('GET', $this->withQuery("/companies/{$companyId}/nfse/provider-info", $filters));
+        return $this->request('GET', $this->withQuery("/company/{$companyId}/nfse/provider-info", $filters));
     }
 
     public function previewDocumentByOperation(string|int $companyId, string $operationCode, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/documents/".rawurlencode($operationCode).'/preview', ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/documents/".rawurlencode($operationCode).'/preview', ['json' => $payload]);
     }
 
     public function createDocumentByOperation(string|int $companyId, string $operationCode, array $payload, string $idempotencyKey): array
     {
-        return $this->request('POST', "/companies/{$companyId}/documents/".rawurlencode($operationCode), [
+        return $this->request('POST', "/company/{$companyId}/documents/".rawurlencode($operationCode), [
             'json' => $payload,
             'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
@@ -59,7 +59,7 @@ class NotaAgilClient
 
     public function createDirectDocument(string|int $companyId, array $payload, string $idempotencyKey): array
     {
-        return $this->request('POST', "/companies/{$companyId}/direct/documents", [
+        return $this->request('POST', "/company/{$companyId}/direct/documents", [
             'json' => $payload,
             'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
@@ -67,7 +67,7 @@ class NotaAgilClient
 
     public function transmitDirectXml(string|int $companyId, array $payload, string $idempotencyKey): array
     {
-        return $this->request('POST', "/companies/{$companyId}/direct/documents/xml", [
+        return $this->request('POST', "/company/{$companyId}/direct/documents/xml", [
             'json' => $payload,
             'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
@@ -75,12 +75,12 @@ class NotaAgilClient
 
     public function document(string $externalId, string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/documents/" . rawurlencode($externalId));
+        return $this->request('GET', "/company/{$companyId}/documents/" . rawurlencode($externalId));
     }
 
     public function documents(string|int $companyId, array $filters = []): array
     {
-        return $this->request('GET', $this->withQuery("/companies/{$companyId}/documents", $filters), unwrapData: false);
+        return $this->request('GET', $this->withQuery("/company/{$companyId}/documents", $filters), unwrapData: false);
     }
 
     public function waitDocument(string $externalId, string|int $companyId, int $timeoutSeconds = 120, int $intervalMilliseconds = 2000): array
@@ -128,12 +128,12 @@ class NotaAgilClient
 
     public function cancelDocument(string $externalId, string $reason, string|int $companyId): array
     {
-        return $this->request('POST', "/companies/{$companyId}/documents/" . rawurlencode($externalId) . '/cancel', ['json' => ['reason' => $reason]]);
+        return $this->request('POST', "/company/{$companyId}/documents/" . rawurlencode($externalId) . '/cancel', ['json' => ['reason' => $reason]]);
     }
 
     public function correctDocument(string $externalId, string $correcao, ?int $sequencia, string|int $companyId): array
     {
-        return $this->request('POST', "/companies/{$companyId}/documents/" . rawurlencode($externalId) . '/correct', ['json' => array_filter([
+        return $this->request('POST', "/company/{$companyId}/documents/" . rawurlencode($externalId) . '/correct', ['json' => array_filter([
             'correcao' => $correcao,
             'sequencia' => $sequencia,
         ], static fn ($value): bool => $value !== null)]);
@@ -141,52 +141,52 @@ class NotaAgilClient
 
     public function products(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/products");
+        return $this->request('GET', "/company/{$companyId}/products");
     }
 
     public function product(string|int $companyId, string|int $productId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/products/{$productId}");
+        return $this->request('GET', "/company/{$companyId}/products/{$productId}");
     }
 
     public function createProduct(string|int $companyId, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/products", ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/products", ['json' => $payload]);
     }
 
     public function updateProduct(string|int $companyId, string|int $productId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/products/{$productId}", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/products/{$productId}", ['json' => $payload]);
     }
 
     public function deleteProduct(string|int $companyId, string|int $productId): array
     {
-        return $this->request('DELETE', "/companies/{$companyId}/products/{$productId}");
+        return $this->request('DELETE', "/company/{$companyId}/products/{$productId}");
     }
 
     public function takers(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/takers");
+        return $this->request('GET', "/company/{$companyId}/takers");
     }
 
     public function taker(string|int $companyId, string|int $takerId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/takers/{$takerId}");
+        return $this->request('GET', "/company/{$companyId}/takers/{$takerId}");
     }
 
     public function createTaker(string|int $companyId, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/takers", ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/takers", ['json' => $payload]);
     }
 
     public function updateTaker(string|int $companyId, string|int $takerId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/takers/{$takerId}", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/takers/{$takerId}", ['json' => $payload]);
     }
 
     public function deleteTaker(string|int $companyId, string|int $takerId): array
     {
-        return $this->request('DELETE', "/companies/{$companyId}/takers/{$takerId}");
+        return $this->request('DELETE', "/company/{$companyId}/takers/{$takerId}");
     }
 
     public function webhooks(): array
@@ -326,102 +326,102 @@ class NotaAgilClient
 
     public function emitterProfiles(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/fiscal/emitter-profiles");
+        return $this->request('GET', "/company/{$companyId}/fiscal/emitter-profiles");
     }
 
     public function createEmitterProfile(string|int $companyId, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/fiscal/emitter-profiles", ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/fiscal/emitter-profiles", ['json' => $payload]);
     }
 
     public function updateEmitterProfile(string|int $companyId, string|int $profileId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/fiscal/emitter-profiles/{$profileId}", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/fiscal/emitter-profiles/{$profileId}", ['json' => $payload]);
     }
 
     public function deleteEmitterProfile(string|int $companyId, string|int $profileId): array
     {
-        return $this->request('DELETE', "/companies/{$companyId}/fiscal/emitter-profiles/{$profileId}");
+        return $this->request('DELETE', "/company/{$companyId}/fiscal/emitter-profiles/{$profileId}");
     }
 
     public function operationProfiles(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/fiscal/operation-profiles");
+        return $this->request('GET', "/company/{$companyId}/fiscal/operation-profiles");
     }
 
     public function createOperationProfile(string|int $companyId, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/fiscal/operation-profiles", ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/fiscal/operation-profiles", ['json' => $payload]);
     }
 
     public function updateOperationProfile(string|int $companyId, string|int $profileId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/fiscal/operation-profiles/{$profileId}", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/fiscal/operation-profiles/{$profileId}", ['json' => $payload]);
     }
 
     public function deleteOperationProfile(string|int $companyId, string|int $profileId): array
     {
-        return $this->request('DELETE', "/companies/{$companyId}/fiscal/operation-profiles/{$profileId}");
+        return $this->request('DELETE', "/company/{$companyId}/fiscal/operation-profiles/{$profileId}");
     }
 
     public function profileAssignments(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/fiscal/profile-assignments");
+        return $this->request('GET', "/company/{$companyId}/fiscal/profile-assignments");
     }
 
     public function createProfileAssignment(string|int $companyId, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/fiscal/profile-assignments", ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/fiscal/profile-assignments", ['json' => $payload]);
     }
 
     public function updateProfileAssignment(string|int $companyId, string|int $assignmentId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/fiscal/profile-assignments/{$assignmentId}", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/fiscal/profile-assignments/{$assignmentId}", ['json' => $payload]);
     }
 
     public function deleteProfileAssignment(string|int $companyId, string|int $assignmentId): array
     {
-        return $this->request('DELETE', "/companies/{$companyId}/fiscal/profile-assignments/{$assignmentId}");
+        return $this->request('DELETE', "/company/{$companyId}/fiscal/profile-assignments/{$assignmentId}");
     }
 
     public function rateReferences(string|int $companyId, array $filters = []): array
     {
-        return $this->request('GET', $this->withQuery("/companies/{$companyId}/fiscal/rate-references", $filters));
+        return $this->request('GET', $this->withQuery("/company/{$companyId}/fiscal/rate-references", $filters));
     }
 
     public function createRateReference(string|int $companyId, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/fiscal/rate-references", ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/fiscal/rate-references", ['json' => $payload]);
     }
 
     public function updateRateReference(string|int $companyId, string|int $rateReferenceId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/fiscal/rate-references/{$rateReferenceId}", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/fiscal/rate-references/{$rateReferenceId}", ['json' => $payload]);
     }
 
     public function deleteRateReference(string|int $companyId, string|int $rateReferenceId): array
     {
-        return $this->request('DELETE', "/companies/{$companyId}/fiscal/rate-references/{$rateReferenceId}");
+        return $this->request('DELETE', "/company/{$companyId}/fiscal/rate-references/{$rateReferenceId}");
     }
 
     public function taxRuleSets(string|int $companyId): array
     {
-        return $this->request('GET', "/companies/{$companyId}/fiscal/tax-rule-sets");
+        return $this->request('GET', "/company/{$companyId}/fiscal/tax-rule-sets");
     }
 
     public function createTaxRuleSet(string|int $companyId, array $payload): array
     {
-        return $this->request('POST', "/companies/{$companyId}/fiscal/tax-rule-sets", ['json' => $payload]);
+        return $this->request('POST', "/company/{$companyId}/fiscal/tax-rule-sets", ['json' => $payload]);
     }
 
     public function updateTaxRuleSet(string|int $companyId, string|int $taxRuleSetId, array $payload): array
     {
-        return $this->request('PUT', "/companies/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}", ['json' => $payload]);
+        return $this->request('PUT', "/company/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}", ['json' => $payload]);
     }
 
     public function deleteTaxRuleSet(string|int $companyId, string|int $taxRuleSetId): array
     {
-        return $this->request('DELETE', "/companies/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}");
+        return $this->request('DELETE', "/company/{$companyId}/fiscal/tax-rule-sets/{$taxRuleSetId}");
     }
 
     public function unifiedDocuments(string|int $companyId, array $filters = []): array
@@ -531,7 +531,7 @@ class NotaAgilClient
 
     private function companyPath(string $path, string|int $companyId): string
     {
-        return "/companies/{$companyId}{$path}";
+        return "/company/{$companyId}{$path}";
     }
 
     private function documentArtifactPath(string $externalId, string $artifact, string|int $companyId): string

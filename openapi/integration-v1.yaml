@@ -7,15 +7,18 @@ info:
     Public contract for API clients. Every path in this document is relative to
     `/api/v1/integrations` and requires a NotaAgil integration bearer token unless
     explicitly stated otherwise.
+  contact:
+    name: Sabba John - Sabba Sistemas
+  x-author: Sabba John - Sabba Sistemas
 servers:
-  - url: https://api.notagil.com.br/api/v1/integrations
+  - url: https://api_notagil.sabbasistemas.com.br/api/v1/integrations
     description: Production
-  - url: https://sandbox.notagil.com.br/api/v1/integrations
+  - url: http://localhost:8001/api/v1/integrations
     description: Sandbox
 security:
   - bearerAuth: []
 tags:
-  - name: Companies
+  - name: Company
   - name: Documents
   - name: Configuration
   - name: Fiscal Operations
@@ -30,28 +33,23 @@ tags:
   - name: Stock
   - name: Schedules
 paths:
-  /companies:
+  /company:
     get:
-      tags: [Companies]
-      operationId: listCompanies
-      x-required-scopes: ["companies:read"]
-      parameters:
-        - name: cnpj
-          in: query
-          required: false
-          description: Filters companies by CNPJ. Send digits only when possible.
-          schema: { type: string }
+      tags: [Company]
+      operationId: getCompany
+      x-required-scopes: ["company:read"]
       responses:
         "200": { $ref: "#/components/responses/CompanyCollectionResponse" }
-  /companies/{company_id}:
+  # Depreciar ja que cada token a uma empresa especifica
+  /company/{company_id}:
     get:
-      tags: [Companies]
+      tags: [Company]
       operationId: getCompany
-      x-required-scopes: ["companies:read"]
+      x-required-scopes: ["company:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/CompanyResponse" }
-  /companies/{company_id}/configuration:
+  /company/{company_id}/configuration:
     get:
       tags: [Configuration]
       operationId: getCompanyConfiguration
@@ -68,11 +66,11 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/CompanyResponse" }
-  /companies/{company_id}/nfse/provider-info:
+  /company/{company_id}/nfse/provider-info:
     get:
       tags: [Configuration]
       operationId: getCompanyNfseProviderInfo
-      description: Returns the dynamic NFSe form policy required by the resolved municipal provider.
+      description: Returns the dynamic NFSe form policy required by the resolved provider. The exposed `required_fields`, `visible_fields` and `payload_paths` reference only canonical public NFSe fields, never internal provider layouts. For `nfse_nacional`/`manaus`, direct NFSe payloads must use the canonical PT-BR root contract.
       x-required-scopes: ["configuration:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -80,7 +78,7 @@ paths:
         - $ref: "#/components/parameters/FiscalEnvironmentQuery"
       responses:
         "200": { $ref: "#/components/responses/NfseProviderInfoResponse" }
-  /companies/{company_id}/certificates:
+  /company/{company_id}/certificates:
     get:
       tags: [Configuration]
       operationId: listCompanyCertificates
@@ -97,7 +95,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/CertificateResponse" }
-  /companies/{company_id}/certificates/{certificate_id}:
+  /company/{company_id}/certificates/{certificate_id}:
     patch:
       tags: [Configuration]
       operationId: updateCompanyCertificate
@@ -112,7 +110,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/CertificateResponse" }
-  /companies/{company_id}/certificates/{certificate_id}/validate:
+  /company/{company_id}/certificates/{certificate_id}/validate:
     post:
       tags: [Configuration]
       operationId: validateCompanyCertificate
@@ -126,7 +124,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/CertificateValidationResponse" }
-  /companies/{company_id}/readiness:
+  /company/{company_id}/readiness:
     get:
       tags: [Configuration]
       operationId: getCompanyReadiness
@@ -134,7 +132,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports:
+  /company/{company_id}/onboarding/imports:
     get:
       tags: [Configuration]
       operationId: listCompanyOnboardingImports
@@ -151,7 +149,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports/{import_id}:
+  /company/{company_id}/onboarding/imports/{import_id}:
     get:
       tags: [Configuration]
       operationId: getCompanyOnboardingImport
@@ -164,7 +162,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports/{import_id}/review:
+  /company/{company_id}/onboarding/imports/{import_id}/review:
     post:
       tags: [Configuration]
       operationId: reviewCompanyOnboardingImport
@@ -179,7 +177,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports/{import_id}/promote:
+  /company/{company_id}/onboarding/imports/{import_id}/promote:
     post:
       tags: [Configuration]
       operationId: promoteCompanyOnboardingImport
@@ -194,7 +192,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/options:
+  /company/{company_id}/fiscal/options:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyFiscalOptions
@@ -202,7 +200,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/cfops:
+  /company/{company_id}/fiscal/cfops:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyCfops
@@ -210,7 +208,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/utils/municipalities:
+  /company/{company_id}/fiscal/utils/municipalities:
     get:
       tags: [Fiscal Catalog]
       operationId: searchCompanyMunicipalities
@@ -218,7 +216,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/utils/ncms:
+  /company/{company_id}/fiscal/utils/ncms:
     get:
       tags: [Fiscal Catalog]
       operationId: searchCompanyNcms
@@ -226,7 +224,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/tax-catalogs:
+  /company/{company_id}/fiscal/tax-catalogs:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyTaxCatalogs
@@ -234,7 +232,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/tax-catalogs/{catalog}/situations:
+  /company/{company_id}/fiscal/tax-catalogs/{catalog}/situations:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyTaxSituations
@@ -247,7 +245,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/tax-situations/{situation}/classifications:
+  /company/{company_id}/fiscal/tax-situations/{situation}/classifications:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyTaxClassifications
@@ -260,7 +258,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/tax-situations/{situation}/consequence-template:
+  /company/{company_id}/fiscal/tax-situations/{situation}/consequence-template:
     get:
       tags: [Fiscal Catalog]
       operationId: getCompanyTaxConsequenceTemplate
@@ -273,7 +271,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/emitter-profiles:
+  /company/{company_id}/fiscal/emitter-profiles:
     get:
       tags: [Fiscal Operations]
       operationId: listCompanyFiscalEmitterProfiles
@@ -290,7 +288,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/emitter-profiles/{profile_id}:
+  /company/{company_id}/fiscal/emitter-profiles/{profile_id}:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalEmitterProfile
@@ -318,7 +316,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/operation-profiles:
+  /company/{company_id}/fiscal/operation-profiles:
     get:
       tags: [Fiscal Operations]
       operationId: listCompanyFiscalOperationProfiles
@@ -335,7 +333,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/operation-profiles/{profile_id}:
+  /company/{company_id}/fiscal/operation-profiles/{profile_id}:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalOperationProfile
@@ -363,7 +361,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/profile-assignments:
+  /company/{company_id}/fiscal/profile-assignments:
     get:
       tags: [Fiscal Operations]
       operationId: listCompanyFiscalProfileAssignments
@@ -380,7 +378,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/profile-assignments/{assignment_id}:
+  /company/{company_id}/fiscal/profile-assignments/{assignment_id}:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalProfileAssignment
@@ -408,7 +406,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/rate-references:
+  /company/{company_id}/fiscal/rate-references:
     get:
       tags: [Fiscal Rates]
       operationId: listCompanyFiscalRateReferences
@@ -425,7 +423,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/rate-references/{rate_reference_id}:
+  /company/{company_id}/fiscal/rate-references/{rate_reference_id}:
     put:
       tags: [Fiscal Rates]
       operationId: updateCompanyFiscalRateReference
@@ -453,7 +451,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/tax-rule-sets:
+  /company/{company_id}/fiscal/tax-rule-sets:
     get:
       tags: [Fiscal Rules]
       operationId: listCompanyFiscalTaxRuleSets
@@ -470,7 +468,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}:
+  /company/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}:
     put:
       tags: [Fiscal Rules]
       operationId: updateCompanyFiscalTaxRuleSet
@@ -498,7 +496,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/documents/{operation_code}/preview:
+  /company/{company_id}/documents/{operation_code}/preview:
     post:
       tags: [Documents]
       operationId: previewCompanyDocumentByOperation
@@ -510,7 +508,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentPreview" }
       responses:
         "200": { $ref: "#/components/responses/DocumentPreviewResponse" }
-  /companies/{company_id}/documents:
+  /company/{company_id}/documents:
     get:
       tags: [Documents]
       operationId: listCompanyDocuments
@@ -520,7 +518,7 @@ paths:
         - $ref: "#/components/parameters/DocumentTypeQuery"
       responses:
         "200": { $ref: "#/components/responses/DocumentListResponse" }
-  /companies/{company_id}/documents/{operation_code}:
+  /company/{company_id}/documents/{operation_code}:
     post:
       tags: [Documents]
       operationId: createCompanyDocumentByOperation
@@ -533,7 +531,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentSubmit" }
       responses:
         "202": { $ref: "#/components/responses/DocumentAcceptedResponse" }
-  /companies/{company_id}/documents/{external_id}:
+  /company/{company_id}/documents/{external_id}:
     get:
       tags: [Documents]
       operationId: getCompanyDocument
@@ -543,7 +541,7 @@ paths:
         - $ref: "#/components/parameters/ExternalId"
       responses:
         "200": { $ref: "#/components/responses/DocumentDetailResponse" }
-  /companies/{company_id}/documents/{external_id}/xml:
+  /company/{company_id}/documents/{external_id}/xml:
     get:
       tags: [Documents]
       operationId: downloadCompanyDocumentXml
@@ -562,7 +560,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ArtifactProcessingError" }
-  /companies/{company_id}/documents/{external_id}/pdf:
+  /company/{company_id}/documents/{external_id}/pdf:
     get:
       tags: [Documents]
       operationId: downloadCompanyDocumentPdf
@@ -583,7 +581,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ArtifactProcessingError" }
-  /companies/{company_id}/documents/{external_id}/snapshot:
+  /company/{company_id}/documents/{external_id}/snapshot:
     get:
       tags: [Documents]
       operationId: getCompanyDocumentSnapshot
@@ -593,7 +591,7 @@ paths:
         - $ref: "#/components/parameters/ExternalId"
       responses:
         "200": { $ref: "#/components/responses/DocumentSnapshotResponse" }
-  /companies/{company_id}/documents/{external_id}/query:
+  /company/{company_id}/documents/{external_id}/query:
     post:
       tags: [Documents]
       operationId: queryCompanyDocument
@@ -608,7 +606,7 @@ paths:
           schema: { type: boolean }
       responses:
         "200": { $ref: "#/components/responses/DocumentQueryResponse" }
-  /companies/{company_id}/documents/{external_id}/cancel:
+  /company/{company_id}/documents/{external_id}/cancel:
     post:
       tags: [Documents]
       operationId: cancelCompanyDocument
@@ -620,7 +618,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/documents/{external_id}/correct:
+  /company/{company_id}/documents/{external_id}/correct:
     post:
       tags: [Documents]
       operationId: correctCompanyDocument
@@ -632,11 +630,11 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/direct/documents:
+  /company/{company_id}/direct/documents:
     post:
       tags: [Documents]
       operationId: createCompanyDirectDocument
-      description: Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing.
+      description: Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. Direct payloads are normalized to a canonical internal contract before transmission. Legacy aliases are still accepted temporarily on direct routes and are adapted with internal compatibility warnings/audit metadata. When `document_type=nfse` and the resolved provider is `nfse_nacional`/`manaus`, prefer the canonical PT-BR root contract in `payload`; incompatible payloads that cannot be normalized still fail with `422`.
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -644,7 +642,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
       responses:
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
-  /companies/{company_id}/direct/documents/xml:
+  /company/{company_id}/direct/documents/xml:
     post:
       tags: [Documents]
       operationId: transmitCompanyDirectXml
@@ -656,7 +654,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
-  /companies/{company_id}/consulta-notas:
+  /company/{company_id}/consulta-notas:
     get:
       tags: [Documents]
       operationId: listCompanyUnifiedDocuments
@@ -664,7 +662,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/consulta-notas/lookup:
+  /company/{company_id}/consulta-notas/lookup:
     post:
       tags: [Documents]
       operationId: lookupCompanyUnifiedDocument
@@ -674,7 +672,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/consulta-notas/{source}/{document_id}/xml:
+  /company/{company_id}/consulta-notas/{source}/{document_id}/xml:
     get:
       tags: [Documents]
       operationId: downloadCompanyUnifiedDocumentXml
@@ -691,7 +689,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { description: XML artifact. }
-  /companies/{company_id}/consulta-notas/{source}/{document_id}/pdf:
+  /company/{company_id}/consulta-notas/{source}/{document_id}/pdf:
     get:
       tags: [Documents]
       operationId: downloadCompanyUnifiedDocumentPdf
@@ -708,7 +706,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { description: PDF artifact. }
-  /companies/{company_id}/inbound/nfe:
+  /company/{company_id}/inbound/nfe:
     get:
       tags: [Documents]
       operationId: listCompanyInboundNfe
@@ -716,7 +714,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/InboundNfeListResponse" }
-  /companies/{company_id}/inbound/nfe/sync:
+  /company/{company_id}/inbound/nfe/sync:
     post:
       tags: [Documents]
       operationId: syncCompanyInboundNfe
@@ -726,7 +724,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeSyncResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/manifest:
+  /company/{company_id}/inbound/nfe/{document_id}/manifest:
     post:
       tags: [Documents]
       operationId: manifestCompanyInboundNfe
@@ -741,7 +739,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeManifestResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/download-xml:
+  /company/{company_id}/inbound/nfe/{document_id}/download-xml:
     post:
       tags: [Documents]
       operationId: downloadCompanyInboundNfeXml
@@ -755,7 +753,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeDownloadXmlResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping:
+  /company/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping:
     post:
       tags: [Documents]
       operationId: updateCompanyInboundNfeEntryBookkeeping
@@ -770,7 +768,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeDocumentResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm:
+  /company/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm:
     post:
       tags: [Documents]
       operationId: confirmCompanyInboundNfeEntryBookkeeping
@@ -784,7 +782,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeDocumentResponse" }
-  /companies/{company_id}/schedules:
+  /company/{company_id}/schedules:
     get:
       tags: [Schedules]
       operationId: listCompanySchedules
@@ -801,7 +799,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/schedules/{schedule_id}:
+  /company/{company_id}/schedules/{schedule_id}:
     put:
       tags: [Schedules]
       operationId: updateCompanySchedule
@@ -829,7 +827,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/products:
+  /company/{company_id}/products:
     get:
       tags: [Products]
       operationId: listProducts
@@ -846,7 +844,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/ProductResponse" }
-  /companies/{company_id}/products/{product_id}:
+  /company/{company_id}/products/{product_id}:
     get:
       tags: [Products]
       operationId: getProduct
@@ -886,7 +884,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/DeleteResponse" }
-  /companies/{company_id}/takers:
+  /company/{company_id}/takers:
     get:
       tags: [Takers]
       operationId: listTakers
@@ -903,7 +901,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/TakerResponse" }
-  /companies/{company_id}/takers/{taker_id}:
+  /company/{company_id}/takers/{taker_id}:
     get:
       tags: [Takers]
       operationId: getTaker
@@ -1101,6 +1099,99 @@ components:
                 required: [external_id]
                 properties:
                   external_id: { type: string }
+          examples:
+            canonical_nfce_direct:
+              summary: Canonical NFCe direct payload
+              value:
+                external_id: "pdv-0001"
+                document_type: "nfce"
+                payload:
+                  identificacao:
+                    cUF: 42
+                    cNF: 50422676
+                    natOp: "Venda de mercadoria"
+                    mod: 65
+                    serie: 1
+                    nNF: 2035
+                    cMunFG: 4209102
+                    tpAmb: 2
+                  emitente:
+                    cnpj: "83188342000104"
+                    razaoSocial: "FREELINE INFORMATICA LTDA"
+                    nomeFantasia: "FREELINE"
+                    inscricaoEstadual: "252290720"
+                    logradouro: "Rua Benjamin Constant"
+                    numero: "4135"
+                    bairro: "Gloria"
+                    codigoMunicipio: "4209102"
+                    municipio: "Joinville"
+                    uf: "SC"
+                    cep: "89217002"
+                    crt: 1
+                  destinatario:
+                    cpfCnpj: "33440118000147"
+                    nome: "Padaria Bom Trigo"
+                    municipio: "Belo Horizonte"
+                    uf: "MG"
+                    email: "contato@bomtrigo.com.br"
+                    indIEDest: 9
+                  itens:
+                    - produto:
+                        codigo: "SKU-ORG-012"
+                        descricao: "Pao Australiano para Hamburguer"
+                        ncm: "21069090"
+                        cfop: "5102"
+                        unidadeComercial: "UN"
+                        quantidadeComercial: 1
+                        valorUnitario: 20.37
+                        valorTotal: 20.37
+                      impostos:
+                        icms: { cst: "102", orig: 0 }
+                        pis: { cst: "01", vBC: 20.37, pPIS: 1.65, vPIS: 0.34 }
+                        cofins: { cst: "01", vBC: 20.37, pCOFINS: 7.6, vCOFINS: 1.55 }
+            canonical_nfse_nacional_direct:
+              summary: Canonical NFSe Nacional direct payload
+              value:
+                external_id: "nfse-dir-0001"
+                document_type: "nfse"
+                municipio: "manaus"
+                payload:
+                  tpAmb: "2"
+                  dhEmi: "2026-06-08T10:00:00-03:00"
+                  verAplic: "fiscal-platform-api"
+                  serie: "1"
+                  nDPS: "10"
+                  dCompet: "2026-06-08"
+                  tpEmit: "1"
+                  cLocEmi: "1302603"
+                  prestador:
+                    cnpj: "12345678000196"
+                    inscricaoMunicipal: "12345"
+                    razaoSocial: "Empresa Teste LTDA"
+                    opSimpNac: "3"
+                    regEspTrib: "0"
+                    codigoMunicipio: "1302603"
+                  tomador:
+                    documento: "00980556236"
+                    razaoSocial: "Cliente Teste"
+                    endereco:
+                      logradouro: "Rua A"
+                      numero: "10"
+                      bairro: "Centro"
+                      cep: "69000000"
+                      codigoMunicipio: "1302603"
+                      uf: "AM"
+                      municipio: "Manaus"
+                  servico:
+                    cLocPrestacao: "1302603"
+                    cTribNac: "140101"
+                    cTribMun: "234"
+                    cNBS: "120018900"
+                    descricao: "Servico de manutencao"
+                    tribISSQN: "1"
+                    tpRetISSQN: "1"
+                    aliquota: 5
+                  valor_servicos: 200
     OperationDocumentPreview:
       required: true
       content:
@@ -1118,6 +1209,46 @@ components:
                 required: [external_id]
                 properties:
                   external_id: { type: string }
+          examples:
+            canonical_operation_snapshot_nfe:
+              summary: Canonical operation-code snapshot payload
+              value:
+                external_id: "erp-0001"
+                document_type: "nfe"
+                snapshot:
+                  fiscal_environment: "homologacao"
+                  document_direction: "saida"
+                  reference_date: "2026-06-08"
+                  document_data:
+                    serie: "1"
+                    numero: "100"
+                    data_emissao: "2026-06-08T10:00:00-03:00"
+                    natureza_operacao: "Venda de mercadoria"
+                    valor_total: 20.37
+                    origin_uf: "SC"
+                    destination_uf: "MG"
+                  counterparty:
+                    nome: "Padaria Bom Trigo"
+                    documento: "33440118000147"
+                    person_type: "pj"
+                    email: "contato@bomtrigo.com.br"
+                    address:
+                      logradouro: "Rua do Comercio"
+                      numero: "100"
+                      bairro: "Centro"
+                      municipio: "Belo Horizonte"
+                      uf: "MG"
+                      cep: "30110000"
+                      codigo_municipio: "3106200"
+                  items:
+                    - sku: "SKU-ORG-012"
+                      description: "Pao Australiano para Hamburguer"
+                      item_type: "product"
+                      quantity: 1
+                      unit_price: 20.37
+                      gross_amount: 20.37
+                      ncm: "21069090"
+                      cfop_code: "5102"
   responses:
     ResourceResponse:
       description: Canonical JSON resource response.
@@ -1332,6 +1463,8 @@ components:
             properties:
               data:
                 $ref: "#/components/schemas/QueuedDocument"
+              meta:
+                $ref: "#/components/schemas/IntegrationResponseMeta"
     DirectDocumentAcceptedResponse:
       description: Queued direct transmission response.
       content:
@@ -1341,6 +1474,8 @@ components:
             properties:
               data:
                 $ref: "#/components/schemas/DirectQueuedDocument"
+              meta:
+                $ref: "#/components/schemas/IntegrationResponseMeta"
     DocumentPreviewResponse:
       description: Preview response for snapshot-based document resolution.
       content:
@@ -1362,7 +1497,7 @@ components:
                 items:
                   $ref: "#/components/schemas/DocumentListItem"
               meta:
-                $ref: "#/components/schemas/PaginationMeta"
+                $ref: "#/components/schemas/IntegrationPaginationMeta"
     DocumentDetailResponse:
       description: Document detail response.
       content:
@@ -1372,6 +1507,8 @@ components:
             properties:
               data:
                 $ref: "#/components/schemas/DocumentDetail"
+              meta:
+                $ref: "#/components/schemas/IntegrationResponseMeta"
     DocumentSnapshotResponse:
       description: Document snapshot response.
       content:
@@ -1468,9 +1605,11 @@ components:
         payload:
           type: object
           additionalProperties: true
+          description: Generic direct payload contract. Payloads are normalized before transmission and legacy aliases may be adapted temporarily with internal compatibility warnings. For `document_type=nfse`, prefer the canonical NFSe payload shape and use `provider-info` to discover required canonical fields for the resolved provider. For `nfse_nacional`/`manaus`, prefer only the canonical PT-BR root fields `id`, `tpAmb`, `dhEmi`, `verAplic`, `serie`, `nDPS`, `dCompet`, `tpEmit`, `cLocEmi`, `prestador`, `tomador`, `servico` and `valor_servicos`.
         metadata:
           type: object
           additionalProperties: true
+          description: Optional integration metadata. Compatibility warnings and legacy field usage are audited internally by NotaAgil and are not yet part of the public response envelope.
     OperationDocumentRequest:
       type: object
       required: [document_type, snapshot]
@@ -1488,7 +1627,7 @@ components:
     OperationDocumentSnapshot:
       type: object
       required: [items]
-      description: Snapshot-shaped input. Fiscal resolution fields are generated by NotaAgil and must not be sent by clients. Use `counterparty` for the recipient/taker/consumer, `document_data` for document fields and canonical item fields such as `quantity`, `unit_price`, `gross_amount`, `description` and `sku`; legacy `customer`, `complementary`, `totals`, `tax_totals` and Portuguese item aliases are rejected on operation-code routes.
+      description: Snapshot-shaped input. Fiscal resolution fields are generated by NotaAgil and must not be sent by clients. Use `counterparty` for the recipient/taker/consumer, `document_data` for document fields and canonical item fields such as `quantity`, `unit_price`, `gross_amount`, `description` and `sku`. Operation-code routes normalize only the supported snapshot contract; legacy `customer`, `complementary`, `totals`, `tax_totals` and Portuguese item aliases are rejected.
       properties:
         document_direction: { type: string }
         direction: { type: string }
@@ -1555,15 +1694,30 @@ components:
         hints:
           type: object
           additionalProperties: { type: string }
+        enum_fields:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+        conditional_rules:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        extensions_supported:
+          type: array
+          items: { type: string }
     NfsePolicyField:
       type: string
       enum:
-        - service.municipal_code
-        - service.national_tax_code
-        - service.nbs
-        - service.cnae_code
-        - service.activity_code
-        - prestador.op_simp_nac
+        - servico.cTribMun
+        - servico.cTribNac
+        - servico.cNBS
+        - servico.codigoCnae
+        - servico.codigo_atividade
+        - servico.benefit_code
+        - prestador.opSimpNac
+        - prestador.mei
     ResourceResponse:
       type: object
       properties:
@@ -1637,6 +1791,37 @@ components:
         last_page: { type: integer }
         per_page: { type: integer }
         total: { type: integer }
+    ResponseContractMeta:
+      type: object
+      description: Documents the canonical response contract and the legacy aliases that remain available temporarily for backward compatibility.
+      properties:
+        version: { type: string, example: "v1" }
+        canonical_fields:
+          type: array
+          items: { type: string }
+          example: [status, document_type, operational_status, fiscal_status, access_key, protocol, authorized_at]
+        legacy_aliases:
+          type: array
+          items: { type: string }
+          example: [status_operacional, status_fiscal, chave_acesso, protocolo, autorizado_em, serie, numero]
+        deprecated_top_level_aliases:
+          type: array
+          items: { type: string }
+          description: Legacy aliases that still exist at the response top level temporarily, but should be replaced by canonical fields or the dedicated legacy_aliases block.
+          example: [legacy_status, type, status_operacional, status_fiscal, chave_acesso, protocolo, autorizado_em, serie, numero]
+        compatibility_block:
+          type: string
+          description: Response property that groups compatibility aliases explicitly.
+          example: legacy_aliases
+    IntegrationResponseMeta:
+      type: object
+      properties:
+        response_contract:
+          $ref: "#/components/schemas/ResponseContractMeta"
+    IntegrationPaginationMeta:
+      allOf:
+        - $ref: "#/components/schemas/PaginationMeta"
+        - $ref: "#/components/schemas/IntegrationResponseMeta"
     Company:
       type: object
       properties:
@@ -1829,6 +2014,8 @@ components:
         id: { type: [integer, string] }
         external_id: { type: [string, "null"] }
         status: { type: [string, "null"] }
+        legacy_status: { type: [string, "null"] }
+        type: { type: [string, "null"] }
         operational_status: { type: [string, "null"] }
         status_operacional: { type: [string, "null"] }
         fiscal_status: { type: [string, "null"] }
@@ -1856,6 +2043,10 @@ components:
         fiscal_snapshot_id: { type: [integer, string, "null"] }
         resolution_status: { type: [string, "null"] }
         idempotent_replay: { type: boolean }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+        legacy_aliases:
+          $ref: "#/components/schemas/LegacyDocumentAliases"
     DocumentArtifacts:
       type: object
       properties:
@@ -1885,6 +2076,21 @@ components:
           properties:
             direct_transmission: { type: boolean }
             direct_transmission_mode: { type: string }
+            numero_dps:
+              type: [string, "null"]
+              description: Número da DPS gerado para NFS-e.
+            nDPS:
+              type: [string, "null"]
+              description: Alias do número da DPS no layout nacional.
+            id_dps:
+              type: [string, "null"]
+              description: Identificador completo da DPS, quando disponível.
+            dps:
+              type: [object, "null"]
+              properties:
+                numero: { type: string }
+                serie: { type: string }
+                id: { type: [string, "null"] }
     PreviewDocument:
       type: object
       properties:
@@ -1950,6 +2156,8 @@ components:
             additionalProperties: true
         created_at: { type: [string, "null"] }
         updated_at: { type: [string, "null"] }
+        legacy_aliases:
+          $ref: "#/components/schemas/LegacyDocumentAliases"
     DocumentDetail:
       type: object
       properties:
@@ -2001,6 +2209,21 @@ components:
           additionalProperties: true
         created_at: { type: [string, "null"] }
         updated_at: { type: [string, "null"] }
+        legacy_aliases:
+          $ref: "#/components/schemas/LegacyDocumentAliases"
+    LegacyDocumentAliases:
+      type: object
+      description: Compatibility block with legacy aliases preserved temporarily for older SDKs and clients.
+      properties:
+        legacy_status: { type: [string, "null"] }
+        type: { type: [string, "null"] }
+        serie: { type: [string, "null"] }
+        numero: { type: [integer, string, "null"] }
+        status_operacional: { type: [string, "null"] }
+        status_fiscal: { type: [string, "null"] }
+        chave_acesso: { type: [string, "null"] }
+        protocolo: { type: [string, "null"] }
+        autorizado_em: { type: [string, "null"] }
     DocumentSnapshotData:
       type: object
       properties:
