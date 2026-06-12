@@ -7,15 +7,18 @@ info:
     Public contract for API clients. Every path in this document is relative to
     `/api/v1/integrations` and requires a NotaAgil integration bearer token unless
     explicitly stated otherwise.
+  contact:
+    name: Sabba John - Sabba Sistemas
+  x-author: Sabba John - Sabba Sistemas
 servers:
   - url: https://api_notagil.sabbasistemas.com.br/api/v1/integrations
     description: Production
-  - url: https://sandbox.notagil.com.br/api/v1/integrations
+  - url: http://localhost:8001/api/v1/integrations
     description: Sandbox
 security:
   - bearerAuth: []
 tags:
-  - name: Companies
+  - name: Company
   - name: Documents
   - name: Configuration
   - name: Fiscal Operations
@@ -30,24 +33,23 @@ tags:
   - name: Stock
   - name: Schedules
 paths:
-  /companies:
+  /company:
     get:
-      tags: [Companies]
-      operationId: listCompanies
-      x-required-scopes: ["companies:read"]
-      parameters:
-        - $ref: "#/components/parameters/CnpjQuery"
+      tags: [Company]
+      operationId: getCompany
+      x-required-scopes: ["company:read"]
       responses:
         "200": { $ref: "#/components/responses/CompanyCollectionResponse" }
-  /companies/{company_id}:
+  # Depreciar ja que cada token a uma empresa especifica
+  /company/{company_id}:
     get:
-      tags: [Companies]
+      tags: [Company]
       operationId: getCompany
-      x-required-scopes: ["companies:read"]
+      x-required-scopes: ["company:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/CompanyResponse" }
-  /companies/{company_id}/configuration:
+  /company/{company_id}/configuration:
     get:
       tags: [Configuration]
       operationId: getCompanyConfiguration
@@ -64,7 +66,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/CompanyResponse" }
-  /companies/{company_id}/nfse/provider-info:
+  /company/{company_id}/nfse/provider-info:
     get:
       tags: [Configuration]
       operationId: getCompanyNfseProviderInfo
@@ -76,7 +78,7 @@ paths:
         - $ref: "#/components/parameters/FiscalEnvironmentQuery"
       responses:
         "200": { $ref: "#/components/responses/NfseProviderInfoResponse" }
-  /companies/{company_id}/certificates:
+  /company/{company_id}/certificates:
     get:
       tags: [Configuration]
       operationId: listCompanyCertificates
@@ -93,7 +95,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/CertificateResponse" }
-  /companies/{company_id}/certificates/{certificate_id}:
+  /company/{company_id}/certificates/{certificate_id}:
     patch:
       tags: [Configuration]
       operationId: updateCompanyCertificate
@@ -108,7 +110,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/CertificateResponse" }
-  /companies/{company_id}/certificates/{certificate_id}/validate:
+  /company/{company_id}/certificates/{certificate_id}/validate:
     post:
       tags: [Configuration]
       operationId: validateCompanyCertificate
@@ -122,7 +124,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/CertificateValidationResponse" }
-  /companies/{company_id}/readiness:
+  /company/{company_id}/readiness:
     get:
       tags: [Configuration]
       operationId: getCompanyReadiness
@@ -130,7 +132,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports:
+  /company/{company_id}/onboarding/imports:
     get:
       tags: [Configuration]
       operationId: listCompanyOnboardingImports
@@ -147,7 +149,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports/{import_id}:
+  /company/{company_id}/onboarding/imports/{import_id}:
     get:
       tags: [Configuration]
       operationId: getCompanyOnboardingImport
@@ -160,7 +162,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports/{import_id}/review:
+  /company/{company_id}/onboarding/imports/{import_id}/review:
     post:
       tags: [Configuration]
       operationId: reviewCompanyOnboardingImport
@@ -175,7 +177,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/onboarding/imports/{import_id}/promote:
+  /company/{company_id}/onboarding/imports/{import_id}/promote:
     post:
       tags: [Configuration]
       operationId: promoteCompanyOnboardingImport
@@ -190,7 +192,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/options:
+  /company/{company_id}/fiscal/options:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyFiscalOptions
@@ -198,7 +200,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/cfops:
+  /company/{company_id}/fiscal/cfops:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyCfops
@@ -206,7 +208,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/utils/municipalities:
+  /company/{company_id}/fiscal/utils/municipalities:
     get:
       tags: [Fiscal Catalog]
       operationId: searchCompanyMunicipalities
@@ -214,7 +216,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/utils/ncms:
+  /company/{company_id}/fiscal/utils/ncms:
     get:
       tags: [Fiscal Catalog]
       operationId: searchCompanyNcms
@@ -222,7 +224,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/tax-catalogs:
+  /company/{company_id}/fiscal/tax-catalogs:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyTaxCatalogs
@@ -230,7 +232,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/tax-catalogs/{catalog}/situations:
+  /company/{company_id}/fiscal/tax-catalogs/{catalog}/situations:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyTaxSituations
@@ -243,7 +245,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/tax-situations/{situation}/classifications:
+  /company/{company_id}/fiscal/tax-situations/{situation}/classifications:
     get:
       tags: [Fiscal Catalog]
       operationId: listCompanyTaxClassifications
@@ -256,7 +258,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Collection" }
-  /companies/{company_id}/fiscal/tax-situations/{situation}/consequence-template:
+  /company/{company_id}/fiscal/tax-situations/{situation}/consequence-template:
     get:
       tags: [Fiscal Catalog]
       operationId: getCompanyTaxConsequenceTemplate
@@ -269,7 +271,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/emitter-profiles:
+  /company/{company_id}/fiscal/emitter-profiles:
     get:
       tags: [Fiscal Operations]
       operationId: listCompanyFiscalEmitterProfiles
@@ -286,7 +288,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/emitter-profiles/{profile_id}:
+  /company/{company_id}/fiscal/emitter-profiles/{profile_id}:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalEmitterProfile
@@ -314,7 +316,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/operation-profiles:
+  /company/{company_id}/fiscal/operation-profiles:
     get:
       tags: [Fiscal Operations]
       operationId: listCompanyFiscalOperationProfiles
@@ -331,7 +333,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/operation-profiles/{profile_id}:
+  /company/{company_id}/fiscal/operation-profiles/{profile_id}:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalOperationProfile
@@ -359,7 +361,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/profile-assignments:
+  /company/{company_id}/fiscal/profile-assignments:
     get:
       tags: [Fiscal Operations]
       operationId: listCompanyFiscalProfileAssignments
@@ -376,7 +378,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/profile-assignments/{assignment_id}:
+  /company/{company_id}/fiscal/profile-assignments/{assignment_id}:
     put:
       tags: [Fiscal Operations]
       operationId: updateCompanyFiscalProfileAssignment
@@ -404,7 +406,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/rate-references:
+  /company/{company_id}/fiscal/rate-references:
     get:
       tags: [Fiscal Rates]
       operationId: listCompanyFiscalRateReferences
@@ -421,7 +423,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/rate-references/{rate_reference_id}:
+  /company/{company_id}/fiscal/rate-references/{rate_reference_id}:
     put:
       tags: [Fiscal Rates]
       operationId: updateCompanyFiscalRateReference
@@ -449,7 +451,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/tax-rule-sets:
+  /company/{company_id}/fiscal/tax-rule-sets:
     get:
       tags: [Fiscal Rules]
       operationId: listCompanyFiscalTaxRuleSets
@@ -466,7 +468,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}:
+  /company/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}:
     put:
       tags: [Fiscal Rules]
       operationId: updateCompanyFiscalTaxRuleSet
@@ -494,7 +496,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/documents/{operation_code}/preview:
+  /company/{company_id}/documents/{operation_code}/preview:
     post:
       tags: [Documents]
       operationId: previewCompanyDocumentByOperation
@@ -506,7 +508,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentPreview" }
       responses:
         "200": { $ref: "#/components/responses/DocumentPreviewResponse" }
-  /companies/{company_id}/documents:
+  /company/{company_id}/documents:
     get:
       tags: [Documents]
       operationId: listCompanyDocuments
@@ -516,7 +518,7 @@ paths:
         - $ref: "#/components/parameters/DocumentTypeQuery"
       responses:
         "200": { $ref: "#/components/responses/DocumentListResponse" }
-  /companies/{company_id}/documents/{operation_code}:
+  /company/{company_id}/documents/{operation_code}:
     post:
       tags: [Documents]
       operationId: createCompanyDocumentByOperation
@@ -529,7 +531,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentSubmit" }
       responses:
         "202": { $ref: "#/components/responses/DocumentAcceptedResponse" }
-  /companies/{company_id}/documents/{external_id}:
+  /company/{company_id}/documents/{external_id}:
     get:
       tags: [Documents]
       operationId: getCompanyDocument
@@ -539,7 +541,7 @@ paths:
         - $ref: "#/components/parameters/ExternalId"
       responses:
         "200": { $ref: "#/components/responses/DocumentDetailResponse" }
-  /companies/{company_id}/documents/{external_id}/xml:
+  /company/{company_id}/documents/{external_id}/xml:
     get:
       tags: [Documents]
       operationId: downloadCompanyDocumentXml
@@ -558,7 +560,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ArtifactProcessingError" }
-  /companies/{company_id}/documents/{external_id}/pdf:
+  /company/{company_id}/documents/{external_id}/pdf:
     get:
       tags: [Documents]
       operationId: downloadCompanyDocumentPdf
@@ -579,7 +581,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ArtifactProcessingError" }
-  /companies/{company_id}/documents/{external_id}/snapshot:
+  /company/{company_id}/documents/{external_id}/snapshot:
     get:
       tags: [Documents]
       operationId: getCompanyDocumentSnapshot
@@ -589,7 +591,7 @@ paths:
         - $ref: "#/components/parameters/ExternalId"
       responses:
         "200": { $ref: "#/components/responses/DocumentSnapshotResponse" }
-  /companies/{company_id}/documents/{external_id}/query:
+  /company/{company_id}/documents/{external_id}/query:
     post:
       tags: [Documents]
       operationId: queryCompanyDocument
@@ -604,7 +606,7 @@ paths:
           schema: { type: boolean }
       responses:
         "200": { $ref: "#/components/responses/DocumentQueryResponse" }
-  /companies/{company_id}/documents/{external_id}/cancel:
+  /company/{company_id}/documents/{external_id}/cancel:
     post:
       tags: [Documents]
       operationId: cancelCompanyDocument
@@ -616,7 +618,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/documents/{external_id}/correct:
+  /company/{company_id}/documents/{external_id}/correct:
     post:
       tags: [Documents]
       operationId: correctCompanyDocument
@@ -628,7 +630,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/direct/documents:
+  /company/{company_id}/direct/documents:
     post:
       tags: [Documents]
       operationId: createCompanyDirectDocument
@@ -640,7 +642,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
       responses:
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
-  /companies/{company_id}/direct/documents/xml:
+  /company/{company_id}/direct/documents/xml:
     post:
       tags: [Documents]
       operationId: transmitCompanyDirectXml
@@ -652,7 +654,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
-  /companies/{company_id}/consulta-notas:
+  /company/{company_id}/consulta-notas:
     get:
       tags: [Documents]
       operationId: listCompanyUnifiedDocuments
@@ -660,7 +662,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/consulta-notas/lookup:
+  /company/{company_id}/consulta-notas/lookup:
     post:
       tags: [Documents]
       operationId: lookupCompanyUnifiedDocument
@@ -670,7 +672,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/consulta-notas/{source}/{document_id}/xml:
+  /company/{company_id}/consulta-notas/{source}/{document_id}/xml:
     get:
       tags: [Documents]
       operationId: downloadCompanyUnifiedDocumentXml
@@ -687,7 +689,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { description: XML artifact. }
-  /companies/{company_id}/consulta-notas/{source}/{document_id}/pdf:
+  /company/{company_id}/consulta-notas/{source}/{document_id}/pdf:
     get:
       tags: [Documents]
       operationId: downloadCompanyUnifiedDocumentPdf
@@ -704,7 +706,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { description: PDF artifact. }
-  /companies/{company_id}/inbound/nfe:
+  /company/{company_id}/inbound/nfe:
     get:
       tags: [Documents]
       operationId: listCompanyInboundNfe
@@ -712,7 +714,7 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/InboundNfeListResponse" }
-  /companies/{company_id}/inbound/nfe/sync:
+  /company/{company_id}/inbound/nfe/sync:
     post:
       tags: [Documents]
       operationId: syncCompanyInboundNfe
@@ -722,7 +724,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeSyncResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/manifest:
+  /company/{company_id}/inbound/nfe/{document_id}/manifest:
     post:
       tags: [Documents]
       operationId: manifestCompanyInboundNfe
@@ -737,7 +739,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeManifestResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/download-xml:
+  /company/{company_id}/inbound/nfe/{document_id}/download-xml:
     post:
       tags: [Documents]
       operationId: downloadCompanyInboundNfeXml
@@ -751,7 +753,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeDownloadXmlResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping:
+  /company/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping:
     post:
       tags: [Documents]
       operationId: updateCompanyInboundNfeEntryBookkeeping
@@ -766,7 +768,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeDocumentResponse" }
-  /companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm:
+  /company/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm:
     post:
       tags: [Documents]
       operationId: confirmCompanyInboundNfeEntryBookkeeping
@@ -780,7 +782,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/InboundNfeDocumentResponse" }
-  /companies/{company_id}/schedules:
+  /company/{company_id}/schedules:
     get:
       tags: [Schedules]
       operationId: listCompanySchedules
@@ -797,7 +799,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/schedules/{schedule_id}:
+  /company/{company_id}/schedules/{schedule_id}:
     put:
       tags: [Schedules]
       operationId: updateCompanySchedule
@@ -825,7 +827,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /companies/{company_id}/products:
+  /company/{company_id}/products:
     get:
       tags: [Products]
       operationId: listProducts
@@ -842,7 +844,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/ProductResponse" }
-  /companies/{company_id}/products/{product_id}:
+  /company/{company_id}/products/{product_id}:
     get:
       tags: [Products]
       operationId: getProduct
@@ -882,7 +884,7 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/DeleteResponse" }
-  /companies/{company_id}/takers:
+  /company/{company_id}/takers:
     get:
       tags: [Takers]
       operationId: listTakers
@@ -899,7 +901,7 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/TakerResponse" }
-  /companies/{company_id}/takers/{taker_id}:
+  /company/{company_id}/takers/{taker_id}:
     get:
       tags: [Takers]
       operationId: getTaker
