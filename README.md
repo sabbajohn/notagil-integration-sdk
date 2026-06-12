@@ -33,7 +33,7 @@ $client = new NotaAgilClient(
     token: getenv('NOTAGIL_TOKEN'),
 );
 
-$companies = $client->companies(['cnpj' => '12345678000199']);
+$companies = $client->companies();
 ```
 
 O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src`.
@@ -52,7 +52,7 @@ const client = new NotagilIntegrationClient({
   token: process.env.NOTAGIL_TOKEN!,
 });
 
-const companies = await client.listCompanies({ cnpj: '12345678000199' });
+const companies = await client.listCompanies();
 const documents = await client.listCompanyDocuments(companies[0].id, { per_page: 20 });
 const authorized = await client.waitDocument('pdv-sale-0001', { companyId: companies[0].id });
 

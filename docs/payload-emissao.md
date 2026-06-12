@@ -4,8 +4,8 @@ Este documento descreve o contrato recomendado para preview e emissao de documen
 
 A superficie preferencial e baseada no codigo da operacao fiscal:
 
-- `POST /api/v1/integrations/companies/{company_id}/documents/{operation_code}/preview`
-- `POST /api/v1/integrations/companies/{company_id}/documents/{operation_code}`
+- `POST /api/v1/integrations/company/{company_id}/documents/{operation_code}/preview`
+- `POST /api/v1/integrations/company/{company_id}/documents/{operation_code}`
 
 `operation_code` corresponde ao campo `code` do perfil fiscal de operacao da empresa. A operacao precisa existir para a empresa, estar ativa, ser do tipo `operation` e estar vigente na data de referencia.
 
@@ -22,7 +22,7 @@ Preview nao exige `Idempotency-Key`. Emissao exige `Idempotency-Key`.
 
 Quando o cliente monta o payload fiscal completo e usa a superficie direta:
 
-- `POST /api/v1/integrations/companies/{company_id}/direct/documents`
+- `POST /api/v1/integrations/company/{company_id}/direct/documents`
 
 para `document_type = nfse` no ambiente nacional, padronize `payload` no contrato canonico PT-BR abaixo. Nao misture aliases municipais ou campos legados como `codigo_servico_municipal`, `codigo_atividade`, `tomador.cpf_cnpj` ou blocos fora desta arvore.
 
@@ -376,7 +376,7 @@ Campos comuns de referencia:
 ## Exemplo Completo: Preview por Operacao
 
 ```bash
-curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO/preview" \
+curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/company/10/documents/VENDA_BALCAO/preview" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -420,7 +420,7 @@ curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/compa
 ## Exemplo Completo: Emissao por Operacao
 
 ```bash
-curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO" \
+curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/company/10/documents/VENDA_BALCAO" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: erp-0001" \
@@ -461,7 +461,7 @@ curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/compa
 
 As rotas diretas continuam separadas:
 
-- `POST /api/v1/integrations/companies/{company_id}/direct/documents`
+- `POST /api/v1/integrations/company/{company_id}/direct/documents`
 
 Essas rotas recebem um payload fiscal completo e bypassam a resolucao fiscal da NotaAgil. Use apenas quando o cliente ja monta integralmente o formato fiscal exigido para transmissao.
 

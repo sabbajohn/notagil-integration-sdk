@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/companies": {
+    "/company": {
         parameters: {
             query?: never;
             header?: never;
@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}": {
+    "/company/{company_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/configuration": {
+    "/company/{company_id}/configuration": {
         parameters: {
             query?: never;
             header?: never;
@@ -53,7 +53,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/nfse/provider-info": {
+    "/company/{company_id}/nfse/provider-info": {
         parameters: {
             query?: never;
             header?: never;
@@ -70,7 +70,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/certificates": {
+    "/company/{company_id}/certificates": {
         parameters: {
             query?: never;
             header?: never;
@@ -87,7 +87,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/certificates/{certificate_id}": {
+    "/company/{company_id}/certificates/{certificate_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -104,7 +104,7 @@ export interface paths {
         patch: operations["updateCompanyCertificate"];
         trace?: never;
     };
-    "/companies/{company_id}/certificates/{certificate_id}/validate": {
+    "/company/{company_id}/certificates/{certificate_id}/validate": {
         parameters: {
             query?: never;
             header?: never;
@@ -121,7 +121,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/readiness": {
+    "/company/{company_id}/readiness": {
         parameters: {
             query?: never;
             header?: never;
@@ -137,7 +137,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/onboarding/imports": {
+    "/company/{company_id}/onboarding/imports": {
         parameters: {
             query?: never;
             header?: never;
@@ -154,7 +154,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/onboarding/imports/{import_id}": {
+    "/company/{company_id}/onboarding/imports/{import_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -170,7 +170,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/onboarding/imports/{import_id}/review": {
+    "/company/{company_id}/onboarding/imports/{import_id}/review": {
         parameters: {
             query?: never;
             header?: never;
@@ -187,7 +187,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/onboarding/imports/{import_id}/promote": {
+    "/company/{company_id}/onboarding/imports/{import_id}/promote": {
         parameters: {
             query?: never;
             header?: never;
@@ -204,7 +204,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/options": {
+    "/company/{company_id}/fiscal/options": {
         parameters: {
             query?: never;
             header?: never;
@@ -220,7 +220,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/cfops": {
+    "/company/{company_id}/fiscal/cfops": {
         parameters: {
             query?: never;
             header?: never;
@@ -236,7 +236,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/utils/municipalities": {
+    "/company/{company_id}/fiscal/utils/municipalities": {
         parameters: {
             query?: never;
             header?: never;
@@ -252,7 +252,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/utils/ncms": {
+    "/company/{company_id}/fiscal/utils/ncms": {
         parameters: {
             query?: never;
             header?: never;
@@ -268,7 +268,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/tax-catalogs": {
+    "/company/{company_id}/fiscal/tax-catalogs": {
         parameters: {
             query?: never;
             header?: never;
@@ -284,7 +284,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/tax-catalogs/{catalog}/situations": {
+    "/company/{company_id}/fiscal/tax-catalogs/{catalog}/situations": {
         parameters: {
             query?: never;
             header?: never;
@@ -300,7 +300,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/tax-situations/{situation}/classifications": {
+    "/company/{company_id}/fiscal/tax-situations/{situation}/classifications": {
         parameters: {
             query?: never;
             header?: never;
@@ -316,7 +316,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/tax-situations/{situation}/consequence-template": {
+    "/company/{company_id}/fiscal/tax-situations/{situation}/consequence-template": {
         parameters: {
             query?: never;
             header?: never;
@@ -332,7 +332,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/emitter-profiles": {
+    "/company/{company_id}/fiscal/emitter-profiles": {
         parameters: {
             query?: never;
             header?: never;
@@ -349,7 +349,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/emitter-profiles/{profile_id}": {
+    "/company/{company_id}/fiscal/emitter-profiles/{profile_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -367,7 +367,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/operation-profiles": {
+    "/company/{company_id}/fiscal/operation-profiles": {
         parameters: {
             query?: never;
             header?: never;
@@ -384,7 +384,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/operation-profiles/{profile_id}": {
+    "/company/{company_id}/fiscal/operation-profiles/{profile_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -402,7 +402,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/profile-assignments": {
+    "/company/{company_id}/fiscal/profile-assignments": {
         parameters: {
             query?: never;
             header?: never;
@@ -419,7 +419,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/profile-assignments/{assignment_id}": {
+    "/company/{company_id}/fiscal/profile-assignments/{assignment_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -437,7 +437,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/rate-references": {
+    "/company/{company_id}/fiscal/rate-references": {
         parameters: {
             query?: never;
             header?: never;
@@ -454,7 +454,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/rate-references/{rate_reference_id}": {
+    "/company/{company_id}/fiscal/rate-references/{rate_reference_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -472,7 +472,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/tax-rule-sets": {
+    "/company/{company_id}/fiscal/tax-rule-sets": {
         parameters: {
             query?: never;
             header?: never;
@@ -489,7 +489,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}": {
+    "/company/{company_id}/fiscal/tax-rule-sets/{tax_rule_set_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -507,7 +507,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{operation_code}/preview": {
+    "/company/{company_id}/documents/{operation_code}/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -524,7 +524,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents": {
+    "/company/{company_id}/documents": {
         parameters: {
             query?: never;
             header?: never;
@@ -540,7 +540,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{operation_code}": {
+    "/company/{company_id}/documents/{operation_code}": {
         parameters: {
             query?: never;
             header?: never;
@@ -557,7 +557,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{external_id}": {
+    "/company/{company_id}/documents/{external_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -573,7 +573,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{external_id}/xml": {
+    "/company/{company_id}/documents/{external_id}/xml": {
         parameters: {
             query?: never;
             header?: never;
@@ -589,7 +589,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{external_id}/pdf": {
+    "/company/{company_id}/documents/{external_id}/pdf": {
         parameters: {
             query?: never;
             header?: never;
@@ -605,7 +605,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{external_id}/snapshot": {
+    "/company/{company_id}/documents/{external_id}/snapshot": {
         parameters: {
             query?: never;
             header?: never;
@@ -621,7 +621,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{external_id}/query": {
+    "/company/{company_id}/documents/{external_id}/query": {
         parameters: {
             query?: never;
             header?: never;
@@ -638,7 +638,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{external_id}/cancel": {
+    "/company/{company_id}/documents/{external_id}/cancel": {
         parameters: {
             query?: never;
             header?: never;
@@ -655,7 +655,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/documents/{external_id}/correct": {
+    "/company/{company_id}/documents/{external_id}/correct": {
         parameters: {
             query?: never;
             header?: never;
@@ -672,7 +672,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/direct/documents": {
+    "/company/{company_id}/direct/documents": {
         parameters: {
             query?: never;
             header?: never;
@@ -689,7 +689,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/direct/documents/xml": {
+    "/company/{company_id}/direct/documents/xml": {
         parameters: {
             query?: never;
             header?: never;
@@ -706,7 +706,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/consulta-notas": {
+    "/company/{company_id}/consulta-notas": {
         parameters: {
             query?: never;
             header?: never;
@@ -722,7 +722,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/consulta-notas/lookup": {
+    "/company/{company_id}/consulta-notas/lookup": {
         parameters: {
             query?: never;
             header?: never;
@@ -739,7 +739,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/consulta-notas/{source}/{document_id}/xml": {
+    "/company/{company_id}/consulta-notas/{source}/{document_id}/xml": {
         parameters: {
             query?: never;
             header?: never;
@@ -755,7 +755,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/consulta-notas/{source}/{document_id}/pdf": {
+    "/company/{company_id}/consulta-notas/{source}/{document_id}/pdf": {
         parameters: {
             query?: never;
             header?: never;
@@ -771,7 +771,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/inbound/nfe": {
+    "/company/{company_id}/inbound/nfe": {
         parameters: {
             query?: never;
             header?: never;
@@ -787,7 +787,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/inbound/nfe/sync": {
+    "/company/{company_id}/inbound/nfe/sync": {
         parameters: {
             query?: never;
             header?: never;
@@ -804,7 +804,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/inbound/nfe/{document_id}/manifest": {
+    "/company/{company_id}/inbound/nfe/{document_id}/manifest": {
         parameters: {
             query?: never;
             header?: never;
@@ -821,7 +821,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/inbound/nfe/{document_id}/download-xml": {
+    "/company/{company_id}/inbound/nfe/{document_id}/download-xml": {
         parameters: {
             query?: never;
             header?: never;
@@ -838,7 +838,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping": {
+    "/company/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping": {
         parameters: {
             query?: never;
             header?: never;
@@ -855,7 +855,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm": {
+    "/company/{company_id}/inbound/nfe/{document_id}/entry-bookkeeping/confirm": {
         parameters: {
             query?: never;
             header?: never;
@@ -872,7 +872,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/schedules": {
+    "/company/{company_id}/schedules": {
         parameters: {
             query?: never;
             header?: never;
@@ -889,7 +889,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/schedules/{schedule_id}": {
+    "/company/{company_id}/schedules/{schedule_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -907,7 +907,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/products": {
+    "/company/{company_id}/products": {
         parameters: {
             query?: never;
             header?: never;
@@ -924,7 +924,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/products/{product_id}": {
+    "/company/{company_id}/products/{product_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -942,7 +942,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/takers": {
+    "/company/{company_id}/takers": {
         parameters: {
             query?: never;
             header?: never;
@@ -959,7 +959,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/companies/{company_id}/takers/{taker_id}": {
+    "/company/{company_id}/takers/{taker_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2165,9 +2165,7 @@ export type $defs = Record<string, never>;
 export interface operations {
     listCompanies: {
         parameters: {
-            query?: {
-                cnpj?: components["parameters"]["CnpjQuery"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;

@@ -40,7 +40,7 @@ test('createCompanyDocumentByOperation sends bearer token, idempotency key and s
 
   assert.deepEqual(response, { id: '1', idempotent_replay: false });
   assert.equal(history.length, 1);
-  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/companies/10/documents/VENDA_BALCAO');
+  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/company/10/documents/VENDA_BALCAO');
   assert.equal(history[0].init.method, 'POST');
   assert.equal(history[0].init.headers.Authorization, 'Bearer test-token');
   assert.equal(history[0].init.headers['Idempotency-Key'], 'idem-1');
@@ -64,11 +64,11 @@ test('manifestCompanyInboundNfe alias uses the company-scoped inbound path', asy
   const response = await client.manifestCompanyInboundNfe('10', '22', { event_type: 'ciencia' });
 
   assert.equal(response.ok, true);
-  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/companies/10/inbound/nfe/22/manifest');
+  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/company/10/inbound/nfe/22/manifest');
   assert.equal(history[0].init.method, 'POST');
 });
 
-test('listCompanies can filter companies by CNPJ', async () => {
+test('listCompanies accepts legacy filters on the singular company endpoint', async () => {
   const history = [];
   const client = new NotagilIntegrationClient({
     baseUrl: 'https://api.test/api/v1/integrations',
@@ -85,7 +85,7 @@ test('listCompanies can filter companies by CNPJ', async () => {
   const companies = await client.listCompanies({ cnpj: '12345678000199' });
 
   assert.deepEqual(companies, [{ id: '10' }]);
-  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/companies?cnpj=12345678000199');
+  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/company');
   assert.equal(history[0].init.method, 'GET');
 });
 

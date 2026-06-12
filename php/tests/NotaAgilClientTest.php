@@ -86,7 +86,7 @@ class NotaAgilClientTest extends TestCase
         }
     }
 
-    public function test_companies_can_filter_by_cnpj(): void
+    public function test_companies_accepts_legacy_filters_on_singular_company_endpoint(): void
     {
         $history = [];
         $client = $this->client([new Response(200, [], json_encode(['data' => [['id' => '10']]]))], $history);
@@ -95,7 +95,7 @@ class NotaAgilClientTest extends TestCase
 
         $this->assertSame([['id' => '10']], $companies);
         $this->assertSame('/api/v1/integrations/company', $history[0]['request']->getUri()->getPath());
-        $this->assertSame('cnpj=12345678000199', $history[0]['request']->getUri()->getQuery());
+        $this->assertSame('', $history[0]['request']->getUri()->getQuery());
     }
 
     public function test_public_docs_methods_expose_openapi_and_swagger_urls(): void

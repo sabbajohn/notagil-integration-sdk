@@ -25,7 +25,7 @@ $docs = $client->publicDocs();
 echo $docs['openapi_url'] . PHP_EOL;
 echo $docs['swagger_url'] . PHP_EOL;
 
-$companies = $client->companies(['cnpj' => '12345678000199']);
+$companies = $client->companies();
 
 $snapshot = [
     'fiscal_environment' => 'homologacao',

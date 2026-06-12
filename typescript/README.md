@@ -21,7 +21,7 @@ const client = new NotagilIntegrationClient({
   token: process.env.NOTAGIL_TOKEN!,
 });
 
-const companies = await client.listCompanies({ cnpj: '12345678000199' });
+const companies = await client.listCompanies();
 const companyId = companies[0].id;
 const docs = await client.getPublicDocsSettings();
 

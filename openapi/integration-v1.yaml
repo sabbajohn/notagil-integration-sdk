@@ -36,7 +36,7 @@ paths:
   /company:
     get:
       tags: [Company]
-      operationId: getCompany
+      operationId: listCompanies
       x-required-scopes: ["company:read"]
       responses:
         "200": { $ref: "#/components/responses/CompanyCollectionResponse" }
