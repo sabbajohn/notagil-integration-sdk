@@ -18,6 +18,115 @@ A superficie preferencial e baseada no codigo da operacao fiscal:
 
 Preview nao exige `Idempotency-Key`. Emissao exige `Idempotency-Key`.
 
+## NFSe Nacional Direta
+
+Quando o cliente monta o payload fiscal completo e usa a superficie direta:
+
+- `POST /api/v1/integrations/companies/{company_id}/direct/documents`
+
+para `document_type = nfse` no ambiente nacional, padronize `payload` no contrato canonico PT-BR abaixo. Nao misture aliases municipais ou campos legados como `codigo_servico_municipal`, `codigo_atividade`, `tomador.cpf_cnpj` ou blocos fora desta arvore.
+
+```json
+{
+  "external_id": "nfse-direct-2026-0001",
+  "document_type": "nfse",
+  "fiscal_environment": "homologacao",
+  "payload": {
+    "id": "nfse-direct-2026-0001",
+    "tpAmb": 2,
+    "dhEmi": "2026-05-26T10:00:00-03:00",
+    "verAplic": "sdk-0.3.0",
+    "serie": "1",
+    "nDPS": "1001",
+    "dCompet": "2026-05-26",
+    "tpEmit": 1,
+    "cLocEmi": "3550308",
+    "prestador": {
+      "cnpj": "12345678000199",
+      "inscricaoMunicipal": "123456",
+      "razaoSocial": "Empresa Exemplo LTDA",
+      "opSimpNac": "1",
+      "regEspTrib": "0",
+      "codigoMunicipio": "3550308"
+    },
+    "tomador": {
+      "documento": "12345678909",
+      "razaoSocial": "Cliente Exemplo",
+      "email": "cliente@example.com",
+      "telefone": "11999999999",
+      "endereco": {
+        "logradouro": "Rua Exemplo",
+        "numero": "100",
+        "complemento": "Sala 1",
+        "bairro": "Centro",
+        "cep": "01001000",
+        "codigoMunicipio": "3550308",
+        "uf": "SP",
+        "municipio": "Sao Paulo"
+      }
+    },
+    "servico": {
+      "cLocPrestacao": "3550308",
+      "cTribNac": "0107",
+      "cTribMun": "0107",
+      "cNBS": "1.0101.00.00",
+      "descricao": "Servico de exemplo",
+      "tribISSQN": "1",
+      "tpRetISSQN": "1",
+      "aliquota": 0.02,
+      "enviarPAliq": true,
+      "valor_irrf": 0,
+      "valor_ir": 0,
+      "iss_retido": false
+    },
+    "valor_servicos": 100
+  }
+}
+```
+
+Campos aceitos no payload canonico:
+
+- `id`
+- `tpAmb`
+- `dhEmi`
+- `verAplic`
+- `serie`
+- `nDPS`
+- `dCompet`
+- `tpEmit`
+- `cLocEmi`
+- `prestador.cnpj`
+- `prestador.inscricaoMunicipal`
+- `prestador.razaoSocial`
+- `prestador.opSimpNac`
+- `prestador.regEspTrib`
+- `prestador.codigoMunicipio`
+- `tomador.documento`
+- `tomador.razaoSocial`
+- `tomador.email`
+- `tomador.telefone`
+- `tomador.endereco.logradouro`
+- `tomador.endereco.numero`
+- `tomador.endereco.complemento`
+- `tomador.endereco.bairro`
+- `tomador.endereco.cep`
+- `tomador.endereco.codigoMunicipio`
+- `tomador.endereco.uf`
+- `tomador.endereco.municipio`
+- `servico.cLocPrestacao`
+- `servico.cTribNac`
+- `servico.cTribMun`
+- `servico.cNBS`
+- `servico.descricao`
+- `servico.tribISSQN`
+- `servico.tpRetISSQN`
+- `servico.aliquota`
+- `servico.enviarPAliq`
+- `servico.valor_irrf`
+- `servico.valor_ir`
+- `servico.iss_retido`
+- `valor_servicos`
+
 ## Envelope Principal
 
 ```json
@@ -267,7 +376,7 @@ Campos comuns de referencia:
 ## Exemplo Completo: Preview por Operacao
 
 ```bash
-curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO/preview" \
+curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO/preview" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -311,7 +420,7 @@ curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/docume
 ## Exemplo Completo: Emissao por Operacao
 
 ```bash
-curl -X POST "https://api.notagil.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO" \
+curl -X POST "https://api_notagil.sabbasistemas.com.br/api/v1/integrations/companies/10/documents/VENDA_BALCAO" \
   -H "Authorization: Bearer $NOTAGIL_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: erp-0001" \

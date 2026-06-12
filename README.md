@@ -9,11 +9,11 @@ Este repositorio publica dois pacotes a partir do mesmo codigo fonte:
 
 O contrato OpenAPI versionado fica em `openapi/integration-v1.yaml`.
 
-A estrutura recomendada para preview e emissao fiscal por `operation_code` esta documentada em [docs/payload-emissao.md](docs/payload-emissao.md).
+A estrutura recomendada para preview e emissao fiscal por `operation_code`, alem do payload canonico PT-BR para NFSe Nacional na superficie direta, esta documentada em [docs/payload-emissao.md](docs/payload-emissao.md).
 
 ## Release Atual
 
-`v0.1.5` adiciona busca de empresas por CNPJ em `/companies`, preserva os metadados fiscais/autorizacao e os downloads de XML/PDF para emissao fiscal.
+`v0.3.0` consolida a resposta canônica publica com `legacy_aliases` explicito, adiciona descoberta de `swagger_url`/`openapi_url` nos SDKs e atualiza o endpoint oficial para `api_notagil.sabbasistemas.com.br`.
 
 Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais de emissor, perfis de operacao, atribuicoes de perfil, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por `operation_code` com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto escopado por empresa, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
 
@@ -22,14 +22,14 @@ Breaking beta: os aliases sem `companyId` e a emissao por `payload` legado foram
 ## Instalacao PHP
 
 ```sh
-composer require notagil/integration-sdk:0.1.5
+composer require notagil/integration-sdk:^0.3.0
 ```
 
 ```php
 use NotaAgil\Integration\NotaAgilClient;
 
 $client = new NotaAgilClient(
-    baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
+    baseUrl: 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations',
     token: getenv('NOTAGIL_TOKEN'),
 );
 
@@ -41,14 +41,14 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ## Instalacao TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@0.1.5
+npm install @notagil/integration-sdk@^0.3.0
 ```
 
 ```ts
 import { NotagilIntegrationClient } from '@notagil/integration-sdk';
 
 const client = new NotagilIntegrationClient({
-  baseUrl: 'https://api.notagil.com.br/api/v1/integrations',
+  baseUrl: 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations',
   token: process.env.NOTAGIL_TOKEN!,
 });
 
@@ -136,8 +136,8 @@ composer test
 4. Crie a tag semver, por exemplo:
 
 ```sh
-git tag v0.1.5
-git push origin v0.1.5
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.

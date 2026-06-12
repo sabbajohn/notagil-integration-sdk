@@ -1,13 +1,216 @@
 export type DocumentType = 'nfe' | 'nfce' | 'nfse';
 export type ResolutionStatus = 'resolved' | 'review' | 'blocked';
 export type FiscalEnvironment = 'homologacao' | 'producao';
-export type NfsePolicyField =
-  | 'service.municipal_code'
-  | 'service.national_tax_code'
-  | 'service.nbs'
-  | 'service.cnae_code'
-  | 'service.activity_code'
-  | 'prestador.op_simp_nac';
+export const NFSE_CANONICAL_POLICY_FIELDS = [
+  'servico.cTribMun',
+  'servico.cTribNac',
+  'servico.cNBS',
+  'servico.codigoCnae',
+  'servico.codigo_atividade',
+  'servico.benefit_code',
+  'prestador.opSimpNac',
+  'prestador.mei',
+] as const;
+export const NFSE_NACIONAL_POLICY_FIELDS = NFSE_CANONICAL_POLICY_FIELDS;
+export type NfsePolicyField = (typeof NFSE_CANONICAL_POLICY_FIELDS)[number];
+
+const NFSE_POLICY_FIELD_ALIASES: Record<string, NfsePolicyField> = {
+  'service.municipal_code': 'servico.cTribMun',
+  'service.national_tax_code': 'servico.cTribNac',
+  'service.nbs': 'servico.cNBS',
+  'service.cnae_code': 'servico.codigoCnae',
+  'service.activity_code': 'servico.codigo_atividade',
+  'service.benefit_code': 'servico.benefit_code',
+  'prestador.op_simp_nac': 'prestador.opSimpNac',
+  'servico.cTribMun': 'servico.cTribMun',
+  'servico.cTribNac': 'servico.cTribNac',
+  'servico.cNBS': 'servico.cNBS',
+  'servico.codigoCnae': 'servico.codigoCnae',
+  'servico.codigo_atividade': 'servico.codigo_atividade',
+  'servico.benefit_code': 'servico.benefit_code',
+  'prestador.opSimpNac': 'prestador.opSimpNac',
+  'prestador.mei': 'prestador.mei',
+};
+
+export const NFSE_NACIONAL_EXPECTED_FIELDS = [
+  'id',
+  'tpAmb',
+  'dhEmi',
+  'verAplic',
+  'serie',
+  'nDPS',
+  'dCompet',
+  'tpEmit',
+  'cLocEmi',
+  'prestador.cnpj',
+  'prestador.inscricaoMunicipal',
+  'prestador.razaoSocial',
+  'prestador.opSimpNac',
+  'prestador.regEspTrib',
+  'prestador.codigoMunicipio',
+  'tomador.documento',
+  'tomador.razaoSocial',
+  'tomador.email',
+  'tomador.telefone',
+  'tomador.endereco.logradouro',
+  'tomador.endereco.numero',
+  'tomador.endereco.complemento',
+  'tomador.endereco.bairro',
+  'tomador.endereco.cep',
+  'tomador.endereco.codigoMunicipio',
+  'tomador.endereco.uf',
+  'tomador.endereco.municipio',
+  'servico.cLocPrestacao',
+  'servico.cTribNac',
+  'servico.cTribMun',
+  'servico.cNBS',
+  'servico.descricao',
+  'servico.tribISSQN',
+  'servico.tpRetISSQN',
+  'servico.aliquota',
+  'servico.enviarPAliq',
+  'servico.valor_irrf',
+  'servico.valor_ir',
+  'servico.iss_retido',
+  'valor_servicos',
+] as const;
+
+type NfseCanonicalScalar = string | number | boolean | null;
+interface CanonicalSchema {
+  [key: string]: true | CanonicalSchema;
+}
+
+export interface NfsePrestador extends Record<string, unknown> {
+  cnpj?: string;
+  inscricaoMunicipal?: string;
+  razaoSocial?: string;
+  opSimpNac?: NfseCanonicalScalar;
+  regEspTrib?: NfseCanonicalScalar;
+  codigoMunicipio?: string;
+  mei?: NfseCanonicalScalar;
+}
+
+export interface NfseEndereco extends Record<string, unknown> {
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cep?: string;
+  codigoMunicipio?: string;
+  uf?: string;
+  municipio?: string;
+}
+
+export interface NfseTomador extends Record<string, unknown> {
+  documento?: string;
+  razaoSocial?: string;
+  email?: string;
+  telefone?: string;
+  endereco?: NfseEndereco;
+}
+
+export interface NfseServico extends Record<string, unknown> {
+  cLocPrestacao?: string;
+  cTribNac?: string;
+  cTribMun?: string;
+  cNBS?: string;
+  descricao?: string;
+  tribISSQN?: NfseCanonicalScalar;
+  tpRetISSQN?: NfseCanonicalScalar;
+  aliquota?: NfseCanonicalScalar;
+  enviarPAliq?: NfseCanonicalScalar;
+  valor_irrf?: NfseCanonicalScalar;
+  valor_ir?: NfseCanonicalScalar;
+  iss_retido?: NfseCanonicalScalar;
+  codigoCnae?: string;
+  codigo_atividade?: string;
+  benefit_code?: string;
+}
+
+export interface NfseCanonicalPayload extends Record<string, unknown> {
+  id?: string;
+  tpAmb?: NfseCanonicalScalar;
+  dhEmi?: string;
+  verAplic?: string;
+  serie?: string;
+  nDPS?: NfseCanonicalScalar;
+  dCompet?: string;
+  tpEmit?: NfseCanonicalScalar;
+  cLocEmi?: string;
+  prestador?: NfsePrestador;
+  tomador?: NfseTomador;
+  servico?: NfseServico;
+  valor_servicos?: NfseCanonicalScalar;
+}
+
+export type NfseNacionalPrestador = NfsePrestador;
+export type NfseNacionalEndereco = NfseEndereco;
+export type NfseNacionalTomador = NfseTomador;
+export type NfseNacionalServico = NfseServico;
+export type NfseNacionalCanonicalPayload = NfseCanonicalPayload;
+
+export class NfseNacionalContractError extends Error {
+  readonly expectedFields: string[];
+  readonly invalidFields: string[];
+
+  constructor(expectedFields: readonly string[], invalidFields: string[]) {
+    super('Payload invalido para NFSe Nacional. Use somente o contrato canonico PT-BR.');
+    this.name = 'NfseNacionalContractError';
+    this.expectedFields = [...expectedFields];
+    this.invalidFields = invalidFields;
+  }
+}
+
+const NFSE_NACIONAL_SCHEMA: CanonicalSchema = {
+  id: true,
+  tpAmb: true,
+  dhEmi: true,
+  verAplic: true,
+  serie: true,
+  nDPS: true,
+  dCompet: true,
+  tpEmit: true,
+  cLocEmi: true,
+  prestador: {
+    cnpj: true,
+    inscricaoMunicipal: true,
+    razaoSocial: true,
+    opSimpNac: true,
+    regEspTrib: true,
+    codigoMunicipio: true,
+  },
+  tomador: {
+    documento: true,
+    razaoSocial: true,
+    email: true,
+    telefone: true,
+    endereco: {
+      logradouro: true,
+      numero: true,
+      complemento: true,
+      bairro: true,
+      cep: true,
+      codigoMunicipio: true,
+      uf: true,
+      municipio: true,
+    },
+  },
+  servico: {
+    cLocPrestacao: true,
+    cTribNac: true,
+    cTribMun: true,
+    cNBS: true,
+    descricao: true,
+    tribISSQN: true,
+    tpRetISSQN: true,
+    aliquota: true,
+    enviarPAliq: true,
+    valor_irrf: true,
+    valor_ir: true,
+    iss_retido: true,
+  },
+  valor_servicos: true,
+};
 
 export interface NfseFieldSchema {
   label?: string;
@@ -29,6 +232,70 @@ export interface NfseFormPolicy {
   field_schema?: Partial<Record<NfsePolicyField, NfseFieldSchema>>;
   labels: Partial<Record<NfsePolicyField, string>>;
   hints: Partial<Record<NfsePolicyField, string>>;
+  enum_fields?: Partial<Record<NfsePolicyField, string[]>>;
+  conditional_rules?: Array<Record<string, unknown>>;
+  extensions_supported?: string[];
+}
+
+export function assertCanonicalNfseNacionalPayload(payload: Record<string, unknown>): asserts payload is NfseNacionalCanonicalPayload {
+  const invalidFields = legacyNfseNacionalFields(payload);
+  if (invalidFields.length === 0) {
+    return;
+  }
+
+  throw new NfseNacionalContractError(NFSE_NACIONAL_EXPECTED_FIELDS, invalidFields);
+}
+
+export function canonicalizeNfseProviderPolicy<T extends Record<string, unknown>>(
+  policy: T,
+): T & Pick<NfseFormPolicy, 'required_fields' | 'visible_fields' | 'field_schema' | 'labels' | 'hints' | 'enum_fields' | 'conditional_rules' | 'extensions_supported'> {
+  const schema = normalizePolicyFieldMap(policy.field_schema);
+  const requiredFields = normalizePolicyFields(policy.required_fields);
+  const visibleFields = normalizePolicyFields(policy.visible_fields);
+  const activeFields = Array.from(new Set<NfsePolicyField>([
+    ...requiredFields,
+    ...visibleFields,
+    ...Object.keys(schema).filter((field): field is NfsePolicyField => canonicalPolicyField(field) !== null),
+  ]));
+  const allFields = [...NFSE_CANONICAL_POLICY_FIELDS];
+  const labels = normalizePolicyFieldMap(policy.labels, activeFields) as Partial<Record<NfsePolicyField, string>>;
+  const hints = normalizePolicyFieldMap(policy.hints, activeFields) as Partial<Record<NfsePolicyField, string>>;
+  const fieldSchema = allFields.reduce<Partial<Record<NfsePolicyField, NfseFieldSchema>>>((acc, field) => {
+    const defaults = canonicalFieldDefaults(field);
+    if (!defaults) {
+      return acc;
+    }
+
+    acc[field] = canonicalFieldEntry(
+      asRecord(schema[field]),
+      defaults.label,
+      defaults.control,
+      defaults.payloadPaths,
+      defaults.options ?? [],
+    );
+
+    if (activeFields.includes(field) && !labels[field]) {
+      labels[field] = defaults.label;
+    }
+    if (activeFields.includes(field) && !hints[field]) {
+      hints[field] = canonicalFieldHint(field);
+    }
+
+    return acc;
+  }, {});
+
+  return {
+    ...policy,
+    required_fields: requiredFields,
+    visible_fields: visibleFields,
+    default_values: normalizePolicyFieldMap(policy.default_values, activeFields) as Partial<Record<NfsePolicyField, string>>,
+    labels,
+    hints,
+    enum_fields: normalizePolicyEnumFields(policy.enum_fields, activeFields),
+    conditional_rules: normalizeConditionalRules(policy.conditional_rules),
+    extensions_supported: Array.isArray(policy.extensions_supported) ? policy.extensions_supported.map(String) : [],
+    field_schema: fieldSchema,
+  };
 }
 
 export interface NfseProviderInfo {
@@ -104,9 +371,16 @@ export interface DirectDocumentSubmitRequest {
   document_type: DocumentType;
   municipio?: string | null;
   fiscal_environment?: FiscalEnvironment;
-  payload: Record<string, unknown>;
+  payload: NfseCanonicalPayload | Record<string, unknown>;
   metadata?: Record<string, unknown>;
 }
+
+export interface DirectNfseCanonicalSubmitRequest extends Omit<DirectDocumentSubmitRequest, 'document_type' | 'payload'> {
+  document_type: 'nfse';
+  payload: NfseCanonicalPayload;
+}
+
+export type DirectNfseNacionalSubmitRequest = DirectNfseCanonicalSubmitRequest;
 
 export interface DirectXmlSubmitRequest {
   external_id: string;
@@ -132,6 +406,32 @@ export interface PreviewResult {
   warnings?: Array<Record<string, unknown> | string>;
 }
 
+export interface LegacyDocumentAliases {
+  legacy_status?: string | null;
+  type?: string | null;
+  serie?: string | null;
+  numero?: number | string | null;
+  status_operacional?: string | null;
+  status_fiscal?: string | null;
+  chave_acesso?: string | null;
+  protocolo?: string | null;
+  autorizado_em?: string | null;
+  [key: string]: unknown;
+}
+
+export interface ResponseContractMeta {
+  version: string;
+  canonical_fields: string[];
+  legacy_aliases: string[];
+  deprecated_top_level_aliases?: string[];
+  compatibility_block?: string | null;
+}
+
+export interface IntegrationResponseMeta {
+  response_contract?: ResponseContractMeta;
+  [key: string]: unknown;
+}
+
 export interface DocumentAccepted {
   id: string | number;
   external_id?: string | null;
@@ -155,6 +455,7 @@ export interface DocumentAccepted {
   protocolo?: string | null;
   authorized_at?: string | null;
   autorizado_em?: string | null;
+  legacy_aliases?: LegacyDocumentAliases | null;
   artifacts?: DocumentArtifacts | null;
   message?: string | null;
   rejection_reason?: string | null;
@@ -198,6 +499,7 @@ export interface DocumentStatus {
   protocolo?: string | null;
   authorized_at?: string | null;
   autorizado_em?: string | null;
+  legacy_aliases?: LegacyDocumentAliases | null;
   artifacts?: DocumentArtifacts | null;
   message?: string | null;
   rejection_reason?: string | null;
@@ -229,7 +531,20 @@ export interface PaginatedDocumentList {
     last_page: number;
     per_page: number;
     total: number;
-  };
+  } & IntegrationResponseMeta;
+}
+
+export interface PublicDocsSettings {
+  enabled: boolean;
+  title: string;
+  intro: string;
+  sandbox_base_url: string;
+  production_base_url: string;
+  sections: string[];
+  featured_sdk: string;
+  changelog: string;
+  openapi_url: string;
+  swagger_url?: string;
 }
 
 export interface DocumentSnapshotResult {
@@ -323,6 +638,237 @@ export interface WaitDocumentOptions {
   terminalOperationalStatuses?: string[];
 }
 
+export function normalizeDocumentResponse<T extends Partial<DocumentAccepted & DocumentStatus>>(document: T): T {
+  const legacy = isRecord(document.legacy_aliases) ? document.legacy_aliases : {};
+
+  return {
+    ...document,
+    document_type: document.document_type ?? (legacy.type as string | undefined) ?? null,
+    series: document.series ?? (legacy.serie as string | undefined) ?? null,
+    number: document.number ?? (legacy.numero as string | number | undefined) ?? null,
+    access_key: document.access_key ?? (legacy.chave_acesso as string | undefined) ?? document.document_key ?? null,
+    protocol: document.protocol ?? (legacy.protocolo as string | undefined) ?? null,
+    authorized_at: document.authorized_at ?? (legacy.autorizado_em as string | undefined) ?? null,
+    operational_status: document.operational_status ?? (legacy.status_operacional as string | undefined) ?? null,
+    fiscal_status: document.fiscal_status ?? (legacy.status_fiscal as string | undefined) ?? document.status ?? null,
+  };
+}
+
+function legacyNfseNacionalFields(payload: Record<string, unknown>): string[] {
+  return [...new Set(collectInvalidPaths(payload, NFSE_NACIONAL_SCHEMA))].sort();
+}
+
+function collectInvalidPaths(payload: Record<string, unknown>, schema: CanonicalSchema, prefix = ''): string[] {
+  const invalid: string[] = [];
+
+  for (const [key, value] of Object.entries(payload)) {
+    const path = prefix === '' ? key : `${prefix}.${key}`;
+    if (!(key in schema)) {
+      invalid.push(path);
+      continue;
+    }
+
+    const childSchema = schema[key];
+    if (childSchema === undefined) {
+      invalid.push(path);
+      continue;
+    }
+
+    if (childSchema === true) {
+      continue;
+    }
+
+    if (!isRecord(value)) {
+      invalid.push(path);
+      continue;
+    }
+
+    invalid.push(...collectInvalidPaths(value, childSchema, path));
+  }
+
+  return invalid;
+}
+
+function normalizePolicyFields(value: unknown): NfsePolicyField[] {
+  const normalized: NfsePolicyField[] = [];
+
+  for (const field of Array.isArray(value) ? value : []) {
+    const canonical = canonicalPolicyField(field);
+    if (canonical && !normalized.includes(canonical)) {
+      normalized.push(canonical);
+    }
+  }
+
+  return normalized;
+}
+
+function normalizePolicyFieldMap(
+  value: unknown,
+  activeFields?: NfsePolicyField[],
+): Record<string, unknown> {
+  const record = asRecord(value);
+  const allowedFields = activeFields ? new Set(activeFields) : null;
+  const normalized: Record<string, unknown> = {};
+
+  for (const [field, entry] of Object.entries(record)) {
+    const canonical = canonicalPolicyField(field);
+    if (!canonical) {
+      continue;
+    }
+    if (allowedFields && !allowedFields.has(canonical)) {
+      continue;
+    }
+
+    normalized[canonical] = entry;
+  }
+
+  return normalized;
+}
+
+function normalizePolicyEnumFields(
+  value: unknown,
+  activeFields: NfsePolicyField[],
+): Partial<Record<NfsePolicyField, string[]>> {
+  const allowedFields = new Set(activeFields);
+  const normalized: Partial<Record<NfsePolicyField, string[]>> = {};
+
+  for (const [field, enumValues] of Object.entries(asRecord(value))) {
+    const canonical = canonicalPolicyField(field);
+    if (!canonical || !allowedFields.has(canonical) || !Array.isArray(enumValues)) {
+      continue;
+    }
+
+    normalized[canonical] = enumValues.map((item) => String(item));
+  }
+
+  return normalized;
+}
+
+function normalizeConditionalRules(value: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((rule) => {
+    if (!isRecord(rule)) {
+      return [];
+    }
+
+    const normalized: Record<string, unknown> = { ...rule };
+    if (isRecord(rule.when) && 'field' in rule.when) {
+      const whenField = canonicalPolicyField(rule.when.field);
+      if (whenField) {
+        normalized.when = { ...rule.when, field: whenField };
+      }
+    }
+
+    for (const key of ['require', 'show', 'hide'] as const) {
+      if (Array.isArray(rule[key])) {
+        normalized[key] = normalizePolicyFields(rule[key]);
+      }
+    }
+
+    return [normalized];
+  });
+}
+
+function canonicalPolicyField(field: unknown): NfsePolicyField | null {
+  const normalized = typeof field === 'string' ? field.trim() : '';
+  return normalized !== '' ? NFSE_POLICY_FIELD_ALIASES[normalized] ?? null : null;
+}
+
+function canonicalFieldDefaults(
+  field: NfsePolicyField,
+): { label: string; control: string; payloadPaths: string[]; options?: Array<{ value: string; label: string }> } | null {
+  switch (field) {
+    case 'servico.cTribMun':
+      return { label: 'Codigo Servico Municipal', control: 'text', payloadPaths: ['servico.cTribMun'] };
+    case 'servico.cTribNac':
+      return { label: 'Codigo Tributacao Nacional', control: 'text', payloadPaths: ['servico.cTribNac'] };
+    case 'servico.cNBS':
+      return { label: 'Codigo NBS', control: 'text', payloadPaths: ['servico.cNBS'] };
+    case 'servico.codigoCnae':
+      return { label: 'CNAE do Servico', control: 'text', payloadPaths: ['servico.codigoCnae'] };
+    case 'servico.codigo_atividade':
+      return { label: 'Codigo de Atividade', control: 'text', payloadPaths: ['servico.codigo_atividade'] };
+    case 'servico.benefit_code':
+      return { label: 'Codigo Beneficio Municipal', control: 'text', payloadPaths: ['servico.benefit_code'] };
+    case 'prestador.opSimpNac':
+      return {
+        label: 'Simples Nacional',
+        control: 'select',
+        payloadPaths: ['prestador.opSimpNac'],
+        options: [
+          { value: '1', label: '1 - Nao optante' },
+          { value: '2', label: '2 - MEI' },
+          { value: '3', label: '3 - ME/EPP' },
+        ],
+      };
+    case 'prestador.mei':
+      return {
+        label: 'Emitente MEI',
+        control: 'select',
+        payloadPaths: ['prestador.mei'],
+        options: [
+          { value: 'false', label: 'Nao MEI' },
+          { value: 'true', label: 'MEI' },
+        ],
+      };
+    default:
+      return null;
+  }
+}
+
+function canonicalFieldHint(field: NfsePolicyField): string {
+  switch (field) {
+    case 'servico.cTribMun':
+      return 'Codigo municipal do servico aceito pelo provider NFSe.';
+    case 'servico.cTribNac':
+      return 'Codigo nacional de tributacao do servico.';
+    case 'servico.cNBS':
+      return 'Nomenclatura Brasileira de Servicos exigida pelo layout nacional.';
+    case 'servico.codigoCnae':
+      return 'CNAE fiscal do servico; alguns municipios validam esta tag no XML.';
+    case 'servico.codigo_atividade':
+      return 'Codigo de atividade municipal quando o provider exigir campo separado.';
+    case 'servico.benefit_code':
+      return 'Codigo oficial do beneficio municipal quando houver beneficio permitido para o servico.';
+    case 'prestador.opSimpNac':
+      return 'Opcao do Simples Nacional exigida pelo layout nacional.';
+    case 'prestador.mei':
+      return 'Classificacao explicita do emitente para roteamento municipal ou nacional da NFSe.';
+  }
+}
+
+function canonicalFieldEntry(
+  entry: Record<string, unknown>,
+  label: string,
+  control: string,
+  payloadPaths: string[],
+  options: Array<{ value: string; label: string }> = [],
+): NfseFieldSchema {
+  const normalized: NfseFieldSchema = {
+    ...entry,
+    label: typeof entry.label === 'string' ? entry.label : label,
+    control: typeof entry.control === 'string' ? entry.control : control,
+    payload_paths: payloadPaths,
+  };
+
+  if (options.length > 0) {
+    normalized.options = options;
+  }
+
+  return normalized;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export interface NotagilClientOptions {
   baseUrl: string;
   token: string;
@@ -372,6 +918,22 @@ export class NotagilIntegrationClient {
     return this.request<IntegrationCompany>(`/company/${encodeURIComponent(String(companyId))}`, {
       method: 'GET',
     });
+  }
+
+  getPublicDocsSettings(): Promise<PublicDocsSettings> {
+    return this.requestFromBase<PublicDocsSettings>(this.platformBaseUrl(), '/public/docs', {
+      method: 'GET',
+    });
+  }
+
+  async getPublicOpenApiUrl(): Promise<string> {
+    const docs = await this.getPublicDocsSettings();
+    return docs.openapi_url;
+  }
+
+  async getPublicSwaggerUrl(): Promise<string | null> {
+    const docs = await this.getPublicDocsSettings();
+    return typeof docs.swagger_url === 'string' && docs.swagger_url.trim() !== '' ? docs.swagger_url : null;
   }
 
   previewCompanyDocumentByOperation(
@@ -1029,7 +1591,16 @@ export class NotagilIntegrationClient {
     body?: unknown;
     unwrapData?: boolean;
   }): Promise<T> {
-    const response = await this.fetcher(`${this.baseUrl}${path}`, {
+    return this.requestFromBase<T>(this.baseUrl, path, options);
+  }
+
+  private async requestFromBase<T>(baseUrl: string, path: string, options: {
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    headers?: Record<string, string>;
+    body?: unknown;
+    unwrapData?: boolean;
+  }): Promise<T> {
+    const response = await this.fetcher(`${baseUrl}${path}`, {
       method: options.method,
       headers: {
         Accept: 'application/json',
@@ -1052,6 +1623,10 @@ export class NotagilIntegrationClient {
     }
 
     return (parsed && typeof parsed === 'object' && 'data' in parsed ? (parsed as { data: T }).data : parsed) as T;
+  }
+
+  private platformBaseUrl(): string {
+    return this.baseUrl.replace(/\/v1\/integrations$/, '');
   }
 
   private parseResponseBody(text: string): unknown {

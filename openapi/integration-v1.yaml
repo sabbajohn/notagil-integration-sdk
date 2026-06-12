@@ -1080,6 +1080,11 @@ components:
       schema:
         type: string
         enum: [homologacao, producao, production, prod]
+    CnpjQuery:
+      name: cnpj
+      in: query
+      required: false
+      schema: { type: string, maxLength: 20 }
   requestBodies:
     JsonObject:
       required: true
