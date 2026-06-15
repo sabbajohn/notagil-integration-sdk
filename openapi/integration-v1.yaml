@@ -2008,11 +2008,50 @@ components:
         delivery_id: { type: string }
         status: { type: string }
         attempts: { type: integer }
+        max_attempts: { type: integer, example: 3 }
         response_status: { type: [integer, "null"] }
         error_message: { type: [string, "null"] }
         next_attempt_at: { type: [string, "null"] }
         delivered_at: { type: [string, "null"] }
         created_at: { type: [string, "null"] }
+    FiscalDocumentWebhookDocument:
+      type: object
+      description: Document summary sent inside fiscal document webhook events.
+      properties:
+        id: { type: string }
+        company_id: { type: string }
+        external_id: { type: [string, "null"] }
+        document_type: { type: string, enum: [nfe, nfce, nfse] }
+        operational_status: { type: [string, "null"] }
+        fiscal_status: { type: [string, "null"] }
+        document_key: { type: [string, "null"] }
+        protocol: { type: [string, "null"] }
+        last_error: { type: [string, "null"] }
+        created_at: { type: [string, "null"] }
+        updated_at: { type: [string, "null"] }
+        xml:
+          type: string
+          description: Raw authorized XML, present only on fiscal_document.authorized when the XML is available.
+    FiscalDocumentWebhookEvent:
+      type: object
+      properties:
+        id: { type: string }
+        event_type: { type: string }
+        occurred_at: { type: [string, "null"] }
+    FiscalDocumentAuthorizedWebhookPayload:
+      type: object
+      description: Payload delivered to webhook endpoints subscribed to fiscal_document.authorized.
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [fiscal_document.authorized] }
+        created_at: { type: string }
+        data:
+          type: object
+          properties:
+            document:
+              $ref: "#/components/schemas/FiscalDocumentWebhookDocument"
+            event:
+              $ref: "#/components/schemas/FiscalDocumentWebhookEvent"
     QueuedDocument:
       type: object
       properties:

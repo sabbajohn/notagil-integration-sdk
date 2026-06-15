@@ -1461,6 +1461,39 @@ export interface components {
             delivered_at?: string | null;
             created_at?: string | null;
         };
+        /** @description Document summary sent inside fiscal document webhook events. */
+        FiscalDocumentWebhookDocument: {
+            id?: string;
+            company_id?: string;
+            external_id?: string | null;
+            /** @enum {string} */
+            document_type?: "nfe" | "nfce" | "nfse";
+            operational_status?: string | null;
+            fiscal_status?: string | null;
+            document_key?: string | null;
+            protocol?: string | null;
+            last_error?: string | null;
+            created_at?: string | null;
+            updated_at?: string | null;
+            /** @description Raw authorized XML, present only on fiscal_document.authorized when the XML is available. */
+            xml?: string;
+        };
+        FiscalDocumentWebhookEvent: {
+            id?: string;
+            event_type?: string;
+            occurred_at?: string | null;
+        };
+        /** @description Payload delivered to webhook endpoints subscribed to fiscal_document.authorized. */
+        FiscalDocumentAuthorizedWebhookPayload: {
+            id?: string;
+            /** @enum {string} */
+            type?: "fiscal_document.authorized";
+            created_at?: string;
+            data?: {
+                document?: components["schemas"]["FiscalDocumentWebhookDocument"];
+                event?: components["schemas"]["FiscalDocumentWebhookEvent"];
+            };
+        };
         QueuedDocument: {
             id?: number | string;
             external_id?: string | null;

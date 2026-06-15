@@ -14,6 +14,7 @@ import {
   assertCanonicalNfseNacionalPayload,
   normalizeDocumentResponse,
   type DirectNfseNacionalSubmitRequest,
+  type FiscalDocumentAuthorizedWebhookPayload,
 } from '@notagil/integration-sdk';
 
 const client = new NotagilIntegrationClient({
@@ -153,6 +154,12 @@ const expected = await NotagilIntegrationClient.webhookSignature(
   timestamp,
   rawBody,
 );
+
+const payload = JSON.parse(rawBody) as FiscalDocumentAuthorizedWebhookPayload;
+if (payload.type === 'fiscal_document.authorized' && payload.data.document.xml) {
+  // XML autorizado bruto para disparar a impressao imediata no PDV.
+  await printNfce(payload.data.document.xml);
+}
 ```
 
 For clients that already assemble the complete fiscal form payload or XML, use the direct surface. This bypasses NotaAgil fiscal rule resolution and requires a token with `documents:direct`.

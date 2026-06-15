@@ -583,6 +583,41 @@ export interface WebhookPayload {
   [key: string]: unknown;
 }
 
+export interface FiscalDocumentWebhookDocument {
+  id: string;
+  company_id: string;
+  external_id?: string | null;
+  document_type?: DocumentType | string | null;
+  operational_status?: string | null;
+  fiscal_status?: string | null;
+  document_key?: string | null;
+  protocol?: string | null;
+  last_error?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  xml?: string;
+  [key: string]: unknown;
+}
+
+export interface FiscalDocumentWebhookEvent {
+  id: string;
+  event_type: string;
+  occurred_at?: string | null;
+  [key: string]: unknown;
+}
+
+export interface FiscalDocumentAuthorizedWebhookPayload {
+  id: string;
+  type: 'fiscal_document.authorized';
+  created_at: string;
+  data: {
+    document: FiscalDocumentWebhookDocument;
+    event: FiscalDocumentWebhookEvent;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 export interface FiscalOperationProfilePayload {
   id?: string | number;
   [key: string]: unknown;

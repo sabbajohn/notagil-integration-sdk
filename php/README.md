@@ -164,6 +164,15 @@ $expected = NotaAgilClient::webhookSignature(
     $timestamp,
     $rawBody,
 );
+
+$payload = json_decode($rawBody, true, flags: JSON_THROW_ON_ERROR);
+if (($payload['type'] ?? null) === 'fiscal_document.authorized') {
+    $xml = $payload['data']['document']['xml'] ?? null;
+    if (is_string($xml) && $xml !== '') {
+        // XML autorizado bruto para disparar a impressao imediata no PDV.
+        imprimirNfce($xml);
+    }
+}
 ```
 
 O pacote e agnostico de framework. Veja `examples/laravel.php` para uma forma simples de registrar o cliente no container Laravel.
