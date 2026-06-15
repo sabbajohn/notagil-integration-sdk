@@ -371,6 +371,8 @@ export interface DirectDocumentSubmitRequest {
   document_type: DocumentType;
   municipio?: string | null;
   fiscal_environment?: FiscalEnvironment;
+  emission_mode?: 'queued' | 'sync' | 'synchronous';
+  synchronous?: boolean;
   payload: NfseCanonicalPayload | Record<string, unknown>;
   metadata?: Record<string, unknown>;
 }
@@ -387,6 +389,8 @@ export interface DirectXmlSubmitRequest {
   document_type: 'nfe' | 'nfce';
   municipio?: string | null;
   fiscal_environment?: FiscalEnvironment;
+  emission_mode?: 'queued' | 'sync' | 'synchronous';
+  synchronous?: boolean;
   xml?: string;
   xml_base64?: string;
   already_signed?: boolean;
@@ -462,6 +466,9 @@ export interface DocumentAccepted {
   errors?: Array<Record<string, unknown> | string>;
   direct_transmission?: boolean;
   direct_transmission_mode?: string | null;
+  direct_transmission_synchronous?: boolean;
+  sefaz_response?: Record<string, unknown> | null;
+  xml?: string | null;
 }
 
 export interface DocumentArtifacts {
