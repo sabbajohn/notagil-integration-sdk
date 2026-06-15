@@ -1455,6 +1455,8 @@ export interface components {
             delivery_id?: string;
             status?: string;
             attempts?: number;
+            /** @example 3 */
+            max_attempts?: number;
             response_status?: number | null;
             error_message?: string | null;
             next_attempt_at?: string | null;
