@@ -7,6 +7,15 @@ info:
     Public contract for API clients. Every path in this document is relative to
     `/api/v1/integrations` and requires a NotaAgil integration bearer token unless
     explicitly stated otherwise.
+
+    This v1 surface is legacy/compatible. Portuguese route aliases under
+    `/empresas/{company}` and request-field aliases such as `tipo_documento`,
+    `ambiente_fiscal`, `por_pagina`, `justificativa`, `xml_em_base64`,
+    `codigo_origem`, `tipo_pessoa`, `perfis-operacao`, `referencias-aliquotas`
+    `conjuntos-regras-tributarias`, `implantacao/importacoes`, `metricas`,
+    `cobranca` and `notificacoes-web` are accepted by the API during the
+    migration to the strict v2 public contract. Responses in v1 still use the
+    existing `data`/`meta`/`code` envelope and may contain legacy field names.
   contact:
     name: Sabba John - Sabba Sistemas
   x-author: Sabba John - Sabba Sistemas
@@ -36,7 +45,7 @@ paths:
   /company:
     get:
       tags: [Company]
-      operationId: listCompanies
+      operationId: getCompany
       x-required-scopes: ["company:read"]
       responses:
         "200": { $ref: "#/components/responses/CompanyCollectionResponse" }
@@ -44,7 +53,7 @@ paths:
   /company/{company_id}:
     get:
       tags: [Company]
-      operationId: getCompany
+      operationId: getCompanyById
       x-required-scopes: ["company:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
@@ -66,6 +75,34 @@ paths:
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "200": { $ref: "#/components/responses/CompanyResponse" }
+  /company/{company_id}/configuration/nfce/csc/validate:
+    post:
+      tags: [Configuration]
+      operationId: validateCompanyNfceCsc
+      description: Consulta os CSCs NFC-e ativos na SEFAZ para a empresa e compara com `csc_id`/`csc_token` canônicos informados ou já salvos. O retorno não expõe o token nem XML bruto da SEFAZ.
+      x-required-scopes: ["configuration:read"]
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/FiscalEnvironmentQuery"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fiscal_environment:
+                  type: string
+                  enum: [homologacao, producao]
+                csc_id:
+                  type: [string, "null"]
+                csc_token:
+                  type: [string, "null"]
+                nfce:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200": { $ref: "#/components/responses/NfceCscValidationResponse" }
   /company/{company_id}/nfse/provider-info:
     get:
       tags: [Configuration]
@@ -224,6 +261,28 @@ paths:
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Resource" }
+  /company/{company_id}/fiscal/utils/ibpt:
+    post:
+      tags: [Fiscal Catalog]
+      operationId: calculateCompanyIbptItem
+      description: Consulta alíquotas IBPT por UF/NCM/EX e calcula os tributos aproximados de um item.
+      x-required-scopes: ["fiscal_catalog:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /company/{company_id}/fiscal/utils/ibpt/coupon:
+    post:
+      tags: [Fiscal Catalog]
+      operationId: calculateCompanyIbptCoupon
+      description: Consulta alíquotas IBPT dos itens enviados e retorna totais aproximados do cupom.
+      x-required-scopes: ["fiscal_catalog:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/Resource" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /company/{company_id}/fiscal/tax-catalogs:
     get:
       tags: [Fiscal Catalog]
@@ -271,51 +330,82 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/Resource" }
-  /company/{company_id}/fiscal/emitter-profiles:
+  /companies/{company_id}/certificates:
+    get:
+      tags: [Configuration]
+      operationId: listCompaniesCertificates
+      x-required-scopes: ["certificates:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/CertificateCollectionResponse" }
+    post:
+      tags: [Configuration]
+      operationId: createCompaniesCertificate
+      description: Creates and stores a new certificate for the selected company.
+      x-required-scopes: ["certificates:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/CertificateResponse" }
+  /companies/{company_id}/fiscal/cfops:
+    get:
+      tags: [Fiscal Catalog]
+      operationId: listCompaniesCfops
+      x-required-scopes: ["fiscal_catalog:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+  /companies/{company_id}/fiscal/operation-profiles:
     get:
       tags: [Fiscal Operations]
-      operationId: listCompanyFiscalEmitterProfiles
-      x-required-scopes: ["fiscal:profiles:read"]
+      operationId: listCompaniesFiscalOperationProfiles
+      x-required-scopes: ["fiscal:operations:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
         "200": { $ref: "#/components/responses/Collection" }
     post:
       tags: [Fiscal Operations]
-      operationId: createCompanyFiscalEmitterProfile
-      description: Creates a fiscal emitter profile for the selected company.
-      x-required-scopes: ["fiscal:profiles:write"]
+      operationId: createCompaniesFiscalOperationProfile
+      description: Creates a fiscal operation profile for the selected company.
+      x-required-scopes: ["fiscal:operations:write"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/Resource" }
-  /company/{company_id}/fiscal/emitter-profiles/{profile_id}:
-    put:
-      tags: [Fiscal Operations]
-      operationId: updateCompanyFiscalEmitterProfile
-      description: Updates the selected fiscal emitter profile.
-      x-required-scopes: ["fiscal:profiles:write"]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: profile_id
-          in: path
-          required: true
-          schema: { type: string }
+  /companies/{company_id}/fiscal/rate-references:
+    get:
+      tags: [Fiscal Rates]
+      operationId: listCompaniesFiscalRateReferences
+      x-required-scopes: ["fiscal:rates:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Fiscal Rates]
+      operationId: createCompaniesFiscalRateReference
+      description: Creates a company-scoped fiscal rate reference override.
+      x-required-scopes: ["fiscal:rates:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
-    delete:
-      tags: [Fiscal Operations]
-      operationId: deleteCompanyFiscalEmitterProfile
-      description: Deletes the selected fiscal emitter profile.
-      x-required-scopes: ["fiscal:profiles:write"]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: profile_id
-          in: path
-          required: true
-          schema: { type: string }
+        "201": { $ref: "#/components/responses/Resource" }
+  /companies/{company_id}/fiscal/tax-rule-sets:
+    get:
+      tags: [Fiscal Rules]
+      operationId: listCompaniesFiscalTaxRuleSets
+      x-required-scopes: ["fiscal:rules:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       responses:
-        "200": { $ref: "#/components/responses/Resource" }
+        "200": { $ref: "#/components/responses/Collection" }
+    post:
+      tags: [Fiscal Rules]
+      operationId: createCompaniesFiscalTaxRuleSet
+      description: Creates a company-scoped fiscal tax rule set.
+      x-required-scopes: ["fiscal:rules:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "201": { $ref: "#/components/responses/Resource" }
   /company/{company_id}/fiscal/operation-profiles:
     get:
       tags: [Fiscal Operations]
@@ -356,51 +446,6 @@ paths:
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - name: profile_id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        "200": { $ref: "#/components/responses/Resource" }
-  /company/{company_id}/fiscal/profile-assignments:
-    get:
-      tags: [Fiscal Operations]
-      operationId: listCompanyFiscalProfileAssignments
-      x-required-scopes: ["fiscal:profiles:read"]
-      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
-      responses:
-        "200": { $ref: "#/components/responses/Collection" }
-    post:
-      tags: [Fiscal Operations]
-      operationId: createCompanyFiscalProfileAssignment
-      description: Creates a fiscal profile assignment for the selected company.
-      x-required-scopes: ["fiscal:profiles:write"]
-      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
-      responses:
-        "201": { $ref: "#/components/responses/Resource" }
-  /company/{company_id}/fiscal/profile-assignments/{assignment_id}:
-    put:
-      tags: [Fiscal Operations]
-      operationId: updateCompanyFiscalProfileAssignment
-      description: Updates the selected fiscal profile assignment.
-      x-required-scopes: ["fiscal:profiles:write"]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: assignment_id
-          in: path
-          required: true
-          schema: { type: string }
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
-      responses:
-        "200": { $ref: "#/components/responses/Resource" }
-    delete:
-      tags: [Fiscal Operations]
-      operationId: deleteCompanyFiscalProfileAssignment
-      description: Deletes the selected fiscal profile assignment.
-      x-required-scopes: ["fiscal:profiles:write"]
-      parameters:
-        - $ref: "#/components/parameters/CompanyId"
-        - name: assignment_id
           in: path
           required: true
           schema: { type: string }
@@ -522,7 +567,7 @@ paths:
     post:
       tags: [Documents]
       operationId: createCompanyDocumentByOperation
-      description: Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract. Requires `Idempotency-Key` and returns `202 Accepted` when the document was queued instead of completed inline.
+      description: Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract. Requires `Idempotency-Key` and returns `202 Accepted` when the document was queued. For `document_type=nfce`, clients may send `emission_mode=sync` or `synchronous=true` to transmit inline and receive the SEFAZ response in the same HTTP response.
       x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -530,6 +575,7 @@ paths:
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody: { $ref: "#/components/requestBodies/OperationDocumentSubmit" }
       responses:
+        "200": { $ref: "#/components/responses/DocumentAcceptedResponse" }
         "202": { $ref: "#/components/responses/DocumentAcceptedResponse" }
   /company/{company_id}/documents/{external_id}:
     get:
@@ -634,25 +680,27 @@ paths:
     post:
       tags: [Documents]
       operationId: createCompanyDirectDocument
-      description: Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. Direct payloads are normalized to a canonical internal contract before transmission. Legacy aliases are still accepted temporarily on direct routes and are adapted with internal compatibility warnings/audit metadata. When `document_type=nfse` and the resolved provider is `nfse_nacional`/`manaus`, prefer the canonical PT-BR root contract in `payload`; incompatible payloads that cannot be normalized still fail with `422`.
+      description: Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. For `document_type=nfce`, clients may send `emission_mode=sync` or `synchronous=true` to transmit inline and receive the SEFAZ response in the same HTTP response. Direct payloads are normalized to a canonical internal contract before transmission. Legacy aliases are still accepted temporarily on direct routes and are adapted with internal compatibility warnings/audit metadata. When `document_type=nfse` and the resolved provider is `nfse_nacional`/`manaus`, prefer the canonical PT-BR root contract in `payload`; incompatible payloads that cannot be normalized still fail with `422`.
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody: { $ref: "#/components/requestBodies/DocumentSubmit" }
       responses:
+        "200": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
   /company/{company_id}/direct/documents/xml:
     post:
       tags: [Documents]
       operationId: transmitCompanyDirectXml
-      description: Queues a direct XML transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the XML was queued for processing.
+      description: Queues a direct XML transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the XML was queued for processing. For `document_type=nfce`, clients may send `emission_mode=sync` or `synchronous=true` to transmit inline and receive the SEFAZ response in the same HTTP response.
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
+        "200": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
   /company/{company_id}/consulta-notas:
     get:
@@ -1080,11 +1128,6 @@ components:
       schema:
         type: string
         enum: [homologacao, producao, production, prod]
-    CnpjQuery:
-      name: cnpj
-      in: query
-      required: false
-      schema: { type: string, maxLength: 20 }
   requestBodies:
     JsonObject:
       required: true
@@ -1110,6 +1153,7 @@ components:
               value:
                 external_id: "pdv-0001"
                 document_type: "nfce"
+                emission_mode: "sync"
                 payload:
                   identificacao:
                     cUF: 42
@@ -1514,6 +1558,22 @@ components:
                 $ref: "#/components/schemas/DocumentDetail"
               meta:
                 $ref: "#/components/schemas/IntegrationResponseMeta"
+    NfceCscValidationResponse:
+      description: Resultado da validação de CSC NFC-e contra a consulta administrativa da SEFAZ.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ok:
+                type: boolean
+              data:
+                $ref: "#/components/schemas/NfceCscValidation"
+              error:
+                type: [string, "null"]
+              metadata:
+                type: object
+                additionalProperties: true
     DocumentSnapshotResponse:
       description: Document snapshot response.
       content:
@@ -1607,6 +1667,13 @@ components:
           type: string
           enum: [nfe, nfce, nfse]
         municipio: { type: string }
+        emission_mode:
+          type: string
+          enum: [queued, sync, synchronous]
+          description: Use `sync` only with `document_type=nfce` to transmit inline and return the SEFAZ response without queueing the emission job.
+        synchronous:
+          type: boolean
+          description: Boolean alias for `emission_mode=sync`, available only for `document_type=nfce`.
         payload:
           type: object
           additionalProperties: true
@@ -1624,6 +1691,13 @@ components:
           type: string
           enum: [nfe, nfce, nfse]
         municipio: { type: string }
+        emission_mode:
+          type: string
+          enum: [queued, sync, synchronous]
+          description: Use `sync` only with `document_type=nfce` to transmit inline and return the SEFAZ response without queueing the emission job.
+        synchronous:
+          type: boolean
+          description: Boolean alias for `emission_mode=sync`, available only for `document_type=nfce`.
         snapshot:
           $ref: "#/components/schemas/OperationDocumentSnapshot"
         metadata:
@@ -1671,6 +1745,39 @@ components:
           items: { type: string }
         form_policy:
           $ref: "#/components/schemas/NfseFormPolicy"
+    NfceCscValidation:
+      type: object
+      properties:
+        environment:
+          type: string
+          enum: [homologacao, producao]
+        configured:
+          type: object
+          properties:
+            csc_id: { type: boolean }
+            csc_token: { type: boolean }
+        csc_id:
+          type: [string, "null"]
+          description: CSC ID comparado. O token nunca é retornado.
+        csc_id_active:
+          type: [boolean, "null"]
+          description: True quando o CSC ID informado aparece entre os CSCs ativos retornados pela SEFAZ; null quando não houve ID informado ou retorno parseável.
+        csc_token_matches:
+          type: [boolean, "null"]
+          description: True quando a SEFAZ retorna token para o CSC ID e ele confere; null quando a SEFAZ não retorna token.
+        valid:
+          type: [boolean, "null"]
+        registered_csc_ids:
+          type: array
+          items: { type: string }
+        sefaz:
+          type: object
+          properties:
+            ok: { type: boolean }
+            cstat: { type: [string, "null"] }
+            xmotivo: { type: [string, "null"] }
+        message:
+          type: string
     NfseFormPolicy:
       type: object
       properties:
@@ -1866,17 +1973,11 @@ components:
         is_presumed_profit: { type: boolean }
         inscricao_estadual: { type: string }
         inscricao_municipal: { type: string }
+        csc_id: { type: string }
+        csc_token: { type: string }
         logo_url: { type: [string, "null"] }
         lote_prefixo: { type: string }
         lote_sincrono: { type: boolean }
-        default_fiscal_emitter_profile_id: { type: [string, "null"] }
-        default_fiscal_emitter_profile:
-          oneOf:
-            - type: "null"
-            - type: object
-              properties:
-                id: { type: string }
-                name: { type: string }
         layout_cupom:
           oneOf:
             - type: "null"
@@ -2013,6 +2114,8 @@ components:
         error_message: { type: [string, "null"] }
         next_attempt_at: { type: [string, "null"] }
         delivered_at: { type: [string, "null"] }
+        emission_requested_at: { type: [string, "null"] }
+        emission_to_webhook_ms: { type: [integer, "null"] }
         created_at: { type: [string, "null"] }
     FiscalDocumentWebhookDocument:
       type: object
@@ -2087,6 +2190,16 @@ components:
         fiscal_snapshot_id: { type: [integer, string, "null"] }
         resolution_status: { type: [string, "null"] }
         idempotent_replay: { type: boolean }
+        operation_transmission_synchronous:
+          type: boolean
+          description: True when an NFCe operation-code request was transmitted inline instead of queueing the emission job.
+        sefaz_response:
+          type: object
+          additionalProperties: true
+          description: Raw normalized provider response returned only for synchronous NFCe transmissions.
+        xml:
+          type: [string, "null"]
+          description: Canonical XML returned only when available for synchronous NFCe transmissions.
         created_at: { type: [string, "null"] }
         updated_at: { type: [string, "null"] }
         legacy_aliases:
@@ -2120,6 +2233,16 @@ components:
           properties:
             direct_transmission: { type: boolean }
             direct_transmission_mode: { type: string }
+            direct_transmission_synchronous:
+              type: boolean
+              description: True when an NFCe was transmitted inline instead of queueing the emission job.
+            sefaz_response:
+              type: object
+              additionalProperties: true
+              description: Raw normalized provider response returned only for synchronous NFCe transmissions.
+            xml:
+              type: [string, "null"]
+              description: Canonical XML returned only when available for synchronous NFCe transmissions.
             numero_dps:
               type: [string, "null"]
               description: Número da DPS gerado para NFS-e.

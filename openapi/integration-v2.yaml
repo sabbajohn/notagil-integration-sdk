@@ -1,0 +1,2548 @@
+openapi: 3.1.0
+info:
+  title: Fiscal Platform API - Integracoes v2
+  version: "2.0.0"
+  description: Superficie estrita para emissao direta com payload fiscal publico em portugues e snake_case. A empresa e resolvida pelo token de integracao.
+servers:
+  - url: /api/v2/integrations
+security:
+  - bearerAuth: []
+paths:
+  /contratos/{tipo_documento}:
+    get:
+      tags: [Contratos]
+      operationId: obterContratoFiscalV2
+      description: Retorna discovery do contrato FiscalCanonicalPayloadV2 por tipo de documento. Todos os campos retornados usam portugues e snake_case.
+      x-required-scopes: ["configuration:read", "documents:direct"]
+      parameters:
+        - $ref: "#/components/parameters/TipoDocumento"
+      responses:
+        "200": { $ref: "#/components/responses/ContractInfoResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /direto/documentos:
+    post:
+      tags: [Documents]
+      operationId: criarDocumentoDiretoV2
+      description: Requer Idempotency-Key. Enfileira uma emissao direta usando FiscalCanonicalPayloadV2 estrito. O payload aceita somente campos publicos em portugues, snake_case, sem aliases legados e sem nomes de XML ou provider.
+      x-required-scopes: ["documents:direct"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DirectDocumentRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
+        "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /contracts/{document_type}:
+    get:
+      tags: [Contratos]
+      operationId: getFiscalContractV2
+      deprecated: true
+      description: Alias compatível de /contratos/{tipo_documento}. A resposta ja usa campos em portugues.
+      x-required-scopes: ["configuration:read", "documents:direct"]
+      parameters:
+        - $ref: "#/components/parameters/DocumentType"
+      responses:
+        "200": { $ref: "#/components/responses/ContractInfoResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfse/informacoes-provedor:
+    get:
+      tags: [Contratos]
+      operationId: obterInformacoesProvedorNfseV2
+      description: Retorna informacoes do provedor NFSe no contrato publico v2. fiscal_environment, provider_key, form_policy e camelCase sao rejeitados.
+      x-required-scopes: ["configuration:read"]
+      parameters:
+        - name: municipio
+          in: query
+          required: false
+          schema: { type: string, maxLength: 120 }
+        - $ref: "#/components/parameters/AmbienteFiscal"
+      responses:
+        "200": { $ref: "#/components/responses/NfseProviderInfoResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfce/validar-csc:
+    post:
+      tags: [Contratos]
+      operationId: validarCscNfceV2
+      description: Valida CSC da NFCe usando campos publicos em portugues. fiscal_environment, environment, csc_id, csc_token e camelCase sao rejeitados.
+      x-required-scopes: ["configuration:read"]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidarCscNfceRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/ValidarCscNfceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /configuracao:
+    get:
+      tags: [Configuracao]
+      operationId: obterConfiguracaoEmpresaV2
+      description: Retorna a configuracao da empresa vinculada ao token. Nao informe company_id na URL.
+      x-required-scopes: ["configuration:read"]
+      responses:
+        "200": { $ref: "#/components/responses/CompanyConfigurationResponse" }
+    put:
+      tags: [Configuracao]
+      operationId: atualizarConfiguracaoEmpresaV2
+      description: Atualiza a configuracao usando somente campos publicos em portugues e snake_case. company_size, provider_key, csc_id e camelCase sao rejeitados.
+      x-required-scopes: ["configuration:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AtualizarConfiguracaoEmpresaV2"
+      responses:
+        "200": { $ref: "#/components/responses/CompanyConfigurationResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /empresa:
+    get:
+      tags: [Empresa]
+      operationId: obterEmpresaVinculadaV2
+      description: Retorna a empresa vinculada 1:1 ao token de integracao. empresa_id, company_id e camelCase sao rejeitados.
+      x-required-scopes: ["company:read"]
+      responses:
+        "200": { $ref: "#/components/responses/CompanyConfigurationResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /certificados:
+    get:
+      tags: [Certificados]
+      operationId: listarCertificadosV2
+      description: Lista certificados da empresa vinculada ao token.
+      x-required-scopes: ["certificates:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Certificados]
+      operationId: criarCertificadoV2
+      description: Cria certificado usando nome, nome_arquivo, arquivo_base64 e senha. name, file_name, file_base64 e camelCase sao rejeitados.
+      x-required-scopes: ["certificates:write"]
+      responses:
+        "201": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /certificados/{certificado}:
+    patch:
+      tags: [Certificados]
+      operationId: atualizarCertificadoV2
+      description: Atualiza metadados do certificado da empresa vinculada ao token.
+      x-required-scopes: ["certificates:write"]
+      parameters:
+        - name: certificado
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /certificados/{certificado}/validar:
+    post:
+      tags: [Certificados]
+      operationId: validarCertificadoV2
+      description: Valida o certificado da empresa vinculada ao token.
+      x-required-scopes: ["certificates:write"]
+      parameters:
+        - name: certificado
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /prontidao:
+    get:
+      tags: [Implantacao]
+      operationId: obterProntidaoV2
+      description: Retorna prontidao operacional da empresa vinculada ao token.
+      x-required-scopes: ["onboarding:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /implantacao/importacoes:
+    get:
+      tags: [Implantacao]
+      operationId: listarImportacoesImplantacaoV2
+      description: Lista importacoes de implantacao da empresa vinculada ao token.
+      x-required-scopes: ["onboarding:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+    post:
+      tags: [Implantacao]
+      operationId: criarImportacaoImplantacaoV2
+      description: Cria importacao de implantacao usando campos publicos em portugues.
+      x-required-scopes: ["onboarding:write"]
+      responses:
+        "202": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /implantacao/importacoes/{importacao}:
+    get:
+      tags: [Implantacao]
+      operationId: obterImportacaoImplantacaoV2
+      description: Retorna importacao de implantacao da empresa vinculada ao token.
+      x-required-scopes: ["onboarding:read"]
+      parameters:
+        - name: importacao
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /implantacao/importacoes/{importacao}/revisar:
+    post:
+      tags: [Implantacao]
+      operationId: revisarImportacaoImplantacaoV2
+      description: Aplica revisao em importacao de implantacao usando campos publicos em portugues.
+      x-required-scopes: ["onboarding:write"]
+      parameters:
+        - name: importacao
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /implantacao/importacoes/{importacao}/promover:
+    post:
+      tags: [Implantacao]
+      operationId: promoverImportacaoImplantacaoV2
+      description: Promove importacao revisada para cadastros operacionais da empresa vinculada ao token.
+      x-required-scopes: ["onboarding:write"]
+      parameters:
+        - name: importacao
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/opcoes:
+    get:
+      tags: [Catalogos Fiscais]
+      operationId: listarOpcoesFiscaisV2
+      description: Lista opcoes fiscais no vocabulario publico v2.
+      x-required-scopes: ["fiscal_catalog:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+  /fiscal/cfops:
+    get:
+      tags: [Catalogos Fiscais]
+      operationId: listarCfopsV2
+      description: Lista CFOPs usando codigo, descricao e demais campos publicos em portugues.
+      x-required-scopes: ["fiscal_catalog:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+  /fiscal/utilitarios/municipios:
+    get:
+      tags: [Catalogos Fiscais]
+      operationId: listarMunicipiosV2
+      description: Pesquisa municipios por codigo ou termo em portugues.
+      x-required-scopes: ["fiscal_catalog:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+  /fiscal/utilitarios/ncms:
+    get:
+      tags: [Catalogos Fiscais]
+      operationId: listarNcmsV2
+      description: Pesquisa NCMs por codigo ou termo em portugues.
+      x-required-scopes: ["fiscal_catalog:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+  /fiscal/utilitarios/ibpt:
+    post:
+      tags: [Catalogos Fiscais]
+      operationId: consultarIbptItemV2
+      description: Consulta aliquotas IBPT por UF/NCM/EX e calcula tributos aproximados de um item usando somente campos publicos em portugues e snake_case.
+      x-required-scopes: ["fiscal_catalog:read"]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/utilitarios/ibpt/cupom:
+    post:
+      tags: [Catalogos Fiscais]
+      operationId: consultarIbptCupomV2
+      description: Consulta aliquotas IBPT para os itens enviados e retorna totais aproximados do cupom.
+      x-required-scopes: ["fiscal_catalog:read"]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/catalogos-tributarios:
+    get:
+      tags: [Catalogos Fiscais]
+      operationId: listarCatalogosTributariosV2
+      description: Lista catalogos tributarios aplicaveis a empresa vinculada ao token.
+      x-required-scopes: ["fiscal_catalog:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+  /fiscal/catalogos-tributarios/{catalogo}/situacoes:
+    get:
+      tags: [Catalogos Fiscais]
+      operationId: listarSituacoesTributariasV2
+      description: Lista situacoes tributarias de um catalogo.
+      x-required-scopes: ["fiscal_catalog:read"]
+      parameters:
+        - name: catalogo
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/situacoes-tributarias/{situacao}/classificacoes:
+    get:
+      tags: [Catalogos Fiscais]
+      operationId: listarClassificacoesTributariasV2
+      description: Lista classificacoes tributarias de uma situacao.
+      x-required-scopes: ["fiscal_catalog:read"]
+      parameters:
+        - name: situacao
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/situacoes-tributarias/{situacao}/modelo-consequencia:
+    post:
+      tags: [Catalogos Fiscais]
+      operationId: gerarModeloConsequenciaTributariaV2
+      description: Gera modelo de consequencia tributaria usando codigo_classificacao e campos publicos em portugues.
+      x-required-scopes: ["fiscal_catalog:read"]
+      parameters:
+        - name: situacao
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /direto/documentos/xml:
+    post:
+      tags: [Documents]
+      operationId: criarDocumentoDiretoXmlV2
+      description: Enfileira XML fiscal em base64 usando tipo_documento e ambiente_fiscal. document_type, fiscal_environment e camelCase sao rejeitados.
+      x-required-scopes: ["documents:direct"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /consulta-notas:
+    get:
+      tags: [Documents]
+      operationId: listarConsultaNotasV2
+      description: Lista documentos por origem usando a empresa vinculada ao token.
+      x-required-scopes: ["documents:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /consulta-notas/consultar:
+    post:
+      tags: [Documents]
+      operationId: consultarNotasV2
+      description: Consulta documento fiscal por origem e identificador usando campos publicos em portugues.
+      x-required-scopes: ["documents:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /consulta-notas/{origem}/{documento}/xml:
+    get:
+      tags: [Documents]
+      operationId: baixarXmlConsultaNotasV2
+      description: Baixa XML de documento consultado sem parametro de empresa.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - name: origem
+          in: path
+          required: true
+          schema: { type: string }
+        - name: documento
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: XML do documento fiscal. }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /consulta-notas/{origem}/{documento}/pdf:
+    get:
+      tags: [Documents]
+      operationId: baixarPdfConsultaNotasV2
+      description: Baixa PDF de documento consultado sem parametro de empresa.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - name: origem
+          in: path
+          required: true
+          schema: { type: string }
+        - name: documento
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: PDF do documento fiscal. }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /nfe/entrada:
+    get:
+      tags: [NFe Entrada]
+      operationId: listarNfeEntradaV2
+      description: Lista NFes de entrada da empresa vinculada ao token.
+      x-required-scopes: ["documents:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+  /nfe/entrada/sincronizar:
+    post:
+      tags: [NFe Entrada]
+      operationId: sincronizarNfeEntradaV2
+      description: Solicita sincronizacao de NFes de entrada usando ambiente_fiscal opcional.
+      x-required-scopes: ["documents:read"]
+      responses:
+        "202": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfe/entrada/{documento}/manifestar:
+    post:
+      tags: [NFe Entrada]
+      operationId: manifestarNfeEntradaV2
+      description: Manifesta NFe de entrada usando acao_manifestacao em portugues.
+      x-required-scopes: ["documents:write"]
+      parameters:
+        - name: documento
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfe/entrada/{documento}/baixar-xml:
+    post:
+      tags: [NFe Entrada]
+      operationId: baixarXmlNfeEntradaV2
+      description: Solicita download do XML de NFe de entrada.
+      x-required-scopes: ["documents:write"]
+      parameters:
+        - name: documento
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfe/entrada/{documento}/escrituracao:
+    post:
+      tags: [NFe Entrada]
+      operationId: escriturarNfeEntradaV2
+      description: Gera escrituracao da NFe de entrada usando campos publicos em portugues.
+      x-required-scopes: ["documents:write"]
+      parameters:
+        - name: documento
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfe/entrada/{documento}/escrituracao/confirmar:
+    post:
+      tags: [NFe Entrada]
+      operationId: confirmarEscrituracaoNfeEntradaV2
+      description: Confirma escrituracao de NFe de entrada.
+      x-required-scopes: ["documents:write"]
+      parameters:
+        - name: documento
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /produtos:
+    get:
+      tags: [Produtos]
+      operationId: listarProdutosV2
+      description: Lista produtos da empresa vinculada ao token.
+      x-required-scopes: ["products:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Produtos]
+      operationId: criarProdutoV2
+      description: Cria produto com campos publicos em portugues. origin_code e camelCase sao rejeitados.
+      x-required-scopes: ["products:write"]
+      responses:
+        "201": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /produtos/{produto}:
+    get:
+      tags: [Produtos]
+      operationId: obterProdutoV2
+      description: Retorna produto da empresa vinculada ao token.
+      x-required-scopes: ["products:read"]
+      parameters:
+        - name: produto
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+    put:
+      tags: [Produtos]
+      operationId: atualizarProdutoV2
+      description: Atualiza produto usando campos publicos em portugues.
+      x-required-scopes: ["products:write"]
+      parameters:
+        - name: produto
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Produtos]
+      operationId: excluirProdutoV2
+      description: Exclui produto da empresa vinculada ao token.
+      x-required-scopes: ["products:delete"]
+      parameters:
+        - name: produto
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /tomadores:
+    get:
+      tags: [Tomadores]
+      operationId: listarTomadoresV2
+      description: Lista tomadores da empresa vinculada ao token.
+      x-required-scopes: ["takers:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Tomadores]
+      operationId: criarTomadorV2
+      description: Cria tomador com campos publicos em portugues. person_type e camelCase sao rejeitados.
+      x-required-scopes: ["takers:write"]
+      responses:
+        "201": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /tomadores/{tomador}:
+    get:
+      tags: [Tomadores]
+      operationId: obterTomadorV2
+      description: Retorna tomador da empresa vinculada ao token.
+      x-required-scopes: ["takers:read"]
+      parameters:
+        - name: tomador
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+    put:
+      tags: [Tomadores]
+      operationId: atualizarTomadorV2
+      description: Atualiza tomador usando campos publicos em portugues.
+      x-required-scopes: ["takers:write"]
+      parameters:
+        - name: tomador
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Tomadores]
+      operationId: excluirTomadorV2
+      description: Exclui tomador da empresa vinculada ao token.
+      x-required-scopes: ["takers:delete"]
+      parameters:
+        - name: tomador
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /metricas:
+    get:
+      tags: [Metricas]
+      operationId: obterMetricasV2
+      description: Retorna metricas da empresa vinculada ao token. empresa_id e company_id sao rejeitados.
+      x-required-scopes: ["metrics:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /cobranca:
+    get:
+      tags: [Cobranca]
+      operationId: obterCobrancaV2
+      description: Retorna cobranca da conta vinculada ao token. empresa_id, company_id e account_id sao rejeitados.
+      x-required-scopes: ["billing:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/perfis-operacao:
+    get:
+      tags: [Parametros Fiscais]
+      operationId: listarPerfisOperacaoV2
+      description: Lista perfis de operacao fiscal resolvidos para a empresa vinculada ao token. visibility, code, document_scopes e camelCase sao rejeitados.
+      x-required-scopes: ["fiscal:operations:read"]
+      parameters:
+        - name: visibilidade
+          in: query
+          schema:
+            type: string
+            enum: [catalogo, resolvido, bruto]
+            default: catalogo
+      responses:
+        "200": { $ref: "#/components/responses/PerfilOperacaoListResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Parametros Fiscais]
+      operationId: criarPerfilOperacaoV2
+      description: Cria perfil de operacao fiscal usando somente campos publicos em portugues e snake_case.
+      x-required-scopes: ["fiscal:operations:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PerfilOperacaoFiscalRequestV2"
+      responses:
+        "201": { $ref: "#/components/responses/PerfilOperacaoResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/perfis-operacao/{perfil}:
+    put:
+      tags: [Parametros Fiscais]
+      operationId: atualizarPerfilOperacaoV2
+      description: Atualiza perfil de operacao fiscal da empresa vinculada ao token.
+      x-required-scopes: ["fiscal:operations:write"]
+      parameters:
+        - $ref: "#/components/parameters/PerfilOperacaoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PerfilOperacaoFiscalRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/PerfilOperacaoResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Parametros Fiscais]
+      operationId: excluirPerfilOperacaoV2
+      description: Remove perfil da empresa ou cria sobrescrita inativa quando o perfil e padrao global.
+      x-required-scopes: ["fiscal:operations:write"]
+      parameters:
+        - $ref: "#/components/parameters/PerfilOperacaoId"
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/referencias-aliquotas:
+    get:
+      tags: [Parametros Fiscais]
+      operationId: listarReferenciasAliquotasV2
+      description: Lista referencias de aliquotas aplicaveis a empresa vinculada ao token. tax_type, municipality_ibge, rate e camelCase sao rejeitados.
+      x-required-scopes: ["fiscal:rates:read"]
+      parameters:
+        - name: tributo
+          in: query
+          schema: { type: string, enum: [icms, iss, ibs, cbs, pis, cofins, ipi, is] }
+        - name: codigo_situacao_tributaria
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: codigo_classificacao_tributaria
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: codigo_municipio
+          in: query
+          schema: { type: string, maxLength: 20 }
+        - name: uf
+          in: query
+          schema: { type: string, maxLength: 7 }
+      responses:
+        "200": { $ref: "#/components/responses/ReferenciaAliquotaListResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Parametros Fiscais]
+      operationId: criarReferenciaAliquotaV2
+      description: Cria referencia de aliquota usando somente campos publicos em portugues e snake_case.
+      x-required-scopes: ["fiscal:rates:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferenciaAliquotaFiscalRequestV2"
+      responses:
+        "201": { $ref: "#/components/responses/ReferenciaAliquotaResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/referencias-aliquotas/{referencia}:
+    put:
+      tags: [Parametros Fiscais]
+      operationId: atualizarReferenciaAliquotaV2
+      description: Atualiza referencia de aliquota da empresa vinculada ao token. Padroes globais nao sao editaveis diretamente.
+      x-required-scopes: ["fiscal:rates:write"]
+      parameters:
+        - $ref: "#/components/parameters/ReferenciaAliquotaId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferenciaAliquotaFiscalRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/ReferenciaAliquotaResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Parametros Fiscais]
+      operationId: excluirReferenciaAliquotaV2
+      description: Remove referencia de aliquota da empresa vinculada ao token.
+      x-required-scopes: ["fiscal:rates:write"]
+      parameters:
+        - $ref: "#/components/parameters/ReferenciaAliquotaId"
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/conjuntos-regras-tributarias:
+    get:
+      tags: [Parametros Fiscais]
+      operationId: listarConjuntosRegrasTributariasV2
+      description: Lista conjuntos de regras tributarias visiveis para a empresa vinculada ao token. activation, results, tax_type e camelCase sao rejeitados.
+      x-required-scopes: ["fiscal:rules:read"]
+      responses:
+        "200": { $ref: "#/components/responses/ConjuntoRegraTributariaListResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Parametros Fiscais]
+      operationId: criarConjuntoRegraTributariaV2
+      description: Cria conjunto atomico de regras tributarias usando ativacao e resultados em portugues.
+      x-required-scopes: ["fiscal:rules:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConjuntoRegraTributariaRequestV2"
+      responses:
+        "201": { $ref: "#/components/responses/ConjuntoRegraTributariaResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/conjuntos-regras-tributarias/{conjunto_regra}:
+    put:
+      tags: [Parametros Fiscais]
+      operationId: atualizarConjuntoRegraTributariaV2
+      description: Atualiza conjunto de regras tributarias da empresa vinculada ao token.
+      x-required-scopes: ["fiscal:rules:write"]
+      parameters:
+        - $ref: "#/components/parameters/ConjuntoRegraId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConjuntoRegraTributariaRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/ConjuntoRegraTributariaResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Parametros Fiscais]
+      operationId: excluirConjuntoRegraTributariaV2
+      description: Remove conjunto da empresa ou cria sobrescrita inativa quando o conjunto e padrao global.
+      x-required-scopes: ["fiscal:rules:write"]
+      parameters:
+        - $ref: "#/components/parameters/ConjuntoRegraId"
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /operacoes/{codigo_operacao}/previsualizar:
+    post:
+      tags: [Emissoes]
+      operationId: previsualizarEmissaoPorOperacaoV2
+      description: Resolve a operacao fiscal pelo codigo e retorna a pre-visualizacao do retrato para a empresa vinculada ao token. snapshot, emission_mode, synchronous e camelCase no envelope sao rejeitados.
+      x-required-scopes: ["documents:write"]
+      parameters:
+        - $ref: "#/components/parameters/CodigoOperacao"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperationPreviewRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/OperationPreviewResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /operacoes/{codigo_operacao}/emitir:
+    post:
+      tags: [Emissoes]
+      operationId: emitirDocumentoPorOperacaoV2
+      description: Requer Idempotency-Key. Enfileira ou emite NFCe de forma sincrona a partir de um retrato operacional e do codigo da operacao fiscal.
+      x-required-scopes: ["documents:write"]
+      parameters:
+        - $ref: "#/components/parameters/CodigoOperacao"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperationDocumentRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/OperationDocumentAcceptedResponse" }
+        "202": { $ref: "#/components/responses/OperationDocumentAcceptedResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /agendamentos:
+    get:
+      tags: [Agendamentos]
+      operationId: listarAgendamentosV2
+      description: Lista agendamentos da empresa vinculada ao token.
+      x-required-scopes: ["schedules:read"]
+      responses:
+        "200": { $ref: "#/components/responses/ScheduleCollectionResponse" }
+    post:
+      tags: [Agendamentos]
+      operationId: criarAgendamentoV2
+      description: Cria agendamento usando campos publicos em portugues. next_execution, active e camelCase sao rejeitados.
+      x-required-scopes: ["schedules:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgendamentoRequestV2"
+      responses:
+        "201": { $ref: "#/components/responses/ScheduleResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /agendamentos/{agendamento}:
+    put:
+      tags: [Agendamentos]
+      operationId: atualizarAgendamentoV2
+      x-required-scopes: ["schedules:write"]
+      parameters:
+        - $ref: "#/components/parameters/AgendamentoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgendamentoRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/ScheduleResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Agendamentos]
+      operationId: excluirAgendamentoV2
+      x-required-scopes: ["schedules:delete"]
+      parameters:
+        - $ref: "#/components/parameters/AgendamentoId"
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /notificacoes-web:
+    get:
+      tags: [Webhooks]
+      operationId: listarNotificacoesWebV2
+      description: Lista webhooks da chave de integracao. A empresa e implicita pelo token.
+      x-required-scopes: ["webhooks:read"]
+      responses:
+        "200": { $ref: "#/components/responses/WebhookCollectionResponse" }
+    post:
+      tags: [Webhooks]
+      operationId: criarNotificacaoWebV2
+      description: Cria webhook usando descricao, situacao, ambiente e eventos em portugues. description, status, environment, events e camelCase sao rejeitados.
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookRequestV2"
+      responses:
+        "201": { $ref: "#/components/responses/WebhookResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /notificacoes-web/{notificacao_web}:
+    put:
+      tags: [Webhooks]
+      operationId: atualizarNotificacaoWebV2
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
+      parameters:
+        - $ref: "#/components/parameters/NotificacaoWebId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/WebhookResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Webhooks]
+      operationId: excluirNotificacaoWebV2
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
+      parameters:
+        - $ref: "#/components/parameters/NotificacaoWebId"
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /notificacoes-web/{notificacao_web}/rotacionar-segredo:
+    post:
+      tags: [Webhooks]
+      operationId: rotacionarSegredoNotificacaoWebV2
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
+      parameters:
+        - $ref: "#/components/parameters/NotificacaoWebId"
+      responses:
+        "200": { $ref: "#/components/responses/WebhookResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /notificacoes-web/{notificacao_web}/testar:
+    post:
+      tags: [Webhooks]
+      operationId: testarNotificacaoWebV2
+      x-required-scopes: ["webhooks:write", "webhooks:manage"]
+      parameters:
+        - $ref: "#/components/parameters/NotificacaoWebId"
+      responses:
+        "200": { $ref: "#/components/responses/WebhookDeliveryResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /notificacoes-web/{notificacao_web}/entregas:
+    get:
+      tags: [Webhooks]
+      operationId: listarEntregasNotificacaoWebV2
+      x-required-scopes: ["webhooks:read"]
+      parameters:
+        - $ref: "#/components/parameters/NotificacaoWebId"
+      responses:
+        "200": { $ref: "#/components/responses/WebhookDeliveryCollectionResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos:
+    get:
+      tags: [Documents]
+      operationId: listarDocumentosV2
+      description: Lista documentos usando filtros publicos em portugues. Aliases como document_type, operational_status, created_from e per_page sao rejeitados na v2.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - name: external_id
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: tipo_documento
+          in: query
+          schema: { type: string, enum: [nfe, nfce, nfse] }
+        - name: status_operacional
+          in: query
+          schema: { type: string, maxLength: 40 }
+        - name: status_fiscal
+          in: query
+          schema: { type: string, maxLength: 40 }
+        - name: criado_de
+          in: query
+          schema: { type: string, format: date }
+        - name: criado_ate
+          in: query
+          schema: { type: string, format: date }
+        - name: por_pagina
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+      responses:
+        "200": { $ref: "#/components/responses/DocumentListResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}:
+    get:
+      tags: [Documents]
+      operationId: obterDocumentoV2
+      description: Consulta um documento pelo external_id do envelope publico.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+      responses:
+        "200": { $ref: "#/components/responses/DocumentDetailResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/xml:
+    get:
+      tags: [Documents]
+      operationId: baixarXmlDocumentoV2
+      description: Baixa o XML do documento. Use ambiente_fiscal como query param quando precisar selecionar ambiente.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+        - $ref: "#/components/parameters/AmbienteFiscal"
+      responses:
+        "200":
+          description: XML do documento.
+          content:
+            application/xml:
+              schema: { type: string }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/pdf:
+    get:
+      tags: [Documents]
+      operationId: baixarPdfDocumentoV2
+      description: Baixa o PDF do documento. Use ambiente_fiscal como query param quando precisar selecionar ambiente.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+        - $ref: "#/components/parameters/AmbienteFiscal"
+      responses:
+        "200":
+          description: PDF do documento.
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/retrato:
+    get:
+      tags: [Documents]
+      operationId: obterRetratoDocumentoV2
+      description: Retorna o retrato fiscal persistido do documento.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+        - $ref: "#/components/parameters/AmbienteFiscal"
+      responses:
+        "200": { $ref: "#/components/responses/RetratoDocumentoResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/consultar:
+    post:
+      tags: [Documents]
+      operationId: consultarDocumentoV2
+      description: Consulta o documento usando campos publicos em portugues. force_remote, fiscal_environment, document_key e camelCase sao rejeitados.
+      x-required-scopes: ["documents:read"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultarDocumentoRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/ConsultarDocumentoResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/cancelar:
+    post:
+      tags: [Documents]
+      operationId: cancelarDocumentoV2
+      description: Cancela documento autorizado usando justificativa em portugues. reason, protocol e document_key sao rejeitados.
+      x-required-scopes: ["documents:cancel"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelarDocumentoRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/DocumentOperationResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/corrigir:
+    post:
+      tags: [Documents]
+      operationId: corrigirDocumentoV2
+      description: Emite carta de correcao usando correcao e sequencia. correction e sequence sao rejeitados.
+      x-required-scopes: ["documents:correct"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CorrigirDocumentoRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/DocumentOperationResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    ExternalId:
+      name: external_id
+      in: path
+      required: true
+      schema: { type: string, maxLength: 120 }
+      description: Identificador externo informado no envelope de criacao.
+    DocumentType:
+      name: document_type
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [nfe, nfce, nfse]
+    TipoDocumento:
+      name: tipo_documento
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [nfe, nfce, nfse]
+    AmbienteFiscal:
+      name: ambiente_fiscal
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [homologacao, producao]
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, maxLength: 120 }
+      description: Chave idempotente obrigatoria para emissao direta.
+    PerfilOperacaoId:
+      name: perfil
+      in: path
+      required: true
+      schema: { type: integer }
+    ReferenciaAliquotaId:
+      name: referencia
+      in: path
+      required: true
+      schema: { type: integer }
+    ConjuntoRegraId:
+      name: conjunto_regra
+      in: path
+      required: true
+      schema: { type: integer }
+    CodigoOperacao:
+      name: codigo_operacao
+      in: path
+      required: true
+      schema: { type: string, maxLength: 80 }
+      description: Codigo publico do perfil de operacao fiscal.
+    AgendamentoId:
+      name: agendamento
+      in: path
+      required: true
+      schema: { type: string }
+    NotificacaoWebId:
+      name: notificacao_web
+      in: path
+      required: true
+      schema: { type: integer }
+  requestBodies:
+    JsonObject:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+  responses:
+    DirectDocumentAcceptedResponse:
+      description: Documento aceito ou replay idempotente.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DirectDocumentAcceptedEnvelope"
+    ContractInfoResponse:
+      description: Discovery do contrato fiscal v2.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ContractInfoEnvelope"
+    NfseProviderInfoResponse:
+      description: Informacoes do provedor NFSe no vocabulario publico v2.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InformacoesProvedorNfseEnvelope"
+    ValidarCscNfceResponse:
+      description: Resultado da validacao de CSC da NFCe.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidacaoCscNfceEnvelope"
+    CompanyConfigurationResponse:
+      description: Configuracao da empresa vinculada ao token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConfiguracaoEmpresaEnvelope"
+    OperationPreviewResponse:
+      description: Pre-visualizacao da emissao por operacao.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/OperationPreviewEnvelope"
+    OperationDocumentAcceptedResponse:
+      description: Documento aceito, emitido ou replay idempotente por operacao.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/OperationDocumentAcceptedEnvelope"
+    ScheduleCollectionResponse:
+      description: Lista de agendamentos.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AgendamentoListEnvelope"
+    ScheduleResponse:
+      description: Agendamento.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AgendamentoEnvelope"
+    WebhookCollectionResponse:
+      description: Lista de notificacoes web.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WebhookListEnvelope"
+    WebhookResponse:
+      description: Notificacao web.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WebhookEnvelope"
+    WebhookDeliveryResponse:
+      description: Entrega de notificacao web.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WebhookDeliveryEnvelope"
+    WebhookDeliveryCollectionResponse:
+      description: Lista de entregas de notificacao web.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WebhookDeliveryListEnvelope"
+    DocumentListResponse:
+      description: Lista de documentos.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentListEnvelope"
+    DocumentDetailResponse:
+      description: Detalhe do documento.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentDetailEnvelope"
+    RetratoDocumentoResponse:
+      description: Retrato fiscal persistido.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RetratoDocumentoEnvelope"
+    ConsultarDocumentoResponse:
+      description: Resultado de consulta do documento.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConsultarDocumentoEnvelope"
+    DocumentOperationResponse:
+      description: Resultado de operacao sobre documento.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DocumentOperationEnvelope"
+    PerfilOperacaoListResponse:
+      description: Lista de perfis de operacao.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PerfilOperacaoListEnvelope"
+    PerfilOperacaoResponse:
+      description: Perfil de operacao fiscal.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PerfilOperacaoEnvelope"
+    ReferenciaAliquotaListResponse:
+      description: Lista de referencias de aliquotas.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ReferenciaAliquotaListEnvelope"
+    ReferenciaAliquotaResponse:
+      description: Referencia de aliquota fiscal.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ReferenciaAliquotaEnvelope"
+    ConjuntoRegraTributariaListResponse:
+      description: Lista de conjuntos de regras tributarias.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConjuntoRegraTributariaListEnvelope"
+    ConjuntoRegraTributariaResponse:
+      description: Conjunto de regras tributarias.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ConjuntoRegraTributariaEnvelope"
+    GenericResourceResponse:
+      description: Recurso no envelope publico v2.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [dados]
+            properties:
+              dados:
+                type: object
+                additionalProperties: true
+              metadados:
+                type: object
+                additionalProperties: true
+    GenericCollectionResponse:
+      description: Colecao no envelope publico v2.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [dados]
+            properties:
+              dados:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+              metadados:
+                type: object
+                additionalProperties: true
+    DeleteResponse:
+      description: Resultado de exclusao ou desativacao.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DeleteEnvelope"
+    ErrorResponse:
+      description: Erro padronizado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+  schemas:
+    DirectDocumentRequestV2:
+      type: object
+      required: [external_id, document_type, payload]
+      additionalProperties: false
+      properties:
+        external_id:
+          type: string
+          maxLength: 120
+        document_type:
+          type: string
+          enum: [nfe, nfce, nfse]
+        municipio:
+          type: string
+          maxLength: 120
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+        modo_emissao:
+          type: string
+          enum: [fila, sincrono]
+          description: Use sincrono somente com document_type=nfce.
+        sincrono:
+          type: boolean
+        payload:
+          $ref: "#/components/schemas/FiscalCanonicalPayloadV2"
+        metadata:
+          type: object
+          additionalProperties: true
+    AtualizarConfiguracaoEmpresaV2:
+      type: object
+      additionalProperties: false
+      properties:
+        cnpj: { type: string, maxLength: 20 }
+        razao_social: { type: string, maxLength: 255 }
+        nome_fantasia: { type: string, maxLength: 255 }
+        situacao: { type: string, enum: [ativo, inativo] }
+        email: { type: string, nullable: true, maxLength: 255 }
+        telefone: { type: string, nullable: true, maxLength: 60 }
+        logradouro: { type: string, nullable: true, maxLength: 255 }
+        numero: { type: string, nullable: true, maxLength: 50 }
+        complemento: { type: string, nullable: true, maxLength: 255 }
+        bairro: { type: string, nullable: true, maxLength: 255 }
+        cep: { type: string, nullable: true, maxLength: 20 }
+        municipio: { type: string, nullable: true, maxLength: 255 }
+        uf: { type: string, nullable: true, minLength: 2, maxLength: 2 }
+        codigo_ibge: { type: string, nullable: true, maxLength: 20 }
+        regime_tributario: { type: string, nullable: true, maxLength: 60 }
+        crt: { type: string, nullable: true, maxLength: 10 }
+        cnae_principal: { type: string, nullable: true, maxLength: 255 }
+        tamanho_empresa: { type: string, nullable: true, maxLength: 20 }
+        tipo_contribuinte_icms: { type: string, nullable: true, maxLength: 20 }
+        contribuinte_iss: { type: boolean }
+        indicador_ie: { type: string, nullable: true, maxLength: 20 }
+        indicador_im: { type: string, nullable: true, maxLength: 20 }
+        natureza_juridica: { type: string, nullable: true, maxLength: 40 }
+        codigo_regime_especial: { type: string, nullable: true, maxLength: 30 }
+        codigo_pais: { type: string, nullable: true, maxLength: 4 }
+        mei: { type: boolean }
+        me: { type: boolean }
+        epp: { type: boolean }
+        simples_nacional: { type: boolean }
+        lucro_real: { type: boolean }
+        lucro_presumido: { type: boolean }
+        inscricao_estadual: { type: string, nullable: true, maxLength: 60 }
+        inscricao_municipal: { type: string, nullable: true, maxLength: 60 }
+        id_csc: { type: string, nullable: true, maxLength: 20 }
+        token_csc: { type: string, nullable: true, maxLength: 255 }
+        url_logo: { type: string, nullable: true }
+        lote_prefixo: { type: string, nullable: true, maxLength: 40 }
+        lote_sincrono: { type: boolean }
+        layout_cupom:
+          type: object
+          nullable: true
+          additionalProperties: true
+        nfce:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Use id_csc e token_csc em ambientes homologacao/producao.
+        nfse:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Use provedor e codigo_municipio em vez de provider_key e codigo_ibge.
+    OperationPreviewRequestV2:
+      type: object
+      required: [document_type, retrato]
+      additionalProperties: false
+      properties:
+        external_id: { type: string, maxLength: 120 }
+        document_type: { type: string, enum: [nfe, nfce, nfse] }
+        municipio: { type: string, maxLength: 120 }
+        retrato:
+          $ref: "#/components/schemas/RetratoOperacionalRequestV2"
+        metadata:
+          type: object
+          additionalProperties: true
+    OperationDocumentRequestV2:
+      type: object
+      required: [external_id, document_type, retrato]
+      additionalProperties: false
+      properties:
+        external_id: { type: string, maxLength: 120 }
+        document_type: { type: string, enum: [nfe, nfce, nfse] }
+        municipio: { type: string, maxLength: 120 }
+        modo_emissao:
+          type: string
+          enum: [fila, sincrono]
+          description: Use sincrono somente com document_type=nfce.
+        sincrono:
+          type: boolean
+        retrato:
+          $ref: "#/components/schemas/RetratoOperacionalRequestV2"
+        metadata:
+          type: object
+          additionalProperties: true
+    RetratoOperacionalRequestV2:
+      type: object
+      required: [items]
+      additionalProperties: true
+      properties:
+        fiscal_environment:
+          type: string
+          enum: [homologacao, producao]
+          description: Campo interno do retrato operacional legado. A emissao direta v2 usa ambiente_fiscal no envelope.
+        reference_date: { type: string, format: date-time }
+        document_direction: { type: string, enum: [entrada, saida] }
+        document_data:
+          type: object
+          additionalProperties: true
+        counterparty:
+          type: object
+          additionalProperties: true
+        document_references:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: true
+    AgendamentoRequestV2:
+      type: object
+      required: [tipo, proxima_execucao]
+      additionalProperties: false
+      properties:
+        tipo:
+          type: string
+          enum: [unica, recorrente]
+        frequencia:
+          type: string
+          nullable: true
+          enum: [mensal, semanal]
+        nota_base:
+          type: object
+          nullable: true
+          additionalProperties: true
+        proxima_execucao:
+          type: string
+          format: date-time
+        ativo:
+          type: boolean
+    WebhookRequestV2:
+      type: object
+      required: [url, eventos]
+      additionalProperties: false
+      properties:
+        url: { type: string, format: uri, maxLength: 2048 }
+        descricao: { type: string, nullable: true, maxLength: 255 }
+        situacao:
+          type: string
+          enum: [ativo, pausado]
+        ambiente:
+          type: string
+          enum: [todos, homologacao, producao]
+        eventos:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum:
+              - fiscal_document.created
+              - fiscal_document.authorized
+              - fiscal_document.rejected
+              - fiscal_document.cancelled
+              - fiscal_document.corrected
+              - fiscal_document.failed
+              - inbound_nfe.discovered
+              - inbound_nfe.updated
+              - inbound_nfe.xml_available
+              - inbound_nfe.cancelled
+              - inbound_nfe.corrected
+              - inbound_nfe.manifested
+              - inbound_nfe.event
+    FiscalCanonicalPayloadV2:
+      type: object
+      required: [identificacao, emitente, tomador, itens]
+      additionalProperties: false
+      properties:
+        identificacao:
+          $ref: "#/components/schemas/IdentificacaoFiscalV2"
+        emitente:
+          $ref: "#/components/schemas/ParteFiscalV2"
+        tomador:
+          $ref: "#/components/schemas/ParteFiscalV2"
+        itens:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ItemFiscalV2"
+        servico:
+          $ref: "#/components/schemas/ServicoFiscalV2"
+        pagamento:
+          $ref: "#/components/schemas/PagamentoFiscalV2"
+        transporte:
+          $ref: "#/components/schemas/TransporteFiscalV2"
+        referencias:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferenciaFiscalV2"
+        totais:
+          $ref: "#/components/schemas/TotaisFiscalV2"
+        impostos:
+          $ref: "#/components/schemas/ImpostosFiscalV2"
+        observacoes:
+          $ref: "#/components/schemas/ObservacoesFiscalV2"
+        extensoes:
+          type: object
+          additionalProperties: true
+    IdentificacaoFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        serie: { type: string }
+        numero: { type: string }
+        natureza_operacao: { type: string }
+        data_emissao: { type: string, format: date-time }
+        data_competencia: { type: string, format: date }
+        ambiente: { type: string, enum: [homologacao, producao] }
+        municipio_ocorrencia_codigo: { type: string }
+        presenca: { type: integer }
+        intermediador: { type: integer }
+    ParteFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        documento: { type: string }
+        cpf: { type: string }
+        cnpj: { type: string }
+        nome: { type: string }
+        razao_social: { type: string }
+        nome_fantasia: { type: string }
+        tipo_pessoa: { type: string, enum: [fisica, juridica, estrangeiro] }
+        inscricao_estadual: { type: string }
+        inscricao_municipal: { type: string }
+        crt: { type: string }
+        email: { type: string, format: email }
+        telefone: { type: string }
+        endereco:
+          $ref: "#/components/schemas/EnderecoFiscalV2"
+    EnderecoFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        logradouro: { type: string }
+        numero: { type: string }
+        complemento: { type: string }
+        bairro: { type: string }
+        municipio: { type: string }
+        uf: { type: string, minLength: 2, maxLength: 2 }
+        cep: { type: string }
+        codigo_municipio: { type: string }
+        codigo_ibge: { type: string }
+    ItemFiscalV2:
+      type: object
+      required: [descricao, quantidade, valor_unitario]
+      additionalProperties: false
+      properties:
+        codigo: { type: string }
+        descricao: { type: string }
+        quantidade: { type: number }
+        valor_unitario: { type: number }
+        valor_total: { type: number }
+        unidade: { type: string }
+        ncm: { type: string }
+        cfop: { type: string }
+        impostos:
+          $ref: "#/components/schemas/ImpostosFiscalV2"
+    ServicoFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        codigo_servico_nacional: { type: string }
+        codigo_servico_municipal: { type: string }
+        codigo_nbs: { type: string }
+        codigo_municipio_prestacao: { type: string }
+        municipio_prestacao_codigo: { type: string }
+        descricao: { type: string }
+        aliquota_iss: { type: number }
+        aliquota: { type: number }
+        iss_retido: { type: boolean }
+        tributacao_iss: { type: string }
+        valor_irrf: { type: number }
+        valor_ir: { type: number }
+    PagamentoFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        meios:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              meio: { type: string }
+              valor: { type: number }
+    TransporteFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        modalidade_frete: { type: string }
+    ReferenciaFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        chave: { type: string }
+        tipo: { type: string }
+    TotaisFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        valor_produtos: { type: number }
+        valor_servicos: { type: number }
+        valor_descontos: { type: number }
+        valor_documento: { type: number }
+    ImpostosFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        icms: { $ref: "#/components/schemas/TributoFiscalV2" }
+        iss: { $ref: "#/components/schemas/TributoFiscalV2" }
+        pis: { $ref: "#/components/schemas/TributoFiscalV2" }
+        cofins: { $ref: "#/components/schemas/TributoFiscalV2" }
+        ibs: { $ref: "#/components/schemas/TributoFiscalV2" }
+        cbs: { $ref: "#/components/schemas/TributoFiscalV2" }
+    TributoFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        cst: { type: string }
+        csosn: { type: string }
+        aliquota: { type: number }
+        base_calculo: { type: number }
+        valor: { type: number }
+    ObservacoesFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        contribuinte: { type: string }
+        fisco: { type: string }
+        texto: { type: string }
+    ConsultarDocumentoRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+        forcar_consulta_remota:
+          type: boolean
+          default: false
+    CancelarDocumentoRequestV2:
+      type: object
+      required: [justificativa]
+      additionalProperties: false
+      properties:
+        justificativa:
+          type: string
+          maxLength: 255
+    CorrigirDocumentoRequestV2:
+      type: object
+      required: [correcao]
+      additionalProperties: false
+      properties:
+        correcao:
+          type: string
+          minLength: 15
+          maxLength: 1000
+        sequencia:
+          type: integer
+          minimum: 1
+          maximum: 20
+    ValidarCscNfceRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+        id_csc:
+          type: string
+          maxLength: 20
+        token_csc:
+          type: string
+          maxLength: 255
+          writeOnly: true
+        nfce:
+          type: object
+          additionalProperties: false
+          properties:
+            homologacao:
+              $ref: "#/components/schemas/CscNfceAmbienteV2"
+            producao:
+              $ref: "#/components/schemas/CscNfceAmbienteV2"
+    CscNfceAmbienteV2:
+      type: object
+      additionalProperties: false
+      properties:
+        id_csc:
+          type: string
+          maxLength: 20
+        token_csc:
+          type: string
+          maxLength: 255
+          writeOnly: true
+    PerfilOperacaoFiscalRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        codigo: { type: string, maxLength: 80 }
+        nome: { type: string, maxLength: 255 }
+        situacao: { type: string, enum: [ativo, inativo] }
+        inicio_vigencia: { type: string, format: date }
+        fim_vigencia: { type: string, format: date, nullable: true }
+        metadados:
+          type: object
+          additionalProperties: true
+        escopos_documento:
+          type: array
+          items: { type: string, enum: [nfe, nfce, nfse, cte, mdfe] }
+        direcao: { type: string, enum: [entrada, saida] }
+        finalidade: { type: string, maxLength: 30, nullable: true }
+        indicador_presenca: { type: string, nullable: true }
+        incidencia_principal: { type: string, maxLength: 20, nullable: true }
+        politica_preco: { type: string }
+        gera_financeiro: { type: boolean }
+        devolucao: { type: boolean }
+        exige_documento_referenciado: { type: boolean }
+        familia_tributaria: { type: string, maxLength: 30, nullable: true }
+        origem_mercadoria: { type: string, nullable: true }
+        regimes_tributarios_permitidos:
+          type: array
+          items: { type: string }
+        exige_dados_transporte: { type: boolean }
+        cfops_permitidos:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [cfop_id]
+            properties:
+              cfop_id: { type: integer }
+              etiquetas:
+                type: array
+                items: { type: string, enum: [dentro, fora, exterior, st, combustivel, proprio] }
+        cfops_referencia_permitidos:
+          type: array
+          items: { type: integer }
+        efeitos_operacionais:
+          type: object
+          additionalProperties: false
+          properties:
+            politica_preco: { type: string }
+            gera_financeiro: { type: boolean }
+            devolucao: { type: boolean }
+            exige_documento_referenciado: { type: boolean }
+            exige_dados_transporte: { type: boolean }
+            permite_sobrescrever_cfop_item: { type: boolean }
+        permite_sobrescrever_cfop_item: { type: boolean }
+    PerfilOperacaoFiscalV2:
+      allOf:
+        - $ref: "#/components/schemas/PerfilOperacaoFiscalRequestV2"
+        - type: object
+          properties:
+            id: { type: string }
+            escopo: { type: string, enum: [padrao_global, sobrescrita_empresa] }
+            editavel: { type: boolean }
+    ReferenciaAliquotaFiscalRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        codigo: { type: string, maxLength: 80 }
+        tributo: { type: string, enum: [icms, iss, ibs, cbs, pis, cofins, ipi, is] }
+        nivel_jurisdicao: { type: string, enum: [federal, estadual, municipal] }
+        tipo_aliquota: { type: string, maxLength: 40, nullable: true }
+        tipo_valor: { type: string, maxLength: 40, nullable: true }
+        uf: { type: string, minLength: 2, maxLength: 2, nullable: true }
+        codigo_municipio: { type: string, maxLength: 20, nullable: true }
+        municipio: { type: string, maxLength: 255, nullable: true }
+        uf_origem: { type: string, minLength: 2, maxLength: 2, nullable: true }
+        uf_destino: { type: string, minLength: 2, maxLength: 2, nullable: true }
+        codigo_situacao_tributaria: { type: string, maxLength: 60, nullable: true }
+        codigo_classificacao_tributaria: { type: string, maxLength: 80, nullable: true }
+        escopo_documento: { type: string, maxLength: 30, nullable: true }
+        escopo_item: { type: string, maxLength: 30, nullable: true }
+        aliquota: { type: number, minimum: 0, maximum: 100 }
+        inicio_vigencia: { type: string, format: date, nullable: true }
+        fim_vigencia: { type: string, format: date, nullable: true }
+        ativo: { type: boolean }
+        fonte: { type: string, maxLength: 255, nullable: true }
+        url_fonte: { type: string, maxLength: 255, nullable: true }
+        metadados:
+          type: object
+          additionalProperties: true
+    ReferenciaAliquotaFiscalV2:
+      allOf:
+        - $ref: "#/components/schemas/ReferenciaAliquotaFiscalRequestV2"
+        - type: object
+          properties:
+            id: { type: string }
+            escopo: { type: string, enum: [padrao_global, sobrescrita_empresa] }
+            editavel: { type: boolean }
+    ConjuntoRegraTributariaRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        codigo: { type: string, maxLength: 80 }
+        nome: { type: string, maxLength: 255 }
+        tipo_escopo_regra: { type: string, enum: [produto, servico, outro] }
+        tributo: { type: string, maxLength: 20, nullable: true }
+        tipo_jurisdicao: { type: string, enum: [estadual, municipal, federal, misto], nullable: true }
+        prioridade: { type: integer, minimum: 1 }
+        ativo: { type: boolean }
+        inicio_vigencia: { type: string, format: date }
+        fim_vigencia: { type: string, format: date, nullable: true }
+        parar_processamento: { type: boolean }
+        metadados:
+          type: object
+          additionalProperties: true
+        ativacao:
+          $ref: "#/components/schemas/AtivacaoRegraTributariaV2"
+        resultados:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResultadoRegraTributariaV2"
+    AtivacaoRegraTributariaV2:
+      type: object
+      additionalProperties: false
+      properties:
+        emitente:
+          $ref: "#/components/schemas/ParteAtivacaoRegraTributariaV2"
+        tomador:
+          allOf:
+            - $ref: "#/components/schemas/ParteAtivacaoRegraTributariaV2"
+            - type: object
+              properties:
+                situacao_contribuinte:
+                  type: string
+                  enum: [contribuinte, isento, nao_contribuinte, nao_contribuinte_com_ie, nao_contribuinte_sem_ie]
+                  nullable: true
+                possui_suframa: { type: boolean, nullable: true }
+        operacao:
+          type: object
+          additionalProperties: false
+          properties:
+            ativo: { type: boolean }
+            perfis_operacao_ids:
+              type: array
+              items: { type: integer }
+            direcao: { type: string, enum: [entrada, saida], nullable: true }
+            escopo_territorial: { type: string, nullable: true }
+            gera_financeiro: { type: boolean, nullable: true }
+            devolucao: { type: boolean, nullable: true }
+            escopos_documento:
+              type: array
+              items: { type: string, enum: [nfe, nfce, nfse, cte, mdfe] }
+        produto_servico:
+          type: object
+          additionalProperties: false
+          properties:
+            ativo: { type: boolean }
+            cfops_ids:
+              type: array
+              items: { type: integer }
+            padroes_ncm:
+              type: array
+              items: { type: string }
+            padroes_cest:
+              type: array
+              items: { type: string }
+            padroes_codigo_servico:
+              type: array
+              items: { type: string }
+            padroes_nbs:
+              type: array
+              items: { type: string }
+            padroes_codigo_servico_municipal:
+              type: array
+              items: { type: string }
+            codigos_origem:
+              type: array
+              items: { type: string }
+            codigo_beneficio: { type: string, nullable: true }
+            codigos_classificacao_mercado:
+              type: array
+              items: { type: string }
+            codigos_classificacao_tributaria:
+              type: array
+              items: { type: string }
+    ParteAtivacaoRegraTributariaV2:
+      type: object
+      additionalProperties: false
+      properties:
+        ativo: { type: boolean }
+        tipo_pessoa: { type: string, enum: [fisica, juridica, estrangeira], nullable: true }
+        classificacoes_parte:
+          type: array
+          items: { type: string }
+        regimes_tributarios:
+          type: array
+          items: { type: string }
+        ufs:
+          type: array
+          items: { type: string, minLength: 2, maxLength: 2 }
+        codigos_municipio:
+          type: array
+          items: { type: string }
+    ResultadoRegraTributariaV2:
+      type: object
+      additionalProperties: false
+      properties:
+        codigo_consequencia:
+          type: string
+          enum: [definicao_tributo, reducao_tributo, sobrescrever_tributo, classificacao_item]
+          nullable: true
+        parar_processamento: { type: boolean }
+        impostos:
+          type: object
+          additionalProperties: true
+        fontes_aliquotas:
+          type: object
+          additionalProperties: true
+        observacoes:
+          type: object
+          additionalProperties: true
+    ConjuntoRegraTributariaV2:
+      allOf:
+        - $ref: "#/components/schemas/ConjuntoRegraTributariaRequestV2"
+        - type: object
+          properties:
+            id: { type: string }
+            escopo: { type: string, enum: [padrao_global, sobrescrita_empresa] }
+            editavel: { type: boolean }
+    ContratoPublicoFiscalV2:
+      type: object
+      properties:
+        contrato: { type: string }
+        versao: { type: string }
+        tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
+        provedor: { type: string }
+        familia_layout: { type: string }
+        raizes_payload:
+          type: array
+          items: { type: string }
+        campos_obrigatorios:
+          type: array
+          items: { type: string }
+        campos_visiveis:
+          type: array
+          items: { type: string }
+        campos_enum:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+        regras_condicionais:
+          type: array
+          items:
+            type: object
+            additionalProperties: { type: string }
+        valores_padrao:
+          type: object
+          additionalProperties: true
+        extensoes_suportadas:
+          type: array
+          items: { type: string }
+        rotulos:
+          type: object
+          additionalProperties: { type: string }
+        dicas:
+          type: object
+          additionalProperties: { type: string }
+    InformacoesProvedorNfseEnvelope:
+      type: object
+      properties:
+        dados:
+          type: object
+          properties:
+            nome_provedor: { type: string }
+            provedor: { type: string }
+            municipio: { type: string }
+            ambiente_fiscal: { type: string, enum: [homologacao, producao] }
+            metadados_provedor:
+              type: object
+              additionalProperties: true
+            contrato_publico:
+              $ref: "#/components/schemas/ContratoPublicoFiscalV2"
+            avisos:
+              type: array
+              items: {}
+        metadados:
+          type: object
+          properties:
+            tipo_documento: { type: string, enum: [nfse] }
+          additionalProperties: true
+    ValidacaoCscNfceEnvelope:
+      type: object
+      properties:
+        sucesso: { type: boolean }
+        dados:
+          $ref: "#/components/schemas/DadosValidacaoCscNfceV2"
+        erro:
+          nullable: true
+        metadados:
+          type: object
+          properties:
+            tipo_documento: { type: string, enum: [nfce] }
+            provedor: { type: string }
+            operacao: { type: string }
+            ambiente_fiscal: { type: string, enum: [homologacao, producao] }
+            avisos:
+              type: array
+              items: {}
+          additionalProperties: true
+    DadosValidacaoCscNfceV2:
+      type: object
+      properties:
+        ambiente_fiscal: { type: string, enum: [homologacao, producao] }
+        configurado:
+          type: object
+          properties:
+            id_csc: { type: boolean }
+            token_csc: { type: boolean }
+        id_csc:
+          type: string
+          nullable: true
+        id_csc_ativo:
+          type: boolean
+          nullable: true
+        token_csc_confere:
+          type: boolean
+          nullable: true
+        valido:
+          type: boolean
+          nullable: true
+        ids_csc_registrados:
+          type: array
+          items: { type: string }
+        sefaz:
+          type: object
+          properties:
+            sucesso: { type: boolean }
+            codigo_status: { type: string }
+            motivo: { type: string }
+        mensagem: { type: string }
+    ConfiguracaoEmpresaV2:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        situacao: { type: string }
+        cnpj: { type: string }
+        razao_social: { type: string }
+        nome_fantasia: { type: string }
+        email: { type: string }
+        telefone: { type: string }
+        logradouro: { type: string }
+        numero: { type: string }
+        complemento: { type: string }
+        bairro: { type: string }
+        cep: { type: string }
+        municipio: { type: string }
+        uf: { type: string }
+        codigo_ibge: { type: string }
+        regime_tributario: { type: string }
+        crt: { type: string }
+        cnae_principal: { type: string }
+        tamanho_empresa: { type: string }
+        tipo_contribuinte_icms: { type: string }
+        contribuinte_iss: { type: boolean }
+        indicador_ie: { type: string }
+        indicador_im: { type: string }
+        natureza_juridica: { type: string }
+        codigo_regime_especial: { type: string }
+        codigo_pais: { type: string }
+        mei: { type: boolean }
+        me: { type: boolean }
+        epp: { type: boolean }
+        simples_nacional: { type: boolean }
+        lucro_real: { type: boolean }
+        lucro_presumido: { type: boolean }
+        inscricao_estadual: { type: string }
+        inscricao_municipal: { type: string }
+        id_csc: { type: string }
+        token_csc: { type: string }
+        url_logo: { type: string, nullable: true }
+        lote_prefixo: { type: string }
+        lote_sincrono: { type: boolean }
+        layout_cupom:
+          type: object
+          additionalProperties: true
+        nfce:
+          type: object
+          nullable: true
+          additionalProperties: true
+        nfse:
+          type: object
+          nullable: true
+          additionalProperties: true
+        criado_em: { type: string, format: date-time }
+        atualizado_em: { type: string, format: date-time }
+    OperationPreviewV2:
+      type: object
+      additionalProperties: true
+      properties:
+        status_resolucao: { type: string }
+        emissao_permitida: { type: boolean }
+        bloqueios:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        avisos:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        retrato_previsualizacao:
+          type: object
+          nullable: true
+          additionalProperties: true
+        resolucao_tributaria:
+          type: object
+          nullable: true
+          additionalProperties: true
+        perfis_resolvidos:
+          type: object
+          additionalProperties: true
+    AgendamentoV2:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        tipo: { type: string, enum: [unica, recorrente] }
+        frequencia: { type: string, nullable: true }
+        nota_base:
+          type: object
+          nullable: true
+          additionalProperties: true
+        proxima_execucao: { type: string, format: date-time }
+        ativo: { type: boolean }
+        criado_em: { type: string, format: date-time }
+        atualizado_em: { type: string, format: date-time }
+    WebhookV2:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        url: { type: string, format: uri }
+        descricao: { type: string, nullable: true }
+        situacao: { type: string, enum: [ativo, pausado] }
+        ambiente: { type: string, enum: [todos, homologacao, producao] }
+        eventos:
+          type: array
+          items: { type: string }
+        ultimo_sucesso_em: { type: string, nullable: true, format: date-time }
+        ultima_falha_em: { type: string, nullable: true, format: date-time }
+        criado_em: { type: string, format: date-time }
+        atualizado_em: { type: string, format: date-time }
+        segredo:
+          type: string
+          description: Retornado somente na criacao e rotacao.
+    WebhookDeliveryV2:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        notificacao_web_id: { type: string }
+        documento_fiscal_id: { type: string, nullable: true }
+        nome_evento: { type: string }
+        entrega_id: { type: string }
+        situacao: { type: string }
+        tentativas: { type: integer }
+        maximo_tentativas: { type: integer }
+        status_resposta: { type: integer, nullable: true }
+        mensagem_erro: { type: string, nullable: true }
+        proxima_tentativa_em: { type: string, nullable: true, format: date-time }
+        entregue_em: { type: string, nullable: true, format: date-time }
+        emissao_solicitada_em: { type: string, nullable: true, format: date-time }
+        tempo_emissao_para_webhook_ms: { type: integer, nullable: true }
+        criado_em: { type: string, format: date-time }
+    DocumentSummaryV2:
+      type: object
+      additionalProperties: true
+      properties:
+        external_id: { type: string }
+        tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
+        status: { type: string }
+        status_fiscal: { type: string }
+        status_operacional: { type: string }
+        chave_documento: { type: string }
+        protocolo: { type: string }
+        ambiente_fiscal: { type: string }
+        artefatos:
+          $ref: "#/components/schemas/ArtefatosDocumentoV2"
+        criado_em: { type: string, format: date-time }
+        atualizado_em: { type: string, format: date-time }
+    DocumentDetailV2:
+      allOf:
+        - $ref: "#/components/schemas/DocumentSummaryV2"
+        - type: object
+          additionalProperties: true
+          properties:
+            status_impressao: { type: string }
+            ultimo_erro: { type: string, nullable: true }
+            retrato:
+              type: object
+              additionalProperties: true
+            aliquotas_aplicadas:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            eventos:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            metadados:
+              type: object
+              additionalProperties: true
+    ArtefatosDocumentoV2:
+      type: object
+      additionalProperties: true
+      properties:
+        xml_disponivel: { type: boolean }
+        pdf_disponivel: { type: boolean }
+        processando: { type: boolean }
+        status_xml: { type: string }
+        status_pdf: { type: string }
+        url_xml: { type: string }
+        url_pdf: { type: string }
+    ConsultaRemotaDocumentoV2:
+      type: object
+      additionalProperties: true
+      properties:
+        origem: { type: string }
+        tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
+        chave_documento: { type: string }
+        numero: { type: string }
+        serie: { type: string }
+        data_emissao: { type: string }
+        nome_tomador: { type: string }
+        documento_tomador: { type: string }
+        valor_total: { type: number }
+        status: { type: string }
+        ambiente_fiscal: { type: string }
+        possui_xml: { type: boolean }
+        possui_pdf: { type: boolean }
+    DocumentListEnvelope:
+      type: object
+      properties:
+        dados:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSummaryV2"
+        metadados:
+          type: object
+          properties:
+            pagina_atual: { type: integer }
+            ultima_pagina: { type: integer }
+            por_pagina: { type: integer }
+            total: { type: integer }
+          additionalProperties: true
+    DocumentDetailEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/DocumentDetailV2"
+        metadados:
+          type: object
+          additionalProperties: true
+    RetratoDocumentoEnvelope:
+      type: object
+      properties:
+        dados:
+          type: object
+          properties:
+            external_id: { type: string }
+            documento_id: { type: string }
+            retrato:
+              type: object
+              nullable: true
+              additionalProperties: true
+    ConsultarDocumentoEnvelope:
+      type: object
+      properties:
+        dados:
+          type: object
+          properties:
+            documento:
+              $ref: "#/components/schemas/DocumentDetailV2"
+            remoto:
+              $ref: "#/components/schemas/ConsultaRemotaDocumentoV2"
+              nullable: true
+    DocumentOperationEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/DocumentSummaryV2"
+        metadados:
+          type: object
+          additionalProperties: true
+    ConfiguracaoEmpresaEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/ConfiguracaoEmpresaV2"
+    OperationPreviewEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/OperationPreviewV2"
+    OperationDocumentAcceptedEnvelope:
+      type: object
+      properties:
+        dados:
+          allOf:
+            - $ref: "#/components/schemas/DocumentSummaryV2"
+            - type: object
+              properties:
+                retrato_fiscal_id: { type: integer, nullable: true }
+                status_resolucao: { type: string, nullable: true }
+                transmissao_operacao: { type: boolean }
+                transmissao_operacao_sincrona: { type: boolean }
+                replay_idempotente: { type: boolean }
+                resposta_sefaz:
+                  type: object
+                  additionalProperties: true
+                xml: { type: string }
+        metadados:
+          type: object
+          additionalProperties: true
+    AgendamentoListEnvelope:
+      type: object
+      properties:
+        dados:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgendamentoV2"
+    AgendamentoEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/AgendamentoV2"
+    WebhookListEnvelope:
+      type: object
+      properties:
+        dados:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookV2"
+    WebhookEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/WebhookV2"
+    WebhookDeliveryEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/WebhookDeliveryV2"
+    WebhookDeliveryListEnvelope:
+      type: object
+      properties:
+        dados:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookDeliveryV2"
+    DirectDocumentAcceptedEnvelope:
+      type: object
+      properties:
+        dados:
+          type: object
+          properties:
+            external_id: { type: string }
+            tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
+            status: { type: string }
+            status_operacional: { type: string }
+            status_fiscal: { type: string }
+            transmissao_direta: { type: boolean }
+            modo_transmissao_direta: { type: string }
+            transmissao_direta_sincrona: { type: boolean }
+            replay_idempotente: { type: boolean }
+            retrato_fiscal_id: { type: integer, nullable: true }
+        metadados:
+          type: object
+          additionalProperties: true
+    ContractInfoEnvelope:
+      type: object
+      properties:
+        dados:
+          type: object
+          properties:
+            contrato: { type: string }
+            versao: { type: string }
+            tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
+            provedor: { type: string }
+            familia_layout: { type: string }
+            raizes_payload:
+              type: array
+              items: { type: string }
+            campos_obrigatorios:
+              type: array
+              items: { type: string }
+            campos_visiveis:
+              type: array
+              items: { type: string }
+            campos_enum:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+            regras_condicionais:
+              type: array
+              items:
+                type: object
+                additionalProperties: { type: string }
+            valores_padrao:
+              type: object
+              additionalProperties: true
+            extensoes_suportadas:
+              type: array
+              items: { type: string }
+            rotulos:
+              type: object
+              additionalProperties: { type: string }
+            dicas:
+              type: object
+              additionalProperties: { type: string }
+    PerfilOperacaoListEnvelope:
+      type: object
+      properties:
+        dados:
+          type: array
+          items:
+            $ref: "#/components/schemas/PerfilOperacaoFiscalV2"
+    PerfilOperacaoEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/PerfilOperacaoFiscalV2"
+    ReferenciaAliquotaListEnvelope:
+      type: object
+      properties:
+        dados:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferenciaAliquotaFiscalV2"
+    ReferenciaAliquotaEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/ReferenciaAliquotaFiscalV2"
+    ConjuntoRegraTributariaListEnvelope:
+      type: object
+      properties:
+        dados:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConjuntoRegraTributariaV2"
+    ConjuntoRegraTributariaEnvelope:
+      type: object
+      properties:
+        dados:
+          $ref: "#/components/schemas/ConjuntoRegraTributariaV2"
+    DeleteEnvelope:
+      type: object
+      properties:
+        dados:
+          type: object
+          properties:
+            excluido: { type: boolean }
+    ErrorEnvelope:
+      type: object
+      properties:
+        mensagem: { type: string }
+        descricao: { type: string }
+        status_http: { type: integer }
+        codigo: { type: string }
+        erros:
+          type: object
+          additionalProperties: true
+        detalhes:
+          type: object
+          additionalProperties: true

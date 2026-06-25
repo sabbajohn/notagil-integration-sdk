@@ -1,18 +1,21 @@
 # NotaAgil TypeScript Integration SDK
 
-TypeScript beta SDK for the NotaAgil public integration API documented in `../openapi/integration-v1.yaml`.
+TypeScript beta SDK for the NotaAgil public integration APIs documented in `../openapi/integration-v1.yaml` and `../openapi/integration-v2.yaml`.
 
 See [docs/payload-emissao.md](https://github.com/sabbajohn/notagil-integration-sdk/blob/main/docs/payload-emissao.md) for the normalized fiscal emission payload based on `operation_code` and `snapshot`.
 
 ```bash
-npm install @notagil/integration-sdk@^0.3.0
+npm install @notagil/integration-sdk@^0.4.0
 ```
 
 ```ts
 import {
   NotagilIntegrationClient,
+  assertFiscalCanonicalPayloadV2,
+  buildDirectNfceDocumentRequestV2,
   assertCanonicalNfseNacionalPayload,
   normalizeDocumentResponse,
+  type FiscalCanonicalPayloadV2,
   type DirectNfseNacionalSubmitRequest,
   type FiscalDocumentAuthorizedWebhookPayload,
 } from '@notagil/integration-sdk';
@@ -27,6 +30,85 @@ const companyId = companies[0].id;
 const docs = await client.getPublicDocsSettings();
 
 console.log(docs.openapi_url, docs.swagger_url);
+
+const v2 = NotagilIntegrationClient.v2({ token: process.env.NOTAGIL_TOKEN! });
+const v2Docs = await v2.getPublicOpenApiUrl();
+const contract = await v2.getFiscalContractV2('nfce');
+
+console.log(v2Docs, contract.contrato);
+
+const nfcePayload: FiscalCanonicalPayloadV2 = {
+  identificacao: {
+    serie: '1',
+    numero: '9001',
+    natureza_operacao: 'Venda direta',
+    ambiente: 'homologacao',
+  },
+  emitente: {
+    cnpj: '12345678000199',
+    razao_social: 'Empresa Exemplo LTDA',
+  },
+  tomador: {
+    documento: '12345678909',
+    nome: 'Consumidor',
+  },
+  itens: [
+    {
+      codigo: 'SKU-1',
+      descricao: 'Produto fiscal completo',
+      quantidade: 1,
+      valor_unitario: 100,
+      valor_total: 100,
+    },
+  ],
+};
+
+assertFiscalCanonicalPayloadV2(nfcePayload);
+
+await v2.createDirectDocumentV2(
+  buildDirectNfceDocumentRequestV2(nfcePayload, {
+    external_id: 'erp-v2-2026-0001',
+    ambiente_fiscal: 'homologacao',
+    modo_emissao: 'fila',
+  }),
+  'idem-v2-2026-0001',
+);
+
+const v2Document = await v2.waitDocumentV2('erp-v2-2026-0001');
+const normalizedV2 = normalizeDocumentResponse(v2Document);
+console.log(normalizedV2.document_type, normalizedV2.fiscal_status, normalizedV2.access_key);
+
+const ibptItem = await client.consultIbptItem(companyId, {
+  uf: 'SP',
+  ncm: '84715010',
+  value: 100,
+  description: 'Produto fiscal completo',
+  origin_code: '0',
+});
+
+const ibptCupom = await client.consultIbptCoupon(companyId, {
+  uf: 'SP',
+  items: [
+    { ncm: '84715010', value: 100 },
+  ],
+});
+
+const ibptItemV2 = await v2.consultIbptItemV2({
+  uf: 'SP',
+  ncm: '84715010',
+  valor: 100,
+  descricao: 'Produto fiscal completo',
+  codigo_origem: '0',
+});
+
+const ibptCupomV2 = await v2.consultIbptCouponV2({
+  uf: 'SP',
+  itens: [
+    { ncm: '84715010', valor: 100 },
+  ],
+});
+
+console.log(ibptItem.valores, ibptCupom.totais, ibptItemV2.valores, ibptCupomV2.totais);
 
 const snapshot = {
   fiscal_environment: 'homologacao',
@@ -173,7 +255,7 @@ const directNfse: DirectNfseNacionalSubmitRequest = {
     id: 'nfse-direct-2026-0001',
     tpAmb: 2,
     dhEmi: '2026-05-26T10:00:00-03:00',
-    verAplic: 'sdk-0.3.0',
+    verAplic: 'sdk-0.4.0',
     serie: '1',
     nDPS: '1001',
     dCompet: '2026-05-26',

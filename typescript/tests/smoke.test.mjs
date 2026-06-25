@@ -2,9 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  DEFAULT_BASE_URL_V2,
+  FiscalCanonicalPayloadV2Error,
   NfseNacionalContractError,
   NotagilApiError,
   NotagilIntegrationClient,
+  assertFiscalCanonicalPayloadV2,
+  buildDirectNfceDocumentRequestV2,
   assertCanonicalNfseNacionalPayload,
   canonicalizeNfseProviderPolicy,
   normalizeDocumentResponse,
@@ -68,6 +72,42 @@ test('manifestCompanyInboundNfe alias uses the company-scoped inbound path', asy
   assert.equal(history[0].init.method, 'POST');
 });
 
+test('v1 IBPT helpers use company-scoped fiscal utility paths', async () => {
+  const history = [];
+  const client = new NotagilIntegrationClient({
+    baseUrl: 'https://api.test/api/v1/integrations',
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      const body = history.length === 1
+        ? { data: { valores: { tributo_total: 12.34 } } }
+        : { data: { totais: { tributo_total: 45.67 } } };
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  assert.deepEqual(await client.consultIbptItem('10', {
+    uf: 'SP',
+    ncm: '84715010',
+    value: 100,
+    description: 'Produto',
+    origin_code: '0',
+  }), { valores: { tributo_total: 12.34 } });
+  assert.deepEqual(await client.consultIbptCoupon('10', {
+    uf: 'SP',
+    items: [{ ncm: '84715010', value: 100 }],
+  }), { totais: { tributo_total: 45.67 } });
+
+  assert.equal(history[0].input, 'https://api.test/api/v1/integrations/company/10/fiscal/utils/ibpt');
+  assert.equal(history[1].input, 'https://api.test/api/v1/integrations/company/10/fiscal/utils/ibpt/coupon');
+  assert.equal(history[0].init.method, 'POST');
+  assert.match(history[0].init.body, /"value":100/);
+  assert.match(history[1].init.body, /"items"/);
+});
+
 test('listCompanies accepts legacy filters on the singular company endpoint', async () => {
   const history = [];
   const client = new NotagilIntegrationClient({
@@ -119,6 +159,144 @@ test('public docs settings expose openapi and swagger urls', async () => {
   assert.equal(await client.getPublicSwaggerUrl(), '/api/v1/integrations/docs');
 });
 
+test('v2 factory uses v2 base URL and unwraps dados', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      return new Response(JSON.stringify({ dados: { id: 'empresa-1' } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  const company = await client.getCompanyV2();
+
+  assert.equal(client.apiVersion, 'v2');
+  assert.deepEqual(company, { id: 'empresa-1' });
+  assert.equal(history[0].input, `${DEFAULT_BASE_URL_V2}/empresa`);
+  assert.equal(history[0].init.headers.Authorization, 'Bearer test-token');
+});
+
+test('v2 public docs prefers versioned openapi and swagger URLs', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      return new Response(JSON.stringify({
+        data: {
+          openapi_url: '/api/v1/integrations/openapi.yaml',
+          swagger_url: '/api/v1/integrations/docs',
+          versions: {
+            v2: {
+              openapi_url: '/api/v2/integrations/openapi.yaml',
+              swagger_url: '/api/v2/integrations/docs',
+            },
+          },
+        },
+      }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  assert.equal(await client.getPublicOpenApiUrl(), '/api/v2/integrations/openapi.yaml');
+  assert.equal(await client.getPublicSwaggerUrl(), '/api/v2/integrations/docs');
+  assert.equal(history[0].input, 'https://api_notagil.sabbasistemas.com.br/api/public/docs?version=v2');
+});
+
+test('v2 public docs promotes legacy v1 URLs when versions block is absent', async () => {
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    fetch: async () => new Response(JSON.stringify({
+      data: {
+        openapi_url: '/api/v1/integrations/openapi.yaml',
+        swagger_url: '/api/v1/integrations/docs',
+      },
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }),
+  });
+
+  assert.equal(await client.getPublicOpenApiUrl(), '/api/v2/integrations/openapi.yaml');
+  assert.equal(await client.getPublicSwaggerUrl(), '/api/v2/integrations/docs');
+});
+
+test('v2 direct document helpers use Portuguese public contract paths', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      const body = history.length === 1
+        ? { dados: { contrato: 'FiscalCanonicalPayloadV2' } }
+        : { dados: { external_id: 'erp-1', tipo_documento: 'nfce', status_fiscal: 'pendente' } };
+      return new Response(JSON.stringify(body), {
+        status: history.length === 1 ? 200 : 202,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  const payload = canonicalFiscalPayloadV2();
+  const request = buildDirectNfceDocumentRequestV2(payload, {
+    external_id: 'erp-1',
+    ambiente_fiscal: 'homologacao',
+    modo_emissao: 'fila',
+  });
+
+  assert.deepEqual(await client.getFiscalContractV2('nfce'), { contrato: 'FiscalCanonicalPayloadV2' });
+  assert.deepEqual(await client.createDirectDocumentV2(request, 'idem-1'), {
+    external_id: 'erp-1',
+    tipo_documento: 'nfce',
+    status_fiscal: 'pendente',
+  });
+  assert.equal(history[0].input, `${DEFAULT_BASE_URL_V2}/contratos/nfce`);
+  assert.equal(history[1].input, `${DEFAULT_BASE_URL_V2}/direto/documentos`);
+  assert.equal(history[1].init.headers['Idempotency-Key'], 'idem-1');
+  assert.match(history[1].init.body, /"ambiente_fiscal"/);
+});
+
+test('v2 IBPT helpers use companyless Portuguese utility paths', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      const body = history.length === 1
+        ? { dados: { valores: { tributo_total: 12.34 } } }
+        : { dados: { totais: { tributo_total: 45.67 } } };
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  assert.deepEqual(await client.consultIbptItemV2({
+    uf: 'SP',
+    ncm: '84715010',
+    valor: 100,
+    descricao: 'Produto',
+    codigo_origem: '0',
+  }), { valores: { tributo_total: 12.34 } });
+  assert.deepEqual(await client.consultIbptCouponV2({
+    uf: 'SP',
+    itens: [{ uf: 'SP', ncm: '84715010', valor: 100 }],
+  }), { totais: { tributo_total: 45.67 } });
+
+  assert.equal(history[0].input, `${DEFAULT_BASE_URL_V2}/fiscal/utilitarios/ibpt`);
+  assert.equal(history[1].input, `${DEFAULT_BASE_URL_V2}/fiscal/utilitarios/ibpt/cupom`);
+  assert.equal(history[0].init.method, 'POST');
+  assert.match(history[0].init.body, /"valor":100/);
+  assert.match(history[1].init.body, /"itens"/);
+});
+
 test('normalizeDocumentResponse prefers canonical fields and keeps legacy fallback explicit', () => {
   const normalized = normalizeDocumentResponse({
     status: 'authorized',
@@ -142,6 +320,63 @@ test('normalizeDocumentResponse prefers canonical fields and keeps legacy fallba
   assert.equal(normalized.authorized_at, '2026-06-08T10:00:00-03:00');
   assert.equal(normalized.operational_status, 'completed');
   assert.equal(normalized.fiscal_status, 'authorized');
+});
+
+test('normalizeDocumentResponse accepts v2 Portuguese fields', () => {
+  const normalized = normalizeDocumentResponse({
+    dados: {
+      id: 'doc_123',
+      external_id: 'sale-0001',
+      tipo_documento: 'nfce',
+      serie: '1',
+      numero: '42',
+      status_operacional: 'concluido',
+      status_fiscal: 'autorizado',
+      chave_documento: '12345678901234567890123456789012345678901234',
+      protocolo: '135260000000001',
+      autorizado_em: '2026-06-23T10:30:00-03:00',
+      artefatos: {
+        xml_disponivel: true,
+        pdf_disponivel: true,
+      },
+    },
+  });
+
+  assert.equal(normalized.document_type, 'nfce');
+  assert.equal(normalized.series, '1');
+  assert.equal(normalized.number, '42');
+  assert.equal(normalized.operational_status, 'concluido');
+  assert.equal(normalized.fiscal_status, 'autorizado');
+  assert.equal(normalized.access_key, '12345678901234567890123456789012345678901234');
+  assert.equal(normalized.protocol, '135260000000001');
+  assert.equal(normalized.artifacts.xml_available, true);
+});
+
+test('FiscalCanonicalPayloadV2 validator rejects legacy aliases', () => {
+  assertFiscalCanonicalPayloadV2(canonicalFiscalPayloadV2());
+
+  assert.throws(
+    () => assertFiscalCanonicalPayloadV2({
+      ...canonicalFiscalPayloadV2(),
+      identificacao: {
+        ...canonicalFiscalPayloadV2().identificacao,
+        naturezaOperacao: 'Venda',
+      },
+      itens: [
+        {
+          descricao: 'Produto',
+          quantidade: 1,
+          valorUnitario: 10,
+        },
+      ],
+    }),
+    (error) => {
+      assert.ok(error instanceof FiscalCanonicalPayloadV2Error);
+      assert.deepEqual(error.invalidFields, ['identificacao.naturezaOperacao', 'itens.0.valorUnitario']);
+      assert.ok(error.expectedFields.includes('itens.*.valor_unitario'));
+      return true;
+    },
+  );
 });
 
 test('request errors with non-JSON body still throw NotagilApiError', async () => {
@@ -320,3 +555,35 @@ test('canonicalizeNfseProviderPolicy keeps only canonical NFSe Nacional policy f
   assert.deepEqual(policy.field_schema['servico.cTribNac'].payload_paths, ['servico.cTribNac']);
   assert.equal(policy.field_schema['servico.codigoCnae'].control, 'text');
 });
+
+function canonicalFiscalPayloadV2() {
+  return {
+    identificacao: {
+      serie: '1',
+      numero: '42',
+      natureza_operacao: 'Venda',
+      ambiente: 'homologacao',
+    },
+    emitente: {
+      cnpj: '12345678000199',
+      razao_social: 'Empresa Exemplo LTDA',
+      endereco: {
+        codigo_municipio: '3550308',
+        uf: 'SP',
+      },
+    },
+    tomador: {
+      documento: '12345678909',
+      nome: 'Consumidor',
+    },
+    itens: [
+      {
+        codigo: 'SKU-1',
+        descricao: 'Produto',
+        quantidade: 1,
+        valor_unitario: 10,
+        valor_total: 10,
+      },
+    ],
+  };
+}

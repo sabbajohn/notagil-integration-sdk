@@ -7,13 +7,14 @@ Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padr
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:^0.3.0
+composer require notagil/integration-sdk:^0.4.0
 ```
 
 ## Uso Basico
 
 ```php
 use NotaAgil\Integration\NotaAgilClient;
+use NotaAgil\Integration\FiscalCanonicalV2Contract;
 use NotaAgil\Integration\NfseNacionalCanonicalContract;
 
 $client = new NotaAgilClient(
@@ -26,6 +27,76 @@ echo $docs['openapi_url'] . PHP_EOL;
 echo $docs['swagger_url'] . PHP_EOL;
 
 $companies = $client->companies();
+
+$v2 = NotaAgilClient::v2(token: getenv('NOTAGIL_TOKEN'));
+$contract = $v2->fiscalContractV2('nfce');
+
+$nfcePayload = [
+    'identificacao' => [
+        'serie' => '1',
+        'numero' => '9001',
+        'natureza_operacao' => 'Venda direta',
+        'ambiente' => 'homologacao',
+    ],
+    'emitente' => [
+        'cnpj' => '12345678000199',
+        'razao_social' => 'Empresa Exemplo LTDA',
+    ],
+    'tomador' => [
+        'documento' => '12345678909',
+        'nome' => 'Consumidor',
+    ],
+    'itens' => [
+        [
+            'codigo' => 'SKU-1',
+            'descricao' => 'Produto fiscal completo',
+            'quantidade' => 1,
+            'valor_unitario' => 100,
+            'valor_total' => 100,
+        ],
+    ],
+];
+
+$v2->createDirectDocumentV2(
+    FiscalCanonicalV2Contract::nfce($nfcePayload, [
+        'external_id' => 'erp-v2-2026-0001',
+        'ambiente_fiscal' => 'homologacao',
+        'modo_emissao' => 'fila',
+    ]),
+    'idem-v2-2026-0001',
+);
+
+$documentoV2 = NotaAgilClient::normalizeDocumentResponse($v2->waitDocumentV2('erp-v2-2026-0001'));
+
+$ibptItem = $client->consultIbptItem($companies[0]['id'], [
+    'uf' => 'SP',
+    'ncm' => '84715010',
+    'value' => 100,
+    'description' => 'Produto fiscal completo',
+    'origin_code' => '0',
+]);
+
+$ibptCupom = $client->consultIbptCoupon($companies[0]['id'], [
+    'uf' => 'SP',
+    'items' => [
+        ['ncm' => '84715010', 'value' => 100],
+    ],
+]);
+
+$ibptItemV2 = $v2->consultIbptItemV2([
+    'uf' => 'SP',
+    'ncm' => '84715010',
+    'valor' => 100,
+    'descricao' => 'Produto fiscal completo',
+    'codigo_origem' => '0',
+]);
+
+$ibptCupomV2 = $v2->consultIbptCouponV2([
+    'uf' => 'SP',
+    'itens' => [
+        ['ncm' => '84715010', 'valor' => 100],
+    ],
+]);
 
 $snapshot = [
     'fiscal_environment' => 'homologacao',
@@ -88,7 +159,7 @@ $payload = [
     'id' => 'nfse-direct-2026-0001',
     'tpAmb' => 2,
     'dhEmi' => '2026-05-26T10:00:00-03:00',
-    'verAplic' => 'sdk-0.3.0',
+    'verAplic' => 'sdk-0.4.0',
     'serie' => '1',
     'nDPS' => '1001',
     'dCompet' => '2026-05-26',

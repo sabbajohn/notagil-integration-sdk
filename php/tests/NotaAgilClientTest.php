@@ -233,6 +233,36 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame('/api/v1/integrations/company/10/schedules', $history[4]['request']->getUri()->getPath());
     }
 
+    public function test_v1_ibpt_helpers_use_company_scoped_fiscal_utils_paths(): void
+    {
+        $history = [];
+        $client = $this->client([
+            new Response(200, [], json_encode(['data' => ['valores' => ['tributo_total' => 12.34]]])),
+            new Response(200, [], json_encode(['data' => ['totais' => ['tributo_total' => 45.67]]])),
+        ], $history);
+
+        $item = $client->consultIbptItem('10', [
+            'uf' => 'SP',
+            'ncm' => '84715010',
+            'value' => 100,
+            'description' => 'Produto',
+            'origin_code' => '0',
+        ]);
+        $coupon = $client->consultIbptCoupon('10', [
+            'uf' => 'SP',
+            'items' => [
+                ['ncm' => '84715010', 'value' => 100],
+            ],
+        ]);
+
+        $this->assertSame(['tributo_total' => 12.34], $item['valores']);
+        $this->assertSame(['tributo_total' => 45.67], $coupon['totais']);
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/utils/ibpt', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v1/integrations/company/10/fiscal/utils/ibpt/coupon', $history[1]['request']->getUri()->getPath());
+        $this->assertStringContainsString('"value":100', (string) $history[0]['request']->getBody());
+        $this->assertStringContainsString('"items"', (string) $history[1]['request']->getBody());
+    }
+
     public function test_inbound_nfe_company_first_aliases_use_expected_paths(): void
     {
         $history = [];

@@ -14,7 +14,9 @@ class NotaAgilApiException extends RuntimeException
     ) {
         $message = is_array($payload) && isset($payload['message'])
             ? (string) $payload['message']
-            : 'NotaAgil API error ' . $statusCode;
+            : (is_array($payload) && isset($payload['mensagem'])
+                ? (string) $payload['mensagem']
+                : 'NotaAgil API error ' . $statusCode);
 
         parent::__construct($message, $statusCode);
     }

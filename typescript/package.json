@@ -1,6 +1,6 @@
 {
   "name": "@notagil/integration-sdk",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "TypeScript SDK for the NotaAgil Integration API beta.",
   "type": "module",
   "license": "MIT",
@@ -28,6 +28,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./openapi-types": {
+      "types": "./dist/openapi-types.d.ts",
+      "import": "./dist/openapi-types.js"
+    },
+    "./openapi-types-v2": {
+      "types": "./dist/openapi-types-v2.d.ts",
+      "import": "./dist/openapi-types-v2.js"
     }
   },
   "files": [
@@ -43,7 +51,9 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "generate:types": "openapi-typescript ../openapi/integration-v1.yaml -o src/openapi-types.ts",
+    "generate:types": "npm run generate:types:v1 && npm run generate:types:v2",
+    "generate:types:v1": "openapi-typescript ../openapi/integration-v1.yaml -o src/openapi-types.ts",
+    "generate:types:v2": "openapi-typescript ../openapi/integration-v2.yaml -o src/openapi-types-v2.ts",
     "test": "npm run build && node --test ./tests/smoke.test.mjs",
     "test:e2e": "npm run build && node ./tests/e2e-homolog.mjs",
     "prepack": "npm run build",

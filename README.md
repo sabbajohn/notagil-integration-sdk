@@ -7,22 +7,27 @@ Este repositorio publica dois pacotes a partir do mesmo codigo fonte:
 - PHP/Composer: `notagil/integration-sdk`
 - TypeScript/npm: `@notagil/integration-sdk`
 
-O contrato OpenAPI versionado fica em `openapi/integration-v1.yaml`.
+Os contratos OpenAPI versionados ficam em:
+
+- `openapi/integration-v1.yaml`
+- `openapi/integration-v2.yaml`
 
 A estrutura recomendada para preview e emissao fiscal por `operation_code`, alem do payload canonico PT-BR para NFSe Nacional na superficie direta, esta documentada em [docs/payload-emissao.md](docs/payload-emissao.md).
 
 ## Release Atual
 
-`v0.3.0` consolida a resposta canônica publica com `legacy_aliases` explicito, adiciona descoberta de `swagger_url`/`openapi_url` nos SDKs e atualiza o endpoint oficial para `api_notagil.sabbasistemas.com.br`.
+`v0.4.0` adiciona uma superficie v2 explicita nos SDKs, com rotas companyless, envelope `dados`, contrato `FiscalCanonicalPayloadV2` e helpers de validacao/builders.
 
-Ele cobre autenticacao por bearer token, empresas, configuracao fiscal, certificados, catalogos fiscais, perfis fiscais de emissor, perfis de operacao, atribuicoes de perfil, referencias de aliquota, regras fiscais, readiness/onboarding XML, preview/emissao por `operation_code` com contrato `snapshot`, documentacao da estrutura de emissao, consulta/cancelamento/correcao de documentos, downloads XML/PDF/snapshot, envio direto escopado por empresa, XML direto, entrada NF-e, estoque, agendamentos, produtos, tomadores, webhooks, metricas e billing.
+Ele preserva a v1 compativel e acrescenta metodos v2 para contratos fiscais, emissao direta, emissao por operacao, consulta/cancelamento/correcao de documentos, configuracao, certificados, catalogos fiscais, produtos, tomadores, webhooks, metricas e billing.
 
-Breaking beta: os aliases sem `companyId` e a emissao por `payload` legado foram removidos. Use sempre rotas/metodos company-scoped com envelope `snapshot`.
+Tambem inclui consulta IBPT de item e cupom em v1/v2, com helpers `consultIbptItem`, `consultIbptCoupon`, `consultIbptItemV2` e `consultIbptCouponV2`.
+
+Na v2, use nomes publicos em portugues e `snake_case`; aliases legados continuam restritos a v1.
 
 ## Instalacao PHP
 
 ```sh
-composer require notagil/integration-sdk:^0.3.0
+composer require notagil/integration-sdk:^0.4.0
 ```
 
 ```php
@@ -34,6 +39,9 @@ $client = new NotaAgilClient(
 );
 
 $companies = $client->companies();
+
+$v2 = NotaAgilClient::v2(token: getenv('NOTAGIL_TOKEN'));
+$contract = $v2->fiscalContractV2('nfce');
 ```
 
 O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src`.
@@ -41,7 +49,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ## Instalacao TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@^0.3.0
+npm install @notagil/integration-sdk@^0.4.0
 ```
 
 ```ts
@@ -56,6 +64,9 @@ const companies = await client.listCompanies();
 const documents = await client.listCompanyDocuments(companies[0].id, { per_page: 20 });
 const authorized = await client.waitDocument('pdv-sale-0001', { companyId: companies[0].id });
 
+const v2 = NotagilIntegrationClient.v2({ token: process.env.NOTAGIL_TOKEN! });
+const contract = await v2.getFiscalContractV2('nfce');
+
 if (authorized.fiscal_status === 'authorized') {
   const xml = await client.downloadDocumentXml('pdv-sale-0001', companies[0].id);
   const pdf = await client.downloadDocumentPdf('pdv-sale-0001', companies[0].id);
@@ -68,9 +79,45 @@ if (authorized.fiscal_status === 'authorized') {
 
 O pacote npm e publicado a partir do diretorio `typescript/`.
 
+## Consulta IBPT
+
+Na v1, informe a empresa no helper e, se necessario, use aliases legados como `value`, `items`, `description` e `origin_code`:
+
+```php
+$ibptItem = $client->consultIbptItem($companyId, [
+    'uf' => 'SP',
+    'ncm' => '84715010',
+    'value' => 100,
+]);
+
+$ibptCupom = $client->consultIbptCoupon($companyId, [
+    'uf' => 'SP',
+    'items' => [
+        ['ncm' => '84715010', 'value' => 100],
+    ],
+]);
+```
+
+Na v2, use a empresa vinculada ao token e campos canonicos em portugues:
+
+```ts
+const ibptItem = await v2.consultIbptItemV2({
+  uf: 'SP',
+  ncm: '84715010',
+  valor: 100,
+});
+
+const ibptCupom = await v2.consultIbptCouponV2({
+  uf: 'SP',
+  itens: [
+    { ncm: '84715010', valor: 100 },
+  ],
+});
+```
+
 ## Desenvolvimento
 
-Atualize `openapi/integration-v1.yaml` a partir do `fiscal-platform-api` antes de gerar novos tipos.
+Atualize `openapi/integration-v1.yaml` e `openapi/integration-v2.yaml` a partir do `fiscal-platform-api` antes de gerar novos tipos.
 
 ```sh
 cd typescript
@@ -136,8 +183,8 @@ composer test
 4. Crie a tag semver, por exemplo:
 
 ```sh
-git tag v0.3.0
-git push origin v0.3.0
+git tag v0.4.0
+git push origin v0.4.0
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o pacote TypeScript no npm usando `NPM_TOKEN`.

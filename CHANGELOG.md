@@ -4,6 +4,19 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-23
+
+### Added
+- Suporte explicito a integracao v2 nos SDKs PHP e TypeScript, com factories `v2`, defaults para `/api/v2/integrations`, unwrap de envelope `dados` e leitura versionada de docs publicas.
+- Metodos v2 companyless para contratos fiscais, emissao direta, emissao por operacao, documentos, configuracao, certificados, catalogos fiscais, produtos, tomadores, webhooks, metricas e cobranca.
+- Metodos IBPT v1/v2 para consulta de item e cupom: `consultIbptItem`, `consultIbptCoupon`, `consultIbptItemV2` e `consultIbptCouponV2`.
+- Contrato `FiscalCanonicalPayloadV2` no TypeScript e helper PHP `FiscalCanonicalV2Contract`, com validacao local de campos publicos em portugues e builders por `document_type`.
+- OpenAPI v2 em `openapi/integration-v2.yaml` e tipos gerados em `typescript/src/openapi-types-v2.ts`.
+
+### Changed
+- `normalizeDocumentResponse` agora entende respostas v2 em portugues (`tipo_documento`, `status_fiscal`, `chave_documento`, `artefatos`) alem dos blocos legados.
+- Erros v2 com `mensagem`, `codigo` e `erros` passam a preencher as excecoes tipadas dos SDKs.
+
 ## [0.3.0] - 2026-06-08
 
 ### Added

@@ -1,6 +1,9 @@
 export type DocumentType = 'nfe' | 'nfce' | 'nfse';
 export type ResolutionStatus = 'resolved' | 'review' | 'blocked';
 export type FiscalEnvironment = 'homologacao' | 'producao';
+export type PublicApiVersion = 'v1' | 'v2';
+export const DEFAULT_BASE_URL_V1 = 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations';
+export const DEFAULT_BASE_URL_V2 = 'https://api_notagil.sabbasistemas.com.br/api/v2/integrations';
 export const NFSE_CANONICAL_POLICY_FIELDS = [
   'servico.cTribMun',
   'servico.cTribNac',
@@ -399,6 +402,310 @@ export interface DirectXmlSubmitRequest {
   metadata?: Record<string, unknown>;
 }
 
+export interface IdentificacaoFiscalV2 extends Record<string, unknown> {
+  serie?: string;
+  numero?: string;
+  natureza_operacao?: string;
+  data_emissao?: string;
+  data_competencia?: string;
+  ambiente?: FiscalEnvironment;
+  municipio_ocorrencia_codigo?: string;
+  presenca?: number;
+  intermediador?: number;
+}
+
+export interface EnderecoFiscalV2 extends Record<string, unknown> {
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  municipio?: string;
+  uf?: string;
+  cep?: string;
+  codigo_municipio?: string;
+  codigo_ibge?: string;
+}
+
+export interface ParteFiscalV2 extends Record<string, unknown> {
+  documento?: string;
+  cpf?: string;
+  cnpj?: string;
+  nome?: string;
+  razao_social?: string;
+  nome_fantasia?: string;
+  tipo_pessoa?: 'fisica' | 'juridica' | 'estrangeiro' | string;
+  inscricao_estadual?: string;
+  inscricao_municipal?: string;
+  crt?: string;
+  email?: string;
+  telefone?: string;
+  endereco?: EnderecoFiscalV2;
+}
+
+export interface TributoFiscalV2 extends Record<string, unknown> {
+  cst?: string;
+  csosn?: string;
+  aliquota?: number;
+  base_calculo?: number;
+  valor?: number;
+}
+
+export interface ImpostosFiscalV2 extends Record<string, unknown> {
+  icms?: TributoFiscalV2;
+  iss?: TributoFiscalV2;
+  pis?: TributoFiscalV2;
+  cofins?: TributoFiscalV2;
+  ibs?: TributoFiscalV2;
+  cbs?: TributoFiscalV2;
+}
+
+export interface ItemFiscalV2 extends Record<string, unknown> {
+  codigo?: string;
+  descricao: string;
+  quantidade: number;
+  valor_unitario: number;
+  valor_total?: number;
+  unidade?: string;
+  ncm?: string;
+  cfop?: string;
+  impostos?: ImpostosFiscalV2;
+}
+
+export interface ServicoFiscalV2 extends Record<string, unknown> {
+  codigo_servico_nacional?: string;
+  codigo_servico_municipal?: string;
+  codigo_nbs?: string;
+  codigo_municipio_prestacao?: string;
+  municipio_prestacao_codigo?: string;
+  descricao?: string;
+  aliquota_iss?: number;
+  aliquota?: number;
+  iss_retido?: boolean;
+  tributacao_iss?: string;
+  valor_irrf?: number;
+  valor_ir?: number;
+}
+
+export interface PagamentoFiscalV2 extends Record<string, unknown> {
+  meios?: Array<{
+    meio?: string;
+    valor?: number;
+    [key: string]: unknown;
+  }>;
+}
+
+export interface TransporteFiscalV2 extends Record<string, unknown> {
+  modalidade_frete?: string;
+}
+
+export interface ReferenciaFiscalV2 extends Record<string, unknown> {
+  chave?: string;
+  tipo?: string;
+}
+
+export interface TotaisFiscalV2 extends Record<string, unknown> {
+  valor_produtos?: number;
+  valor_servicos?: number;
+  valor_descontos?: number;
+  valor_documento?: number;
+}
+
+export interface ObservacoesFiscalV2 extends Record<string, unknown> {
+  contribuinte?: string;
+  fisco?: string;
+  texto?: string;
+}
+
+export interface FiscalCanonicalPayloadV2 extends Record<string, unknown> {
+  identificacao: IdentificacaoFiscalV2;
+  emitente: ParteFiscalV2;
+  tomador: ParteFiscalV2;
+  itens: ItemFiscalV2[];
+  servico?: ServicoFiscalV2;
+  pagamento?: PagamentoFiscalV2;
+  transporte?: TransporteFiscalV2;
+  referencias?: ReferenciaFiscalV2[];
+  totais?: TotaisFiscalV2;
+  impostos?: ImpostosFiscalV2;
+  observacoes?: ObservacoesFiscalV2;
+  extensoes?: Record<string, unknown>;
+}
+
+export interface FiscalContractInfo {
+  contrato?: string;
+  versao?: string;
+  tipo_documento?: DocumentType | string;
+  provedor?: string | null;
+  familia_layout?: string | null;
+  raizes_payload?: string[];
+  campos_obrigatorios?: string[];
+  campos_visiveis?: string[];
+  campos_enum?: Record<string, string[]>;
+  regras_condicionais?: Array<Record<string, unknown>>;
+  valores_padrao?: Record<string, unknown>;
+  extensoes_suportadas?: string[];
+  rotulos?: Record<string, string>;
+  dicas?: Record<string, string>;
+  [key: string]: unknown;
+}
+
+export interface DirectDocumentSubmitRequestV2 {
+  external_id: string;
+  document_type: DocumentType;
+  municipio?: string | null;
+  ambiente_fiscal?: FiscalEnvironment;
+  modo_emissao?: 'fila' | 'sincrono';
+  sincrono?: boolean;
+  payload: FiscalCanonicalPayloadV2;
+  metadata?: Record<string, unknown>;
+}
+
+export interface DirectDocumentRequestV2Options {
+  external_id: string;
+  municipio?: string | null;
+  ambiente_fiscal?: FiscalEnvironment;
+  modo_emissao?: 'fila' | 'sincrono';
+  sincrono?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+export interface OperationDocumentSnapshotV2 extends Record<string, unknown> {
+  fiscal_environment?: FiscalEnvironment;
+  reference_date?: string;
+  document_direction?: 'entrada' | 'saida' | string;
+  document_data?: Record<string, unknown>;
+  counterparty?: Record<string, unknown>;
+  document_references?: Array<Record<string, unknown>>;
+  items: Array<Record<string, unknown>>;
+}
+
+export interface OperationDocumentPreviewRequestV2 {
+  external_id?: string;
+  document_type: DocumentType;
+  municipio?: string | null;
+  retrato: OperationDocumentSnapshotV2;
+  metadata?: Record<string, unknown>;
+}
+
+export interface OperationDocumentSubmitRequestV2 extends OperationDocumentPreviewRequestV2 {
+  external_id: string;
+  modo_emissao?: 'fila' | 'sincrono';
+  sincrono?: boolean;
+}
+
+export interface DocumentStatusV2 extends Record<string, unknown> {
+  id?: string | number;
+  external_id?: string | null;
+  status?: string | null;
+  tipo_documento?: DocumentType | string | null;
+  serie?: string | null;
+  numero?: string | number | null;
+  status_operacional?: string | null;
+  status_fiscal?: string | null;
+  ambiente_fiscal?: FiscalEnvironment | string | null;
+  chave_documento?: string | null;
+  protocolo?: string | null;
+  autorizado_em?: string | null;
+  artefatos?: Record<string, unknown> | null;
+  mensagem?: string | null;
+  motivo_rejeicao?: string | null;
+  erros?: unknown;
+}
+
+export interface DocumentListFiltersV2 {
+  external_id?: string;
+  tipo_documento?: DocumentType;
+  status_operacional?: string;
+  status_fiscal?: string;
+  criado_de?: string;
+  criado_ate?: string;
+  por_pagina?: number;
+}
+
+export interface PublicEnvelopeV2<T> {
+  dados: T;
+  metadados?: Record<string, unknown>;
+  codigo?: string;
+}
+
+export interface PaginatedDocumentListV2 extends PublicEnvelopeV2<DocumentStatusV2[]> {
+  metadados?: {
+    pagina_atual?: number;
+    ultima_pagina?: number;
+    por_pagina?: number;
+    total?: number;
+    [key: string]: unknown;
+  };
+}
+
+export type IbptOriginType = 'nacional' | 'importada';
+
+export interface IbptItemRequest extends Record<string, unknown> {
+  uf: string;
+  ncm: string;
+  valor: number | string;
+  extarif?: string | number | null;
+  descricao?: string | null;
+  unidade?: string | null;
+  gtin?: string | null;
+  codigo_interno?: string | number | null;
+  codigo_origem?: string | number | null;
+  tipo_mercadoria?: IbptOriginType | string | null;
+  importado?: boolean | null;
+}
+
+export type IbptCouponItemRequest = Omit<IbptItemRequest, 'uf'> & {
+  uf?: string;
+};
+
+export interface IbptCouponRequest extends Record<string, unknown> {
+  uf: string;
+  itens: IbptCouponItemRequest[];
+}
+
+export interface IbptTaxRates extends Record<string, unknown> {
+  nacional?: number | null;
+  importada?: number | null;
+  estadual?: number | null;
+  municipal?: number | null;
+  federal_utilizada?: number | null;
+}
+
+export interface IbptTaxValues extends Record<string, unknown> {
+  tributo_nacional?: number | null;
+  tributo_importado?: number | null;
+  tributo_federal?: number | null;
+  tributo_estadual?: number | null;
+  tributo_municipal?: number | null;
+  tributo_total?: number | null;
+}
+
+export interface IbptTableInfo extends Record<string, unknown> {
+  vigencia_inicio?: string | null;
+  vigencia_fim?: string | null;
+  chave?: string | null;
+  versao?: string | null;
+  fonte?: string | null;
+}
+
+export interface IbptCacheInfo extends Record<string, unknown> {
+  status?: string | null;
+  chave?: string | null;
+  expira_em?: string | null;
+}
+
+export interface IbptItemResult extends Record<string, unknown> {
+  aliquotas?: IbptTaxRates;
+  valores?: IbptTaxValues;
+  tabela?: IbptTableInfo;
+  cache?: IbptCacheInfo;
+}
+
+export interface IbptCouponResult extends Record<string, unknown> {
+  itens?: IbptItemResult[];
+  totais?: IbptTaxValues & Record<string, unknown>;
+}
+
 export interface PreviewResult {
   resolution_status: ResolutionStatus | string | null;
   emission_allowed: boolean | null;
@@ -552,6 +859,11 @@ export interface PublicDocsSettings {
   changelog: string;
   openapi_url: string;
   swagger_url?: string;
+  versions?: Partial<Record<PublicApiVersion, {
+    openapi_url?: string;
+    swagger_url?: string;
+    [key: string]: unknown;
+  }>>;
 }
 
 export interface DocumentSnapshotResult {
@@ -680,20 +992,330 @@ export interface WaitDocumentOptions {
   terminalOperationalStatuses?: string[];
 }
 
-export function normalizeDocumentResponse<T extends Partial<DocumentAccepted & DocumentStatus>>(document: T): T {
-  const legacy = isRecord(document.legacy_aliases) ? document.legacy_aliases : {};
+export function normalizeDocumentResponse<T extends Partial<DocumentAccepted & DocumentStatus & DocumentStatusV2>>(document: T | { data?: unknown; dados?: unknown }): T {
+  let normalizedInput = document;
+  if (isRecord(normalizedInput) && isRecord(normalizedInput.dados)) {
+    normalizedInput = normalizedInput.dados as T;
+  }
+  if (isRecord(normalizedInput) && isRecord(normalizedInput.data)) {
+    normalizedInput = normalizedInput.data as T;
+  }
+  const maybeBlock: Record<string, unknown> = isRecord(normalizedInput) ? normalizedInput : {};
+  if (isRecord(maybeBlock.document)) {
+    const block = maybeBlock;
+    const documentBlock = block.document as Record<string, unknown>;
+    const fiscalBlock = isRecord(block.fiscal) ? block.fiscal : {};
+    const operationalBlock = isRecord(block.operational) ? block.operational : {};
+    normalizedInput = {
+      ...documentBlock,
+      ...(isRecord(block.fiscal) ? {
+        fiscal_status: fiscalBlock.status,
+        access_key: fiscalBlock.access_key,
+        document_key: fiscalBlock.document_key,
+        protocol: fiscalBlock.protocol,
+        authorized_at: fiscalBlock.authorized_at,
+      } : {}),
+      ...(isRecord(block.operational) ? {
+        operational_status: operationalBlock.status,
+      } : {}),
+      ...(isRecord(block.artifacts) ? {
+        artifacts: block.artifacts,
+      } : {}),
+    } as T;
+  }
+
+  const doc = normalizedInput as T;
+  const legacy = isRecord(doc.legacy_aliases) ? doc.legacy_aliases : {};
+  const artefatos = isRecord(doc.artefatos) ? doc.artefatos : {};
 
   return {
-    ...document,
-    document_type: document.document_type ?? (legacy.type as string | undefined) ?? null,
-    series: document.series ?? (legacy.serie as string | undefined) ?? null,
-    number: document.number ?? (legacy.numero as string | number | undefined) ?? null,
-    access_key: document.access_key ?? (legacy.chave_acesso as string | undefined) ?? document.document_key ?? null,
-    protocol: document.protocol ?? (legacy.protocolo as string | undefined) ?? null,
-    authorized_at: document.authorized_at ?? (legacy.autorizado_em as string | undefined) ?? null,
-    operational_status: document.operational_status ?? (legacy.status_operacional as string | undefined) ?? null,
-    fiscal_status: document.fiscal_status ?? (legacy.status_fiscal as string | undefined) ?? document.status ?? null,
+    ...doc,
+    document_type: doc.document_type ?? doc.tipo_documento ?? (legacy.type as string | undefined) ?? null,
+    series: doc.series ?? doc.serie ?? (legacy.serie as string | undefined) ?? null,
+    number: doc.number ?? doc.numero ?? (legacy.numero as string | number | undefined) ?? null,
+    access_key: doc.access_key ?? doc.chave_documento ?? (legacy.chave_acesso as string | undefined) ?? doc.document_key ?? null,
+    protocol: doc.protocol ?? doc.protocolo ?? (legacy.protocolo as string | undefined) ?? null,
+    authorized_at: doc.authorized_at ?? doc.autorizado_em ?? (legacy.autorizado_em as string | undefined) ?? null,
+    operational_status: doc.operational_status ?? doc.status_operacional ?? (legacy.status_operacional as string | undefined) ?? null,
+    fiscal_status: doc.fiscal_status ?? doc.status_fiscal ?? (legacy.status_fiscal as string | undefined) ?? doc.status ?? null,
+    artifacts: doc.artifacts ?? (Object.keys(artefatos).length > 0 ? {
+      xml_available: artefatos.xml_disponivel,
+      pdf_available: artefatos.pdf_disponivel,
+      processing: artefatos.processando,
+      xml_status: artefatos.status_xml,
+      pdf_status: artefatos.status_pdf,
+      xml_url: artefatos.url_xml,
+      pdf_url: artefatos.url_pdf,
+    } : doc.artifacts),
   };
+}
+
+export const FISCAL_CANONICAL_V2_EXPECTED_FIELDS = [
+  'identificacao',
+  'identificacao.serie',
+  'identificacao.numero',
+  'identificacao.natureza_operacao',
+  'identificacao.data_emissao',
+  'identificacao.data_competencia',
+  'identificacao.ambiente',
+  'identificacao.municipio_ocorrencia_codigo',
+  'identificacao.presenca',
+  'identificacao.intermediador',
+  'emitente',
+  'emitente.documento',
+  'emitente.cpf',
+  'emitente.cnpj',
+  'emitente.nome',
+  'emitente.razao_social',
+  'emitente.nome_fantasia',
+  'emitente.tipo_pessoa',
+  'emitente.inscricao_estadual',
+  'emitente.inscricao_municipal',
+  'emitente.crt',
+  'emitente.email',
+  'emitente.telefone',
+  'emitente.endereco',
+  'tomador',
+  'tomador.documento',
+  'tomador.cpf',
+  'tomador.cnpj',
+  'tomador.nome',
+  'tomador.razao_social',
+  'tomador.nome_fantasia',
+  'tomador.tipo_pessoa',
+  'tomador.inscricao_estadual',
+  'tomador.inscricao_municipal',
+  'tomador.crt',
+  'tomador.email',
+  'tomador.telefone',
+  'tomador.endereco',
+  'itens',
+  'itens.*.codigo',
+  'itens.*.descricao',
+  'itens.*.quantidade',
+  'itens.*.valor_unitario',
+  'itens.*.valor_total',
+  'itens.*.unidade',
+  'itens.*.ncm',
+  'itens.*.cfop',
+  'itens.*.impostos',
+  'servico',
+  'servico.codigo_servico_nacional',
+  'servico.codigo_servico_municipal',
+  'servico.codigo_nbs',
+  'servico.codigo_municipio_prestacao',
+  'servico.municipio_prestacao_codigo',
+  'servico.descricao',
+  'servico.aliquota_iss',
+  'servico.aliquota',
+  'servico.iss_retido',
+  'servico.tributacao_iss',
+  'servico.valor_irrf',
+  'servico.valor_ir',
+  'pagamento',
+  'pagamento.meios',
+  'transporte',
+  'transporte.modalidade_frete',
+  'referencias',
+  'referencias.*.chave',
+  'referencias.*.tipo',
+  'totais',
+  'totais.valor_produtos',
+  'totais.valor_servicos',
+  'totais.valor_descontos',
+  'totais.valor_documento',
+  'impostos',
+  'impostos.icms',
+  'impostos.iss',
+  'impostos.pis',
+  'impostos.cofins',
+  'impostos.ibs',
+  'impostos.cbs',
+  'observacoes',
+  'observacoes.contribuinte',
+  'observacoes.fisco',
+  'observacoes.texto',
+  'extensoes',
+] as const;
+
+export class FiscalCanonicalPayloadV2Error extends Error {
+  readonly expectedFields: string[];
+  readonly invalidFields: string[];
+
+  constructor(expectedFields: readonly string[], invalidFields: string[]) {
+    super('Payload invalido para FiscalCanonicalPayloadV2. Use somente campos publicos em portugues e snake_case.');
+    this.name = 'FiscalCanonicalPayloadV2Error';
+    this.expectedFields = [...expectedFields];
+    this.invalidFields = invalidFields;
+  }
+}
+
+const FISCAL_CANONICAL_V2_PART_SCHEMA: CanonicalSchema = {
+  documento: true,
+  cpf: true,
+  cnpj: true,
+  nome: true,
+  razao_social: true,
+  nome_fantasia: true,
+  tipo_pessoa: true,
+  inscricao_estadual: true,
+  inscricao_municipal: true,
+  crt: true,
+  email: true,
+  telefone: true,
+  endereco: {
+    logradouro: true,
+    numero: true,
+    complemento: true,
+    bairro: true,
+    municipio: true,
+    uf: true,
+    cep: true,
+    codigo_municipio: true,
+    codigo_ibge: true,
+  },
+};
+
+const FISCAL_CANONICAL_V2_TRIBUTO_SCHEMA: CanonicalSchema = {
+  cst: true,
+  csosn: true,
+  aliquota: true,
+  base_calculo: true,
+  valor: true,
+};
+
+const FISCAL_CANONICAL_V2_IMPOSTOS_SCHEMA: CanonicalSchema = {
+  icms: FISCAL_CANONICAL_V2_TRIBUTO_SCHEMA,
+  iss: FISCAL_CANONICAL_V2_TRIBUTO_SCHEMA,
+  pis: FISCAL_CANONICAL_V2_TRIBUTO_SCHEMA,
+  cofins: FISCAL_CANONICAL_V2_TRIBUTO_SCHEMA,
+  ibs: FISCAL_CANONICAL_V2_TRIBUTO_SCHEMA,
+  cbs: FISCAL_CANONICAL_V2_TRIBUTO_SCHEMA,
+};
+
+const FISCAL_CANONICAL_V2_SCHEMA: CanonicalSchema = {
+  identificacao: {
+    serie: true,
+    numero: true,
+    natureza_operacao: true,
+    data_emissao: true,
+    data_competencia: true,
+    ambiente: true,
+    municipio_ocorrencia_codigo: true,
+    presenca: true,
+    intermediador: true,
+  },
+  emitente: FISCAL_CANONICAL_V2_PART_SCHEMA,
+  tomador: FISCAL_CANONICAL_V2_PART_SCHEMA,
+  itens: {
+    '*': {
+      codigo: true,
+      descricao: true,
+      quantidade: true,
+      valor_unitario: true,
+      valor_total: true,
+      unidade: true,
+      ncm: true,
+      cfop: true,
+      impostos: FISCAL_CANONICAL_V2_IMPOSTOS_SCHEMA,
+    },
+  },
+  servico: {
+    codigo_servico_nacional: true,
+    codigo_servico_municipal: true,
+    codigo_nbs: true,
+    codigo_municipio_prestacao: true,
+    municipio_prestacao_codigo: true,
+    descricao: true,
+    aliquota_iss: true,
+    aliquota: true,
+    iss_retido: true,
+    tributacao_iss: true,
+    valor_irrf: true,
+    valor_ir: true,
+  },
+  pagamento: {
+    meios: {
+      '*': {
+        meio: true,
+        valor: true,
+      },
+    },
+  },
+  transporte: {
+    modalidade_frete: true,
+  },
+  referencias: {
+    '*': {
+      chave: true,
+      tipo: true,
+    },
+  },
+  totais: {
+    valor_produtos: true,
+    valor_servicos: true,
+    valor_descontos: true,
+    valor_documento: true,
+  },
+  impostos: FISCAL_CANONICAL_V2_IMPOSTOS_SCHEMA,
+  observacoes: {
+    contribuinte: true,
+    fisco: true,
+    texto: true,
+  },
+  extensoes: true,
+};
+
+export function assertFiscalCanonicalPayloadV2(payload: Record<string, unknown>): asserts payload is FiscalCanonicalPayloadV2 {
+  const invalidFields = [...new Set([
+    ...missingFiscalCanonicalV2RequiredFields(payload),
+    ...collectInvalidPaths(payload, FISCAL_CANONICAL_V2_SCHEMA),
+  ])].sort();
+  if (invalidFields.length === 0) {
+    return;
+  }
+
+  throw new FiscalCanonicalPayloadV2Error(FISCAL_CANONICAL_V2_EXPECTED_FIELDS, invalidFields);
+}
+
+export function buildDirectDocumentRequestV2(
+  documentType: DocumentType,
+  payload: Record<string, unknown>,
+  options: DirectDocumentRequestV2Options,
+): DirectDocumentSubmitRequestV2 {
+  assertFiscalCanonicalPayloadV2(payload);
+
+  return {
+    external_id: options.external_id,
+    document_type: documentType,
+    ...(options.municipio === undefined ? {} : { municipio: options.municipio }),
+    ...(options.ambiente_fiscal === undefined ? {} : { ambiente_fiscal: options.ambiente_fiscal }),
+    ...(options.modo_emissao === undefined ? {} : { modo_emissao: options.modo_emissao }),
+    ...(options.sincrono === undefined ? {} : { sincrono: options.sincrono }),
+    payload,
+    ...(options.metadata === undefined ? {} : { metadata: options.metadata }),
+  };
+}
+
+export function buildDirectNfeDocumentRequestV2(payload: Record<string, unknown>, options: DirectDocumentRequestV2Options): DirectDocumentSubmitRequestV2 {
+  return buildDirectDocumentRequestV2('nfe', payload, options);
+}
+
+export function buildDirectNfceDocumentRequestV2(payload: Record<string, unknown>, options: DirectDocumentRequestV2Options): DirectDocumentSubmitRequestV2 {
+  return buildDirectDocumentRequestV2('nfce', payload, options);
+}
+
+export function buildDirectNfseDocumentRequestV2(payload: Record<string, unknown>, options: DirectDocumentRequestV2Options): DirectDocumentSubmitRequestV2 {
+  return buildDirectDocumentRequestV2('nfse', payload, options);
+}
+
+function missingFiscalCanonicalV2RequiredFields(payload: Record<string, unknown>): string[] {
+  const missing = ['identificacao', 'emitente', 'tomador', 'itens'].filter((field) => !(field in payload));
+  if ('itens' in payload && (!Array.isArray(payload.itens) || payload.itens.length === 0)) {
+    missing.push('itens');
+  }
+
+  return missing;
 }
 
 function legacyNfseNacionalFields(payload: Record<string, unknown>): string[] {
@@ -717,6 +1339,25 @@ function collectInvalidPaths(payload: Record<string, unknown>, schema: Canonical
     }
 
     if (childSchema === true) {
+      continue;
+    }
+
+    if (isRecord(childSchema) && '*' in childSchema) {
+      const itemSchema = childSchema['*'];
+      if (!Array.isArray(value) || itemSchema === true || !isRecord(itemSchema)) {
+        invalid.push(path);
+        continue;
+      }
+
+      value.forEach((item, index) => {
+        const itemPath = `${path}.${index}`;
+        if (!isRecord(item)) {
+          invalid.push(itemPath);
+          return;
+        }
+
+        invalid.push(...collectInvalidPaths(item, itemSchema, itemPath));
+      });
       continue;
     }
 
@@ -911,10 +1552,30 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function defaultBaseUrl(apiVersion: PublicApiVersion): string {
+  return apiVersion === 'v2' ? DEFAULT_BASE_URL_V2 : DEFAULT_BASE_URL_V1;
+}
+
+function inferApiVersion(baseUrl?: string): PublicApiVersion {
+  return typeof baseUrl === 'string' && /\/v2\/integrations\/?$/.test(baseUrl) ? 'v2' : 'v1';
+}
+
+function apiErrorMessage(status: number, body: unknown): string {
+  if (isRecord(body) && typeof body.message === 'string') {
+    return body.message;
+  }
+  if (isRecord(body) && typeof body.mensagem === 'string') {
+    return body.mensagem;
+  }
+
+  return `NotaAgil API error ${status}`;
+}
+
 export interface NotagilClientOptions {
-  baseUrl: string;
+  baseUrl?: string;
   token: string;
   fetch?: typeof fetch;
+  apiVersion?: PublicApiVersion;
 }
 
 export class NotagilApiError extends Error {
@@ -925,17 +1586,19 @@ export class NotagilApiError extends Error {
   readonly errors: unknown;
   readonly rejectionReason: unknown;
   readonly rejection_reason: unknown;
+  readonly codigo: unknown;
 
   constructor(status: number, body: unknown) {
-    super(typeof body === 'object' && body !== null && 'message' in body ? String((body as { message?: unknown }).message) : `NotaAgil API error ${status}`);
+    super(apiErrorMessage(status, body));
     this.name = 'NotagilApiError';
     this.status = status;
     this.statusCode = status;
     this.body = body;
     this.payload = body;
-    this.errors = typeof body === 'object' && body !== null && 'errors' in body ? (body as { errors?: unknown }).errors : undefined;
-    this.rejectionReason = typeof body === 'object' && body !== null && 'rejection_reason' in body ? (body as { rejection_reason?: unknown }).rejection_reason : undefined;
+    this.errors = isRecord(body) ? body.errors ?? body.erros : undefined;
+    this.rejectionReason = isRecord(body) ? body.rejection_reason ?? body.motivo_rejeicao : undefined;
     this.rejection_reason = this.rejectionReason;
+    this.codigo = isRecord(body) ? body.codigo : undefined;
   }
 }
 
@@ -943,11 +1606,25 @@ export class NotagilIntegrationClient {
   private readonly baseUrl: string;
   private readonly token: string;
   private readonly fetcher: typeof fetch;
+  public readonly apiVersion: PublicApiVersion;
 
   constructor(options: NotagilClientOptions) {
-    this.baseUrl = options.baseUrl.replace(/\/+$/, '');
+    this.apiVersion = options.apiVersion ?? inferApiVersion(options.baseUrl);
+    this.baseUrl = (options.baseUrl ?? defaultBaseUrl(this.apiVersion)).replace(/\/+$/, '');
     this.token = options.token;
     this.fetcher = options.fetch ?? fetch;
+  }
+
+  static v1(options: Omit<NotagilClientOptions, 'apiVersion'>): NotagilIntegrationClient {
+    return new NotagilIntegrationClient({ ...options, baseUrl: options.baseUrl ?? DEFAULT_BASE_URL_V1, apiVersion: 'v1' });
+  }
+
+  static v2(options: Omit<NotagilClientOptions, 'apiVersion'>): NotagilIntegrationClient {
+    return new NotagilIntegrationClient({ ...options, baseUrl: options.baseUrl ?? DEFAULT_BASE_URL_V2, apiVersion: 'v2' });
+  }
+
+  getApiVersion(): PublicApiVersion {
+    return this.apiVersion;
   }
 
   listCompanies(filters: CompanyListFilters = {}): Promise<IntegrationCompany[]> {
@@ -963,19 +1640,20 @@ export class NotagilIntegrationClient {
   }
 
   getPublicDocsSettings(): Promise<PublicDocsSettings> {
-    return this.requestFromBase<PublicDocsSettings>(this.platformBaseUrl(), '/public/docs', {
+    return this.requestFromBase<PublicDocsSettings>(this.platformBaseUrl(), this.publicDocsPath(), {
       method: 'GET',
     });
   }
 
   async getPublicOpenApiUrl(): Promise<string> {
     const docs = await this.getPublicDocsSettings();
-    return docs.openapi_url;
+    return this.publicDocsUrl(docs, 'openapi_url') ?? docs.openapi_url;
   }
 
   async getPublicSwaggerUrl(): Promise<string | null> {
     const docs = await this.getPublicDocsSettings();
-    return typeof docs.swagger_url === 'string' && docs.swagger_url.trim() !== '' ? docs.swagger_url : null;
+    const url = this.publicDocsUrl(docs, 'swagger_url') ?? docs.swagger_url;
+    return typeof url === 'string' && url.trim() !== '' ? url : null;
   }
 
   previewCompanyDocumentByOperation(
@@ -1027,6 +1705,156 @@ export class NotagilIntegrationClient {
         'Idempotency-Key': idempotencyKey,
       },
       body: payload,
+    });
+  }
+
+  getFiscalContractV2(documentType: DocumentType): Promise<FiscalContractInfo> {
+    return this.request<FiscalContractInfo>(`/contratos/${encodeURIComponent(documentType)}`, {
+      method: 'GET',
+    });
+  }
+
+  createDirectDocumentV2(payload: DirectDocumentSubmitRequestV2, idempotencyKey: string): Promise<DocumentStatusV2> {
+    return this.request<DocumentStatusV2>('/direto/documentos', {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: payload,
+    });
+  }
+
+  transmitDirectXmlV2(payload: Record<string, unknown>, idempotencyKey: string): Promise<DocumentStatusV2> {
+    return this.request<DocumentStatusV2>('/direto/documentos/xml', {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: payload,
+    });
+  }
+
+  getCompanyV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/empresa', {
+      method: 'GET',
+    });
+  }
+
+  getCompanyConfigurationV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/configuracao', {
+      method: 'GET',
+    });
+  }
+
+  updateCompanyConfigurationV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/configuracao', {
+      method: 'PUT',
+      body: payload,
+    });
+  }
+
+  getNfseProviderInfoV2(params: { municipio?: string | null; ambiente_fiscal?: FiscalEnvironment } = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.withQuery('/nfse/informacoes-provedor', params), {
+      method: 'GET',
+    });
+  }
+
+  validateNfceCscV2(payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/nfce/validar-csc', {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  previewDocumentByOperationV2(operationCode: string, payload: OperationDocumentPreviewRequestV2): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/operacoes/${encodeURIComponent(operationCode)}/previsualizar`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  createDocumentByOperationV2(operationCode: string, payload: OperationDocumentSubmitRequestV2, idempotencyKey: string): Promise<DocumentStatusV2> {
+    return this.request<DocumentStatusV2>(`/operacoes/${encodeURIComponent(operationCode)}/emitir`, {
+      method: 'POST',
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: payload,
+    });
+  }
+
+  listDocumentsV2(filters: DocumentListFiltersV2 = {}): Promise<PaginatedDocumentListV2> {
+    return this.request<PaginatedDocumentListV2>(this.withQuery('/documentos', filters), {
+      method: 'GET',
+      unwrapData: false,
+    });
+  }
+
+  getDocumentV2(externalId: string): Promise<DocumentStatusV2> {
+    return this.request<DocumentStatusV2>(`/documentos/${encodeURIComponent(externalId)}`, {
+      method: 'GET',
+    });
+  }
+
+  async waitDocumentV2(
+    externalId: string,
+    options: Omit<WaitDocumentOptions, 'companyId'> & { terminalFiscalStatuses?: string[]; terminalOperationalStatuses?: string[] } = {},
+  ): Promise<DocumentStatusV2> {
+    const intervalMs = options.intervalMs ?? 2000;
+    const timeoutMs = options.timeoutMs ?? 120000;
+    const fiscalTerminals = new Set(options.terminalFiscalStatuses ?? ['autorizado', 'rejeitado', 'cancelado', 'corrigido', 'authorized', 'rejected', 'cancelled', 'corrected']);
+    const operationalTerminals = new Set(options.terminalOperationalStatuses ?? ['concluido', 'falhou', 'completed', 'failed']);
+    const started = Date.now();
+
+    while (true) {
+      const document = await this.getDocumentV2(externalId);
+      if (fiscalTerminals.has(String(document.status_fiscal ?? document.fiscal_status)) || operationalTerminals.has(String(document.status_operacional ?? document.operational_status))) {
+        return document;
+      }
+
+      if (Date.now() - started >= timeoutMs) {
+        return document;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+  }
+
+  downloadDocumentXmlV2(externalId: string, params: { ambiente_fiscal?: FiscalEnvironment } = {}): Promise<DownloadResult> {
+    return this.download(this.withQuery(`/documentos/${encodeURIComponent(externalId)}/xml`, params), 'text');
+  }
+
+  downloadDocumentPdfV2(externalId: string, params: { ambiente_fiscal?: FiscalEnvironment } = {}): Promise<DownloadResult> {
+    return this.download(this.withQuery(`/documentos/${encodeURIComponent(externalId)}/pdf`, params), 'base64');
+  }
+
+  getDocumentSnapshotV2(externalId: string, params: { ambiente_fiscal?: FiscalEnvironment } = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.withQuery(`/documentos/${encodeURIComponent(externalId)}/retrato`, params), {
+      method: 'GET',
+    });
+  }
+
+  queryDocumentV2(externalId: string, payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/documentos/${encodeURIComponent(externalId)}/consultar`, {
+      method: 'POST',
+      body: payload,
+    });
+  }
+
+  cancelDocumentV2(externalId: string, justificativa: string): Promise<DocumentStatusV2> {
+    return this.request<DocumentStatusV2>(`/documentos/${encodeURIComponent(externalId)}/cancelar`, {
+      method: 'POST',
+      body: { justificativa },
+    });
+  }
+
+  correctDocumentV2(externalId: string, correcao: string, sequencia?: number): Promise<DocumentStatusV2> {
+    return this.request<DocumentStatusV2>(`/documentos/${encodeURIComponent(externalId)}/corrigir`, {
+      method: 'POST',
+      body: {
+        correcao,
+        ...(sequencia === undefined ? {} : { sequencia }),
+      },
     });
   }
 
@@ -1314,6 +2142,14 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>(this.withQuery(this.companyPath('/fiscal/utils/ncms', companyId), params), { method: 'GET', unwrapData: false });
   }
 
+  consultIbptItem(companyId: string | number, payload: IbptItemRequest | Record<string, unknown>): Promise<IbptItemResult> {
+    return this.request<IbptItemResult>(this.companyPath('/fiscal/utils/ibpt', companyId), { method: 'POST', body: payload });
+  }
+
+  consultIbptCoupon(companyId: string | number, payload: IbptCouponRequest | Record<string, unknown>): Promise<IbptCouponResult> {
+    return this.request<IbptCouponResult>(this.companyPath('/fiscal/utils/ibpt/coupon', companyId), { method: 'POST', body: payload });
+  }
+
   listTaxCatalogs(companyId: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.withQuery(this.companyPath('/fiscal/tax-catalogs', companyId), params), { method: 'GET' });
   }
@@ -1541,6 +2377,266 @@ export class NotagilIntegrationClient {
     return this.request<DeleteResult>(this.companyPath(`/schedules/${encodeURIComponent(String(scheduleId))}`, companyId), { method: 'DELETE' });
   }
 
+  listCertificatesV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/certificados', { method: 'GET' });
+  }
+
+  createCertificateV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/certificados', { method: 'POST', body: payload });
+  }
+
+  updateCertificateV2(certificateId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/certificados/${encodeURIComponent(String(certificateId))}`, { method: 'PATCH', body: payload });
+  }
+
+  validateCertificateV2(certificateId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/certificados/${encodeURIComponent(String(certificateId))}/validar`, { method: 'POST' });
+  }
+
+  getReadinessV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/prontidao', { method: 'GET' });
+  }
+
+  listOnboardingImportsV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/implantacao/importacoes', { method: 'GET' });
+  }
+
+  createOnboardingImportV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/implantacao/importacoes', { method: 'POST', body: payload });
+  }
+
+  getOnboardingImportV2(importId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/implantacao/importacoes/${encodeURIComponent(String(importId))}`, { method: 'GET' });
+  }
+
+  reviewOnboardingImportV2(importId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/implantacao/importacoes/${encodeURIComponent(String(importId))}/revisar`, { method: 'POST', body: payload });
+  }
+
+  promoteOnboardingImportV2(importId: string | number, payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/implantacao/importacoes/${encodeURIComponent(String(importId))}/promover`, { method: 'POST', body: payload });
+  }
+
+  listFiscalOptionsV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/fiscal/opcoes', { method: 'GET' });
+  }
+
+  listCfopsV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/fiscal/cfops', { method: 'GET' });
+  }
+
+  searchMunicipalitiesV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery('/fiscal/utilitarios/municipios', params), { method: 'GET' });
+  }
+
+  searchNcmsV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery('/fiscal/utilitarios/ncms', params), { method: 'GET' });
+  }
+
+  consultIbptItemV2(payload: IbptItemRequest): Promise<IbptItemResult> {
+    return this.request<IbptItemResult>('/fiscal/utilitarios/ibpt', { method: 'POST', body: payload });
+  }
+
+  consultIbptCouponV2(payload: IbptCouponRequest): Promise<IbptCouponResult> {
+    return this.request<IbptCouponResult>('/fiscal/utilitarios/ibpt/cupom', { method: 'POST', body: payload });
+  }
+
+  listTaxCatalogsV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery('/fiscal/catalogos-tributarios', params), { method: 'GET' });
+  }
+
+  listTaxSituationsV2(catalog: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery(`/fiscal/catalogos-tributarios/${encodeURIComponent(String(catalog))}/situacoes`, params), { method: 'GET' });
+  }
+
+  listTaxClassificationsV2(situation: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery(`/fiscal/situacoes-tributarias/${encodeURIComponent(String(situation))}/classificacoes`, params), { method: 'GET' });
+  }
+
+  getTaxConsequenceTemplateV2(situation: string | number, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.withQuery(`/fiscal/situacoes-tributarias/${encodeURIComponent(String(situation))}/modelo-consequencia`, params), { method: 'GET' });
+  }
+
+  listUnifiedDocumentsV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery('/consulta-notas', params), { method: 'GET' });
+  }
+
+  lookupUnifiedDocumentV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/consulta-notas/consultar', { method: 'POST', body: payload });
+  }
+
+  downloadUnifiedDocumentXmlV2(source: 'inbound' | 'outbound' | string, documentId: string | number): Promise<DownloadResult> {
+    return this.download(`/consulta-notas/${encodeURIComponent(source)}/${encodeURIComponent(String(documentId))}/xml`, 'text');
+  }
+
+  downloadUnifiedDocumentPdfV2(source: 'inbound' | 'outbound' | string, documentId: string | number): Promise<DownloadResult> {
+    return this.download(`/consulta-notas/${encodeURIComponent(source)}/${encodeURIComponent(String(documentId))}/pdf`, 'base64');
+  }
+
+  syncInboundNfeV2(payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/nfe/entrada/sincronizar', { method: 'POST', body: payload, unwrapData: false });
+  }
+
+  listInboundNfeV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.withQuery('/nfe/entrada', params), { method: 'GET', unwrapData: false });
+  }
+
+  manifestInboundNfeV2(documentId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/nfe/entrada/${encodeURIComponent(String(documentId))}/manifestar`, { method: 'POST', body: payload, unwrapData: false });
+  }
+
+  downloadInboundNfeXmlV2(documentId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/nfe/entrada/${encodeURIComponent(String(documentId))}/baixar-xml`, { method: 'POST', unwrapData: false });
+  }
+
+  updateInboundNfeEntryBookkeepingV2(documentId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/nfe/entrada/${encodeURIComponent(String(documentId))}/escrituracao`, { method: 'POST', body: payload, unwrapData: false });
+  }
+
+  confirmInboundNfeEntryBookkeepingV2(documentId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/nfe/entrada/${encodeURIComponent(String(documentId))}/escrituracao/confirmar`, { method: 'POST', unwrapData: false });
+  }
+
+  listProductsV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/produtos', { method: 'GET' });
+  }
+
+  getProductV2(productId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'GET' });
+  }
+
+  createProductV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/produtos', { method: 'POST', body: payload });
+  }
+
+  updateProductV2(productId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteProductV2(productId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'DELETE' });
+  }
+
+  listTakersV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/tomadores', { method: 'GET' });
+  }
+
+  getTakerV2(takerId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/tomadores/${encodeURIComponent(String(takerId))}`, { method: 'GET' });
+  }
+
+  createTakerV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/tomadores', { method: 'POST', body: payload });
+  }
+
+  updateTakerV2(takerId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/tomadores/${encodeURIComponent(String(takerId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteTakerV2(takerId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/tomadores/${encodeURIComponent(String(takerId))}`, { method: 'DELETE' });
+  }
+
+  listOperationProfilesV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery('/fiscal/perfis-operacao', params), { method: 'GET' });
+  }
+
+  createOperationProfileV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/fiscal/perfis-operacao', { method: 'POST', body: payload });
+  }
+
+  updateOperationProfileV2(profileId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/fiscal/perfis-operacao/${encodeURIComponent(String(profileId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteOperationProfileV2(profileId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/fiscal/perfis-operacao/${encodeURIComponent(String(profileId))}`, { method: 'DELETE' });
+  }
+
+  listRateReferencesV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(this.withQuery('/fiscal/referencias-aliquotas', params), { method: 'GET' });
+  }
+
+  createRateReferenceV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/fiscal/referencias-aliquotas', { method: 'POST', body: payload });
+  }
+
+  updateRateReferenceV2(rateReferenceId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/fiscal/referencias-aliquotas/${encodeURIComponent(String(rateReferenceId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteRateReferenceV2(rateReferenceId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/fiscal/referencias-aliquotas/${encodeURIComponent(String(rateReferenceId))}`, { method: 'DELETE' });
+  }
+
+  listTaxRuleSetsV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/fiscal/conjuntos-regras-tributarias', { method: 'GET' });
+  }
+
+  createTaxRuleSetV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/fiscal/conjuntos-regras-tributarias', { method: 'POST', body: payload });
+  }
+
+  updateTaxRuleSetV2(taxRuleSetId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/fiscal/conjuntos-regras-tributarias/${encodeURIComponent(String(taxRuleSetId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteTaxRuleSetV2(taxRuleSetId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/fiscal/conjuntos-regras-tributarias/${encodeURIComponent(String(taxRuleSetId))}`, { method: 'DELETE' });
+  }
+
+  listSchedulesV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/agendamentos', { method: 'GET' });
+  }
+
+  createScheduleV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/agendamentos', { method: 'POST', body: payload });
+  }
+
+  updateScheduleV2(scheduleId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/agendamentos/${encodeURIComponent(String(scheduleId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteScheduleV2(scheduleId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/agendamentos/${encodeURIComponent(String(scheduleId))}`, { method: 'DELETE' });
+  }
+
+  listWebhooksV2(): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>('/notificacoes-web', { method: 'GET' });
+  }
+
+  createWebhookV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/notificacoes-web', { method: 'POST', body: payload });
+  }
+
+  updateWebhookV2(webhookId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/notificacoes-web/${encodeURIComponent(String(webhookId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteWebhookV2(webhookId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/notificacoes-web/${encodeURIComponent(String(webhookId))}`, { method: 'DELETE' });
+  }
+
+  rotateWebhookSecretV2(webhookId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/notificacoes-web/${encodeURIComponent(String(webhookId))}/rotacionar-segredo`, { method: 'POST' });
+  }
+
+  testWebhookV2(webhookId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/notificacoes-web/${encodeURIComponent(String(webhookId))}/testar`, { method: 'POST' });
+  }
+
+  listWebhookDeliveriesV2(webhookId: string | number): Promise<Record<string, unknown>[]> {
+    return this.request<Record<string, unknown>[]>(`/notificacoes-web/${encodeURIComponent(String(webhookId))}/entregas`, { method: 'GET' });
+  }
+
+  getMetricsV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/metricas', { method: 'GET' });
+  }
+
+  getBillingV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/cobranca', { method: 'GET' });
+  }
+
   static async webhookSignature(secret: string, deliveryId: string, timestamp: string, body: string): Promise<string> {
     const payload = `${deliveryId}.${timestamp}.${body}`;
     const cryptoApi = await this.cryptoApi();
@@ -1574,6 +2670,19 @@ export class NotagilIntegrationClient {
 
   private documentArtifactPath(externalId: string, artifact: 'xml' | 'pdf' | 'snapshot' | 'query', companyId: string | number): string {
     return this.companyPath(`/documents/${encodeURIComponent(externalId)}/${artifact}`, companyId);
+  }
+
+  private publicDocsPath(): string {
+    return this.apiVersion === 'v2' ? '/public/docs?version=v2' : '/public/docs';
+  }
+
+  private publicDocsUrl(docs: PublicDocsSettings, field: 'openapi_url' | 'swagger_url'): string | undefined {
+    const url = docs.versions?.[this.apiVersion]?.[field] ?? docs[field];
+    if (this.apiVersion === 'v2' && typeof url === 'string') {
+      return url.replace('/v1/integrations', '/v2/integrations');
+    }
+
+    return url;
   }
 
   private async download(path: string, mode: 'arrayBuffer' | 'text' | 'base64' = 'arrayBuffer'): Promise<DownloadResult> {
@@ -1664,11 +2773,18 @@ export class NotagilIntegrationClient {
       return parsed as T;
     }
 
-    return (parsed && typeof parsed === 'object' && 'data' in parsed ? (parsed as { data: T }).data : parsed) as T;
+    if (parsed && typeof parsed === 'object' && 'data' in parsed) {
+      return (parsed as { data: T }).data;
+    }
+    if (parsed && typeof parsed === 'object' && 'dados' in parsed) {
+      return (parsed as { dados: T }).dados;
+    }
+
+    return parsed as T;
   }
 
   private platformBaseUrl(): string {
-    return this.baseUrl.replace(/\/v1\/integrations$/, '');
+    return this.baseUrl.replace(/\/v[12]\/integrations$/, '');
   }
 
   private parseResponseBody(text: string): unknown {

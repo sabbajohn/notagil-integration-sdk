@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listCompanies"];
+        get: operations["getCompany"];
         put?: never;
         post?: never;
         delete?: never;
@@ -27,7 +27,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getCompany"];
+        get: operations["getCompanyById"];
         put?: never;
         post?: never;
         delete?: never;
@@ -47,6 +47,23 @@ export interface paths {
         /** @description Updates company configuration fields for the selected company. */
         put: operations["updateCompanyConfiguration"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/company/{company_id}/configuration/nfce/csc/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Consulta os CSCs NFC-e ativos na SEFAZ para a empresa e compara com `csc_id`/`csc_token` canônicos informados ou já salvos. O retorno não expõe o token nem XML bruto da SEFAZ. */
+        post: operations["validateCompanyNfceCsc"];
         delete?: never;
         options?: never;
         head?: never;
@@ -268,6 +285,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/company/{company_id}/fiscal/utils/ibpt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Consulta alíquotas IBPT por UF/NCM/EX e calcula os tributos aproximados de um item. */
+        post: operations["calculateCompanyIbptItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/company/{company_id}/fiscal/utils/ibpt/coupon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Consulta alíquotas IBPT dos itens enviados e retorna totais aproximados do cupom. */
+        post: operations["calculateCompanyIbptCoupon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/company/{company_id}/fiscal/tax-catalogs": {
         parameters: {
             query?: never;
@@ -332,36 +383,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/company/{company_id}/fiscal/emitter-profiles": {
+    "/companies/{company_id}/certificates": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["listCompanyFiscalEmitterProfiles"];
+        get: operations["listCompaniesCertificates"];
         put?: never;
-        /** @description Creates a fiscal emitter profile for the selected company. */
-        post: operations["createCompanyFiscalEmitterProfile"];
+        /** @description Creates and stores a new certificate for the selected company. */
+        post: operations["createCompaniesCertificate"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/company/{company_id}/fiscal/emitter-profiles/{profile_id}": {
+    "/companies/{company_id}/fiscal/cfops": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        /** @description Updates the selected fiscal emitter profile. */
-        put: operations["updateCompanyFiscalEmitterProfile"];
+        get: operations["listCompaniesCfops"];
+        put?: never;
         post?: never;
-        /** @description Deletes the selected fiscal emitter profile. */
-        delete: operations["deleteCompanyFiscalEmitterProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/operation-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompaniesFiscalOperationProfiles"];
+        put?: never;
+        /** @description Creates a fiscal operation profile for the selected company. */
+        post: operations["createCompaniesFiscalOperationProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/rate-references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompaniesFiscalRateReferences"];
+        put?: never;
+        /** @description Creates a company-scoped fiscal rate reference override. */
+        post: operations["createCompaniesFiscalRateReference"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/fiscal/tax-rule-sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCompaniesFiscalTaxRuleSets"];
+        put?: never;
+        /** @description Creates a company-scoped fiscal tax rule set. */
+        post: operations["createCompaniesFiscalTaxRuleSet"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -397,41 +497,6 @@ export interface paths {
         post?: never;
         /** @description Deletes the selected fiscal operation profile. */
         delete: operations["deleteCompanyFiscalOperationProfile"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/company/{company_id}/fiscal/profile-assignments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["listCompanyFiscalProfileAssignments"];
-        put?: never;
-        /** @description Creates a fiscal profile assignment for the selected company. */
-        post: operations["createCompanyFiscalProfileAssignment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/company/{company_id}/fiscal/profile-assignments/{assignment_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** @description Updates the selected fiscal profile assignment. */
-        put: operations["updateCompanyFiscalProfileAssignment"];
-        post?: never;
-        /** @description Deletes the selected fiscal profile assignment. */
-        delete: operations["deleteCompanyFiscalProfileAssignment"];
         options?: never;
         head?: never;
         patch?: never;
@@ -549,7 +614,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract. Requires `Idempotency-Key` and returns `202 Accepted` when the document was queued instead of completed inline. */
+        /** @description Resolves the fiscal operation by code and queues a document from a snapshot-shaped input contract. Requires `Idempotency-Key` and returns `202 Accepted` when the document was queued. For `document_type=nfce`, clients may send `emission_mode=sync` or `synchronous=true` to transmit inline and receive the SEFAZ response in the same HTTP response. */
         post: operations["createCompanyDocumentByOperation"];
         delete?: never;
         options?: never;
@@ -681,7 +746,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. Direct payloads are normalized to a canonical internal contract before transmission. Legacy aliases are still accepted temporarily on direct routes and are adapted with internal compatibility warnings/audit metadata. When `document_type=nfse` and the resolved provider is `nfse_nacional`/`manaus`, prefer the canonical PT-BR root contract in `payload`; incompatible payloads that cannot be normalized still fail with `422`. */
+        /** @description Queues a direct complete-form transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the transmission was queued for processing. For `document_type=nfce`, clients may send `emission_mode=sync` or `synchronous=true` to transmit inline and receive the SEFAZ response in the same HTTP response. Direct payloads are normalized to a canonical internal contract before transmission. Legacy aliases are still accepted temporarily on direct routes and are adapted with internal compatibility warnings/audit metadata. When `document_type=nfse` and the resolved provider is `nfse_nacional`/`manaus`, prefer the canonical PT-BR root contract in `payload`; incompatible payloads that cannot be normalized still fail with `422`. */
         post: operations["createCompanyDirectDocument"];
         delete?: never;
         options?: never;
@@ -698,7 +763,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Queues a direct XML transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the XML was queued for processing. */
+        /** @description Queues a direct XML transmission flow. Requires `Idempotency-Key` and returns `202 Accepted` when the XML was queued for processing. For `document_type=nfce`, clients may send `emission_mode=sync` or `synchronous=true` to transmit inline and receive the SEFAZ response in the same HTTP response. */
         post: operations["transmitCompanyDirectXml"];
         delete?: never;
         options?: never;
@@ -1103,6 +1168,13 @@ export interface components {
             /** @enum {string} */
             document_type: "nfe" | "nfce" | "nfse";
             municipio?: string;
+            /**
+             * @description Use `sync` only with `document_type=nfce` to transmit inline and return the SEFAZ response without queueing the emission job.
+             * @enum {string}
+             */
+            emission_mode?: "queued" | "sync" | "synchronous";
+            /** @description Boolean alias for `emission_mode=sync`, available only for `document_type=nfce`. */
+            synchronous?: boolean;
             /** @description Generic direct payload contract. Payloads are normalized before transmission and legacy aliases may be adapted temporarily with internal compatibility warnings. For `document_type=nfse`, prefer the canonical NFSe payload shape and use `provider-info` to discover required canonical fields for the resolved provider. For `nfse_nacional`/`manaus`, prefer only the canonical PT-BR root fields `id`, `tpAmb`, `dhEmi`, `verAplic`, `serie`, `nDPS`, `dCompet`, `tpEmit`, `cLocEmi`, `prestador`, `tomador`, `servico` and `valor_servicos`. */
             payload: {
                 [key: string]: unknown;
@@ -1117,6 +1189,13 @@ export interface components {
             /** @enum {string} */
             document_type: "nfe" | "nfce" | "nfse";
             municipio?: string;
+            /**
+             * @description Use `sync` only with `document_type=nfce` to transmit inline and return the SEFAZ response without queueing the emission job.
+             * @enum {string}
+             */
+            emission_mode?: "queued" | "sync" | "synchronous";
+            /** @description Boolean alias for `emission_mode=sync`, available only for `document_type=nfce`. */
+            synchronous?: boolean;
             snapshot: components["schemas"]["OperationDocumentSnapshot"];
             metadata?: {
                 [key: string]: unknown;
@@ -1153,6 +1232,28 @@ export interface components {
             };
             warnings?: string[];
             form_policy?: components["schemas"]["NfseFormPolicy"];
+        };
+        NfceCscValidation: {
+            /** @enum {string} */
+            environment?: "homologacao" | "producao";
+            configured?: {
+                csc_id?: boolean;
+                csc_token?: boolean;
+            };
+            /** @description CSC ID comparado. O token nunca é retornado. */
+            csc_id?: string | null;
+            /** @description True quando o CSC ID informado aparece entre os CSCs ativos retornados pela SEFAZ; null quando não houve ID informado ou retorno parseável. */
+            csc_id_active?: boolean | null;
+            /** @description True quando a SEFAZ retorna token para o CSC ID e ele confere; null quando a SEFAZ não retorna token. */
+            csc_token_matches?: boolean | null;
+            valid?: boolean | null;
+            registered_csc_ids?: string[];
+            sefaz?: {
+                ok?: boolean;
+                cstat?: string | null;
+                xmotivo?: string | null;
+            };
+            message?: string;
         };
         NfseFormPolicy: {
             provider_key?: string | null;
@@ -1328,14 +1429,11 @@ export interface components {
             is_presumed_profit?: boolean;
             inscricao_estadual?: string;
             inscricao_municipal?: string;
+            csc_id?: string;
+            csc_token?: string;
             logo_url?: string | null;
             lote_prefixo?: string;
             lote_sincrono?: boolean;
-            default_fiscal_emitter_profile_id?: string | null;
-            default_fiscal_emitter_profile?: null | {
-                id?: string;
-                name?: string;
-            };
             layout_cupom?: null | {
                 [key: string]: unknown;
             };
@@ -1461,6 +1559,8 @@ export interface components {
             error_message?: string | null;
             next_attempt_at?: string | null;
             delivered_at?: string | null;
+            emission_requested_at?: string | null;
+            emission_to_webhook_ms?: number | null;
             created_at?: string | null;
         };
         /** @description Document summary sent inside fiscal document webhook events. */
@@ -1527,6 +1627,14 @@ export interface components {
             fiscal_snapshot_id?: number | string | null;
             resolution_status?: string | null;
             idempotent_replay?: boolean;
+            /** @description True when an NFCe operation-code request was transmitted inline instead of queueing the emission job. */
+            operation_transmission_synchronous?: boolean;
+            /** @description Raw normalized provider response returned only for synchronous NFCe transmissions. */
+            sefaz_response?: {
+                [key: string]: unknown;
+            };
+            /** @description Canonical XML returned only when available for synchronous NFCe transmissions. */
+            xml?: string | null;
             created_at?: string | null;
             updated_at?: string | null;
             legacy_aliases?: components["schemas"]["LegacyDocumentAliases"];
@@ -1556,6 +1664,14 @@ export interface components {
         DirectQueuedDocument: components["schemas"]["QueuedDocument"] & {
             direct_transmission?: boolean;
             direct_transmission_mode?: string;
+            /** @description True when an NFCe was transmitted inline instead of queueing the emission job. */
+            direct_transmission_synchronous?: boolean;
+            /** @description Raw normalized provider response returned only for synchronous NFCe transmissions. */
+            sefaz_response?: {
+                [key: string]: unknown;
+            };
+            /** @description Canonical XML returned only when available for synchronous NFCe transmissions. */
+            xml?: string | null;
             /** @description Número da DPS gerado para NFS-e. */
             numero_dps?: string | null;
             /** @description Alias do número da DPS no layout nacional. */
@@ -2066,6 +2182,22 @@ export interface components {
                 };
             };
         };
+        /** @description Resultado da validação de CSC NFC-e contra a consulta administrativa da SEFAZ. */
+        NfceCscValidationResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    ok?: boolean;
+                    data?: components["schemas"]["NfceCscValidation"];
+                    error?: string | null;
+                    metadata?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
         /** @description Document snapshot response. */
         DocumentSnapshotResponse: {
             headers: {
@@ -2163,7 +2295,6 @@ export interface components {
         DocumentTypeQuery: "nfe" | "nfce" | "nfse";
         MunicipioQuery: string;
         FiscalEnvironmentQuery: "homologacao" | "producao" | "production" | "prod";
-        CnpjQuery: string;
     };
     requestBodies: {
         JsonObject: {
@@ -2198,7 +2329,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    listCompanies: {
+    getCompany: {
         parameters: {
             query?: never;
             header?: never;
@@ -2210,7 +2341,7 @@ export interface operations {
             200: components["responses"]["CompanyCollectionResponse"];
         };
     };
-    getCompany: {
+    getCompanyById: {
         parameters: {
             query?: never;
             header?: never;
@@ -2250,6 +2381,34 @@ export interface operations {
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
             200: components["responses"]["CompanyResponse"];
+        };
+    };
+    validateCompanyNfceCsc: {
+        parameters: {
+            query?: {
+                fiscal_environment?: components["parameters"]["FiscalEnvironmentQuery"];
+            };
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    fiscal_environment?: "homologacao" | "producao";
+                    csc_id?: string | null;
+                    csc_token?: string | null;
+                    nfce?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["NfceCscValidationResponse"];
         };
     };
     getCompanyNfseProviderInfo: {
@@ -2470,6 +2629,36 @@ export interface operations {
             200: components["responses"]["Resource"];
         };
     };
+    calculateCompanyIbptItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    calculateCompanyIbptCoupon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["Resource"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
     listCompanyTaxCatalogs: {
         parameters: {
             query?: never;
@@ -2529,7 +2718,35 @@ export interface operations {
             200: components["responses"]["Resource"];
         };
     };
-    listCompanyFiscalEmitterProfiles: {
+    listCompaniesCertificates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CertificateCollectionResponse"];
+        };
+    };
+    createCompaniesCertificate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["CertificateResponse"];
+        };
+    };
+    listCompaniesCfops: {
         parameters: {
             query?: never;
             header?: never;
@@ -2543,7 +2760,21 @@ export interface operations {
             200: components["responses"]["Collection"];
         };
     };
-    createCompanyFiscalEmitterProfile: {
+    listCompaniesFiscalOperationProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompaniesFiscalOperationProfile: {
         parameters: {
             query?: never;
             header?: never;
@@ -2557,34 +2788,60 @@ export interface operations {
             201: components["responses"]["Resource"];
         };
     };
-    updateCompanyFiscalEmitterProfile: {
+    listCompaniesFiscalRateReferences: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 company_id: components["parameters"]["CompanyId"];
-                profile_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: components["requestBodies"]["JsonObject"];
-        responses: {
-            200: components["responses"]["Resource"];
-        };
-    };
-    deleteCompanyFiscalEmitterProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                company_id: components["parameters"]["CompanyId"];
-                profile_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["Resource"];
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompaniesFiscalRateReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["Resource"];
+        };
+    };
+    listCompaniesFiscalTaxRuleSets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Collection"];
+        };
+    };
+    createCompaniesFiscalTaxRuleSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["Resource"];
         };
     };
     listCompanyFiscalOperationProfiles: {
@@ -2637,64 +2894,6 @@ export interface operations {
             path: {
                 company_id: components["parameters"]["CompanyId"];
                 profile_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["Resource"];
-        };
-    };
-    listCompanyFiscalProfileAssignments: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                company_id: components["parameters"]["CompanyId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["Collection"];
-        };
-    };
-    createCompanyFiscalProfileAssignment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                company_id: components["parameters"]["CompanyId"];
-            };
-            cookie?: never;
-        };
-        requestBody: components["requestBodies"]["JsonObject"];
-        responses: {
-            201: components["responses"]["Resource"];
-        };
-    };
-    updateCompanyFiscalProfileAssignment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                company_id: components["parameters"]["CompanyId"];
-                assignment_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: components["requestBodies"]["JsonObject"];
-        responses: {
-            200: components["responses"]["Resource"];
-        };
-    };
-    deleteCompanyFiscalProfileAssignment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                company_id: components["parameters"]["CompanyId"];
-                assignment_id: string;
             };
             cookie?: never;
         };
@@ -2865,6 +3064,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["OperationDocumentSubmit"];
         responses: {
+            200: components["responses"]["DocumentAcceptedResponse"];
             202: components["responses"]["DocumentAcceptedResponse"];
         };
     };
@@ -3023,6 +3223,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["DocumentSubmit"];
         responses: {
+            200: components["responses"]["DirectDocumentAcceptedResponse"];
             202: components["responses"]["DirectDocumentAcceptedResponse"];
         };
     };
@@ -3040,6 +3241,7 @@ export interface operations {
         };
         requestBody: components["requestBodies"]["JsonObject"];
         responses: {
+            200: components["responses"]["DirectDocumentAcceptedResponse"];
             202: components["responses"]["DirectDocumentAcceptedResponse"];
         };
     };

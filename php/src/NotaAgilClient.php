@@ -8,15 +8,35 @@ use GuzzleHttp\Exception\RequestException;
 
 class NotaAgilClient
 {
+    public const DEFAULT_BASE_URL_V1 = 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations';
+    public const DEFAULT_BASE_URL_V2 = 'https://api_notagil.sabbasistemas.com.br/api/v2/integrations';
+
     private ClientInterface $http;
     private string $baseUrl;
     private string $token;
+    private string $apiVersion;
 
-    public function __construct(string $baseUrl, string $token, ?ClientInterface $http = null)
+    public function __construct(string $baseUrl, string $token, ?ClientInterface $http = null, ?string $apiVersion = null)
     {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->token = $token;
         $this->http = $http ?? new Client(['timeout' => 30]);
+        $this->apiVersion = $apiVersion !== null ? $this->normalizeApiVersion($apiVersion) : $this->inferApiVersion($this->baseUrl);
+    }
+
+    public static function v1(string $token, ?string $baseUrl = null, ?ClientInterface $http = null): self
+    {
+        return new self($baseUrl ?? self::DEFAULT_BASE_URL_V1, $token, $http, 'v1');
+    }
+
+    public static function v2(string $token, ?string $baseUrl = null, ?ClientInterface $http = null): self
+    {
+        return new self($baseUrl ?? self::DEFAULT_BASE_URL_V2, $token, $http, 'v2');
+    }
+
+    public function apiVersion(): string
+    {
+        return $this->apiVersion;
     }
 
     public function companies(array $filters = []): array
@@ -26,13 +46,13 @@ class NotaAgilClient
 
     public function publicDocs(): array
     {
-        return $this->request('GET', '/public/docs', [], true, $this->platformBaseUrl());
+        return $this->request('GET', $this->publicDocsPath(), [], true, $this->platformBaseUrl());
     }
 
     public function publicOpenApiUrl(): ?string
     {
         $docs = $this->publicDocs();
-        $url = $docs['openapi_url'] ?? null;
+        $url = $this->publicDocsUrl($docs, 'openapi_url');
 
         return is_string($url) && trim($url) !== '' ? trim($url) : null;
     }
@@ -40,7 +60,7 @@ class NotaAgilClient
     public function publicSwaggerUrl(): ?string
     {
         $docs = $this->publicDocs();
-        $url = $docs['swagger_url'] ?? null;
+        $url = $this->publicDocsUrl($docs, 'swagger_url');
 
         return is_string($url) && trim($url) !== '' ? trim($url) : null;
     }
@@ -92,6 +112,131 @@ class NotaAgilClient
             'json' => $payload,
             'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
+    }
+
+    public function fiscalContractV2(string $documentType): array
+    {
+        return $this->request('GET', '/contratos/'.rawurlencode($documentType));
+    }
+
+    public function createDirectDocumentV2(array $payload, string $idempotencyKey): array
+    {
+        return $this->request('POST', '/direto/documentos', [
+            'json' => $payload,
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
+        ]);
+    }
+
+    public function transmitDirectXmlV2(array $payload, string $idempotencyKey): array
+    {
+        return $this->request('POST', '/direto/documentos/xml', [
+            'json' => $payload,
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
+        ]);
+    }
+
+    public function companyV2(): array
+    {
+        return $this->request('GET', '/empresa');
+    }
+
+    public function companyConfigurationV2(): array
+    {
+        return $this->request('GET', '/configuracao');
+    }
+
+    public function updateCompanyConfigurationV2(array $payload): array
+    {
+        return $this->request('PUT', '/configuracao', ['json' => $payload]);
+    }
+
+    public function nfseProviderInfoV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/nfse/informacoes-provedor', $filters));
+    }
+
+    public function validateNfceCscV2(array $payload = []): array
+    {
+        return $this->request('POST', '/nfce/validar-csc', ['json' => $payload]);
+    }
+
+    public function previewDocumentByOperationV2(string $operationCode, array $payload): array
+    {
+        return $this->request('POST', '/operacoes/'.rawurlencode($operationCode).'/previsualizar', ['json' => $payload]);
+    }
+
+    public function createDocumentByOperationV2(string $operationCode, array $payload, string $idempotencyKey): array
+    {
+        return $this->request('POST', '/operacoes/'.rawurlencode($operationCode).'/emitir', [
+            'json' => $payload,
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
+        ]);
+    }
+
+    public function documentsV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/documentos', $filters), unwrapData: false);
+    }
+
+    public function documentV2(string $externalId): array
+    {
+        return $this->request('GET', '/documentos/'.rawurlencode($externalId));
+    }
+
+    public function waitDocumentV2(string $externalId, int $timeoutSeconds = 120, int $intervalMilliseconds = 2000): array
+    {
+        $started = microtime(true);
+        $terminalFiscal = ['autorizado', 'rejeitado', 'cancelado', 'corrigido', 'authorized', 'rejected', 'cancelled', 'corrected'];
+        $terminalOperational = ['concluido', 'falhou', 'completed', 'failed'];
+
+        do {
+            $document = $this->documentV2($externalId);
+            if (
+                in_array((string) ($document['status_fiscal'] ?? $document['fiscal_status'] ?? ''), $terminalFiscal, true)
+                || in_array((string) ($document['status_operacional'] ?? $document['operational_status'] ?? ''), $terminalOperational, true)
+            ) {
+                return $document;
+            }
+
+            usleep($intervalMilliseconds * 1000);
+        } while ((microtime(true) - $started) < $timeoutSeconds);
+
+        return $document;
+    }
+
+    public function downloadDocumentXmlV2(string $externalId, array $filters = []): array
+    {
+        return $this->download($this->withQuery('/documentos/'.rawurlencode($externalId).'/xml', $filters));
+    }
+
+    public function downloadDocumentPdfV2(string $externalId, array $filters = []): array
+    {
+        return $this->download($this->withQuery('/documentos/'.rawurlencode($externalId).'/pdf', $filters));
+    }
+
+    public function documentSnapshotV2(string $externalId, array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/documentos/'.rawurlencode($externalId).'/retrato', $filters));
+    }
+
+    public function queryDocumentV2(string $externalId, array $payload = []): array
+    {
+        return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/consultar', ['json' => $payload]);
+    }
+
+    public function cancelDocumentV2(string $externalId, string $justificativa): array
+    {
+        return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/cancelar', [
+            'json' => ['justificativa' => $justificativa],
+        ]);
+    }
+
+    public function correctDocumentV2(string $externalId, string $correcao, ?int $sequencia = null): array
+    {
+        return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/corrigir', ['json' => array_filter([
+            'correcao' => $correcao,
+            'sequencia' => $sequencia,
+        ], static fn ($value): bool => $value !== null)]);
     }
 
     public function document(string $externalId, string|int $companyId): array
@@ -325,6 +470,16 @@ class NotaAgilClient
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/utils/ncms', $companyId), $filters), unwrapData: false);
     }
 
+    public function consultIbptItem(string|int $companyId, array $payload): array
+    {
+        return $this->request('POST', $this->companyPath('/fiscal/utils/ibpt', $companyId), ['json' => $payload]);
+    }
+
+    public function consultIbptCoupon(string|int $companyId, array $payload): array
+    {
+        return $this->request('POST', $this->companyPath('/fiscal/utils/ibpt/coupon', $companyId), ['json' => $payload]);
+    }
+
     public function taxCatalogs(string|int $companyId, array $filters = []): array
     {
         return $this->request('GET', $this->withQuery($this->companyPath('/fiscal/tax-catalogs', $companyId), $filters));
@@ -545,6 +700,331 @@ class NotaAgilClient
         return $this->request('DELETE', $this->companyPath('/schedules/'.$scheduleId, $companyId));
     }
 
+    public function certificatesV2(): array
+    {
+        return $this->request('GET', '/certificados');
+    }
+
+    public function createCertificateV2(array $payload): array
+    {
+        return $this->request('POST', '/certificados', ['json' => $payload]);
+    }
+
+    public function updateCertificateV2(string|int $certificateId, array $payload): array
+    {
+        return $this->request('PATCH', '/certificados/'.rawurlencode((string) $certificateId), ['json' => $payload]);
+    }
+
+    public function validateCertificateV2(string|int $certificateId): array
+    {
+        return $this->request('POST', '/certificados/'.rawurlencode((string) $certificateId).'/validar');
+    }
+
+    public function readinessV2(): array
+    {
+        return $this->request('GET', '/prontidao');
+    }
+
+    public function onboardingImportsV2(): array
+    {
+        return $this->request('GET', '/implantacao/importacoes');
+    }
+
+    public function createOnboardingImportV2(array $payload): array
+    {
+        return $this->request('POST', '/implantacao/importacoes', ['json' => $payload]);
+    }
+
+    public function onboardingImportV2(string|int $importId): array
+    {
+        return $this->request('GET', '/implantacao/importacoes/'.rawurlencode((string) $importId));
+    }
+
+    public function reviewOnboardingImportV2(string|int $importId, array $payload): array
+    {
+        return $this->request('POST', '/implantacao/importacoes/'.rawurlencode((string) $importId).'/revisar', ['json' => $payload]);
+    }
+
+    public function promoteOnboardingImportV2(string|int $importId, array $payload = []): array
+    {
+        return $this->request('POST', '/implantacao/importacoes/'.rawurlencode((string) $importId).'/promover', ['json' => $payload]);
+    }
+
+    public function fiscalOptionsV2(): array
+    {
+        return $this->request('GET', '/fiscal/opcoes');
+    }
+
+    public function cfopsV2(): array
+    {
+        return $this->request('GET', '/fiscal/cfops');
+    }
+
+    public function municipalitiesV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/utilitarios/municipios', $filters));
+    }
+
+    public function ncmsV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/utilitarios/ncms', $filters));
+    }
+
+    public function consultIbptItemV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/utilitarios/ibpt', ['json' => $payload]);
+    }
+
+    public function consultIbptCouponV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/utilitarios/ibpt/cupom', ['json' => $payload]);
+    }
+
+    public function taxCatalogsV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/catalogos-tributarios', $filters));
+    }
+
+    public function taxSituationsV2(string|int $catalog, array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/catalogos-tributarios/'.rawurlencode((string) $catalog).'/situacoes', $filters));
+    }
+
+    public function taxClassificationsV2(string|int $situation, array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/situacoes-tributarias/'.rawurlencode((string) $situation).'/classificacoes', $filters));
+    }
+
+    public function taxConsequenceTemplateV2(string|int $situation, array $payload = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/situacoes-tributarias/'.rawurlencode((string) $situation).'/modelo-consequencia', $payload));
+    }
+
+    public function unifiedDocumentsV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/consulta-notas', $filters));
+    }
+
+    public function lookupUnifiedDocumentV2(array $payload): array
+    {
+        return $this->request('POST', '/consulta-notas/consultar', ['json' => $payload]);
+    }
+
+    public function downloadUnifiedDocumentXmlV2(string $source, string|int $documentId): array
+    {
+        return $this->download('/consulta-notas/'.rawurlencode($source).'/'.rawurlencode((string) $documentId).'/xml');
+    }
+
+    public function downloadUnifiedDocumentPdfV2(string $source, string|int $documentId): array
+    {
+        return $this->download('/consulta-notas/'.rawurlencode($source).'/'.rawurlencode((string) $documentId).'/pdf');
+    }
+
+    public function syncInboundNfeV2(array $payload = []): array
+    {
+        return $this->request('POST', '/nfe/entrada/sincronizar', ['json' => $payload], unwrapData: false);
+    }
+
+    public function inboundNfeV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/nfe/entrada', $filters), unwrapData: false);
+    }
+
+    public function manifestInboundNfeV2(string|int $documentId, array $payload): array
+    {
+        return $this->request('POST', '/nfe/entrada/'.rawurlencode((string) $documentId).'/manifestar', ['json' => $payload], unwrapData: false);
+    }
+
+    public function downloadInboundNfeXmlV2(string|int $documentId): array
+    {
+        return $this->request('POST', '/nfe/entrada/'.rawurlencode((string) $documentId).'/baixar-xml', unwrapData: false);
+    }
+
+    public function updateInboundNfeEntryBookkeepingV2(string|int $documentId, array $payload): array
+    {
+        return $this->request('POST', '/nfe/entrada/'.rawurlencode((string) $documentId).'/escrituracao', ['json' => $payload], unwrapData: false);
+    }
+
+    public function confirmInboundNfeEntryBookkeepingV2(string|int $documentId): array
+    {
+        return $this->request('POST', '/nfe/entrada/'.rawurlencode((string) $documentId).'/escrituracao/confirmar', unwrapData: false);
+    }
+
+    public function productsV2(): array
+    {
+        return $this->request('GET', '/produtos');
+    }
+
+    public function productV2(string|int $productId): array
+    {
+        return $this->request('GET', '/produtos/'.rawurlencode((string) $productId));
+    }
+
+    public function createProductV2(array $payload): array
+    {
+        return $this->request('POST', '/produtos', ['json' => $payload]);
+    }
+
+    public function updateProductV2(string|int $productId, array $payload): array
+    {
+        return $this->request('PUT', '/produtos/'.rawurlencode((string) $productId), ['json' => $payload]);
+    }
+
+    public function deleteProductV2(string|int $productId): array
+    {
+        return $this->request('DELETE', '/produtos/'.rawurlencode((string) $productId));
+    }
+
+    public function takersV2(): array
+    {
+        return $this->request('GET', '/tomadores');
+    }
+
+    public function takerV2(string|int $takerId): array
+    {
+        return $this->request('GET', '/tomadores/'.rawurlencode((string) $takerId));
+    }
+
+    public function createTakerV2(array $payload): array
+    {
+        return $this->request('POST', '/tomadores', ['json' => $payload]);
+    }
+
+    public function updateTakerV2(string|int $takerId, array $payload): array
+    {
+        return $this->request('PUT', '/tomadores/'.rawurlencode((string) $takerId), ['json' => $payload]);
+    }
+
+    public function deleteTakerV2(string|int $takerId): array
+    {
+        return $this->request('DELETE', '/tomadores/'.rawurlencode((string) $takerId));
+    }
+
+    public function operationProfilesV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/perfis-operacao', $filters));
+    }
+
+    public function createOperationProfileV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/perfis-operacao', ['json' => $payload]);
+    }
+
+    public function updateOperationProfileV2(string|int $profileId, array $payload): array
+    {
+        return $this->request('PUT', '/fiscal/perfis-operacao/'.rawurlencode((string) $profileId), ['json' => $payload]);
+    }
+
+    public function deleteOperationProfileV2(string|int $profileId): array
+    {
+        return $this->request('DELETE', '/fiscal/perfis-operacao/'.rawurlencode((string) $profileId));
+    }
+
+    public function rateReferencesV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/referencias-aliquotas', $filters));
+    }
+
+    public function createRateReferenceV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/referencias-aliquotas', ['json' => $payload]);
+    }
+
+    public function updateRateReferenceV2(string|int $rateReferenceId, array $payload): array
+    {
+        return $this->request('PUT', '/fiscal/referencias-aliquotas/'.rawurlencode((string) $rateReferenceId), ['json' => $payload]);
+    }
+
+    public function deleteRateReferenceV2(string|int $rateReferenceId): array
+    {
+        return $this->request('DELETE', '/fiscal/referencias-aliquotas/'.rawurlencode((string) $rateReferenceId));
+    }
+
+    public function taxRuleSetsV2(): array
+    {
+        return $this->request('GET', '/fiscal/conjuntos-regras-tributarias');
+    }
+
+    public function createTaxRuleSetV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/conjuntos-regras-tributarias', ['json' => $payload]);
+    }
+
+    public function updateTaxRuleSetV2(string|int $taxRuleSetId, array $payload): array
+    {
+        return $this->request('PUT', '/fiscal/conjuntos-regras-tributarias/'.rawurlencode((string) $taxRuleSetId), ['json' => $payload]);
+    }
+
+    public function deleteTaxRuleSetV2(string|int $taxRuleSetId): array
+    {
+        return $this->request('DELETE', '/fiscal/conjuntos-regras-tributarias/'.rawurlencode((string) $taxRuleSetId));
+    }
+
+    public function schedulesV2(): array
+    {
+        return $this->request('GET', '/agendamentos');
+    }
+
+    public function createScheduleV2(array $payload): array
+    {
+        return $this->request('POST', '/agendamentos', ['json' => $payload]);
+    }
+
+    public function updateScheduleV2(string|int $scheduleId, array $payload): array
+    {
+        return $this->request('PUT', '/agendamentos/'.rawurlencode((string) $scheduleId), ['json' => $payload]);
+    }
+
+    public function deleteScheduleV2(string|int $scheduleId): array
+    {
+        return $this->request('DELETE', '/agendamentos/'.rawurlencode((string) $scheduleId));
+    }
+
+    public function webhooksV2(): array
+    {
+        return $this->request('GET', '/notificacoes-web');
+    }
+
+    public function createWebhookV2(array $payload): array
+    {
+        return $this->request('POST', '/notificacoes-web', ['json' => $payload]);
+    }
+
+    public function updateWebhookV2(string|int $webhookId, array $payload): array
+    {
+        return $this->request('PUT', '/notificacoes-web/'.rawurlencode((string) $webhookId), ['json' => $payload]);
+    }
+
+    public function deleteWebhookV2(string|int $webhookId): array
+    {
+        return $this->request('DELETE', '/notificacoes-web/'.rawurlencode((string) $webhookId));
+    }
+
+    public function rotateWebhookSecretV2(string|int $webhookId): array
+    {
+        return $this->request('POST', '/notificacoes-web/'.rawurlencode((string) $webhookId).'/rotacionar-segredo');
+    }
+
+    public function testWebhookV2(string|int $webhookId): array
+    {
+        return $this->request('POST', '/notificacoes-web/'.rawurlencode((string) $webhookId).'/testar');
+    }
+
+    public function webhookDeliveriesV2(string|int $webhookId): array
+    {
+        return $this->request('GET', '/notificacoes-web/'.rawurlencode((string) $webhookId).'/entregas');
+    }
+
+    public function metricsV2(): array
+    {
+        return $this->request('GET', '/metricas');
+    }
+
+    public function billingV2(): array
+    {
+        return $this->request('GET', '/cobranca');
+    }
+
     public static function webhookSignature(string $secret, string $deliveryId, string $timestamp, string $body): string
     {
         return hash_hmac('sha256', "{$deliveryId}.{$timestamp}.{$body}", $secret);
@@ -552,20 +1032,91 @@ class NotaAgilClient
 
     public static function normalizeDocumentResponse(array $document): array
     {
+        if (isset($document['dados']) && is_array($document['dados'])) {
+            $document = $document['dados'];
+        }
+        if (isset($document['data']) && is_array($document['data'])) {
+            $document = $document['data'];
+        }
+        if (isset($document['document']) && is_array($document['document'])) {
+            $document = array_merge(
+                $document['document'],
+                isset($document['fiscal']) && is_array($document['fiscal']) ? [
+                    'fiscal_status' => $document['fiscal']['status'] ?? null,
+                    'access_key' => $document['fiscal']['access_key'] ?? null,
+                    'document_key' => $document['fiscal']['document_key'] ?? null,
+                    'protocol' => $document['fiscal']['protocol'] ?? null,
+                    'authorized_at' => $document['fiscal']['authorized_at'] ?? null,
+                ] : [],
+                isset($document['operational']) && is_array($document['operational']) ? [
+                    'operational_status' => $document['operational']['status'] ?? null,
+                ] : [],
+                isset($document['artifacts']) && is_array($document['artifacts']) ? [
+                    'artifacts' => $document['artifacts'],
+                ] : [],
+            );
+        }
+
         $legacy = isset($document['legacy_aliases']) && is_array($document['legacy_aliases'])
             ? $document['legacy_aliases']
             : [];
 
-        $document['document_type'] = $document['document_type'] ?? ($legacy['type'] ?? null);
-        $document['series'] = $document['series'] ?? ($legacy['serie'] ?? null);
-        $document['number'] = $document['number'] ?? ($legacy['numero'] ?? null);
-        $document['access_key'] = $document['access_key'] ?? ($legacy['chave_acesso'] ?? ($document['document_key'] ?? null));
-        $document['protocol'] = $document['protocol'] ?? ($legacy['protocolo'] ?? null);
-        $document['authorized_at'] = $document['authorized_at'] ?? ($legacy['autorizado_em'] ?? null);
-        $document['operational_status'] = $document['operational_status'] ?? ($legacy['status_operacional'] ?? null);
-        $document['fiscal_status'] = $document['fiscal_status'] ?? ($legacy['status_fiscal'] ?? ($document['status'] ?? null));
+        $document['document_type'] = $document['document_type'] ?? ($document['tipo_documento'] ?? ($legacy['type'] ?? null));
+        $document['series'] = $document['series'] ?? ($document['serie'] ?? ($legacy['serie'] ?? null));
+        $document['number'] = $document['number'] ?? ($document['numero'] ?? ($legacy['numero'] ?? null));
+        $document['access_key'] = $document['access_key'] ?? ($document['chave_documento'] ?? ($legacy['chave_acesso'] ?? ($document['document_key'] ?? null)));
+        $document['protocol'] = $document['protocol'] ?? ($document['protocolo'] ?? ($legacy['protocolo'] ?? null));
+        $document['authorized_at'] = $document['authorized_at'] ?? ($document['autorizado_em'] ?? ($legacy['autorizado_em'] ?? null));
+        $document['operational_status'] = $document['operational_status'] ?? ($document['status_operacional'] ?? ($legacy['status_operacional'] ?? null));
+        $document['fiscal_status'] = $document['fiscal_status'] ?? ($document['status_fiscal'] ?? ($legacy['status_fiscal'] ?? ($document['status'] ?? null)));
+        if (! isset($document['artifacts']) && isset($document['artefatos']) && is_array($document['artefatos'])) {
+            $document['artifacts'] = [
+                'xml_available' => $document['artefatos']['xml_disponivel'] ?? null,
+                'pdf_available' => $document['artefatos']['pdf_disponivel'] ?? null,
+                'processing' => $document['artefatos']['processando'] ?? null,
+                'xml_status' => $document['artefatos']['status_xml'] ?? null,
+                'pdf_status' => $document['artefatos']['status_pdf'] ?? null,
+                'xml_url' => $document['artefatos']['url_xml'] ?? null,
+                'pdf_url' => $document['artefatos']['url_pdf'] ?? null,
+            ];
+        }
 
         return $document;
+    }
+
+    private function publicDocsPath(): string
+    {
+        return $this->apiVersion === 'v2' ? '/public/docs?version=v2' : '/public/docs';
+    }
+
+    private function versionedPublicDocsUrl(array $docs, string $field): ?string
+    {
+        $version = $docs['versions'][$this->apiVersion] ?? null;
+
+        return is_array($version) && isset($version[$field]) && is_string($version[$field])
+            ? $version[$field]
+            : null;
+    }
+
+    private function publicDocsUrl(array $docs, string $field): mixed
+    {
+        $url = $this->versionedPublicDocsUrl($docs, $field) ?? ($docs[$field] ?? null);
+
+        if ($this->apiVersion === 'v2' && is_string($url)) {
+            return str_replace('/v1/integrations', '/v2/integrations', $url);
+        }
+
+        return $url;
+    }
+
+    private function normalizeApiVersion(string $apiVersion): string
+    {
+        return str_contains(strtolower(trim($apiVersion)), '2') ? 'v2' : 'v1';
+    }
+
+    private function inferApiVersion(string $baseUrl): string
+    {
+        return preg_match('#/v2/integrations$#', $baseUrl) === 1 ? 'v2' : 'v1';
     }
 
     private function companyPath(string $path, string|int $companyId): string
@@ -575,7 +1126,7 @@ class NotaAgilClient
 
     private function platformBaseUrl(): string
     {
-        return preg_replace('#/v1/integrations$#', '', $this->baseUrl) ?: $this->baseUrl;
+        return preg_replace('#/v[12]/integrations$#', '', $this->baseUrl) ?: $this->baseUrl;
     }
 
     private function documentArtifactPath(string $externalId, string $artifact, string|int $companyId): string
@@ -647,9 +1198,16 @@ class NotaAgilClient
             throw $this->apiException($response->getStatusCode(), $payload);
         }
 
-        return $unwrapData && is_array($payload) && array_key_exists('data', $payload)
-            ? (array) $payload['data']
-            : (array) $payload;
+        if ($unwrapData && is_array($payload)) {
+            if (array_key_exists('data', $payload)) {
+                return (array) $payload['data'];
+            }
+            if (array_key_exists('dados', $payload)) {
+                return (array) $payload['dados'];
+            }
+        }
+
+        return (array) $payload;
     }
 
     private function decode(string $body): mixed
@@ -665,10 +1223,10 @@ class NotaAgilClient
 
     private function apiException(int $statusCode, mixed $payload): NotaAgilApiException
     {
-        $errors = is_array($payload) ? ($payload['errors'] ?? null) : null;
+        $errors = is_array($payload) ? ($payload['errors'] ?? ($payload['erros'] ?? null)) : null;
         $rejectionReason = is_array($payload) && isset($payload['rejection_reason'])
             ? (string) $payload['rejection_reason']
-            : null;
+            : (is_array($payload) && isset($payload['motivo_rejeicao']) ? (string) $payload['motivo_rejeicao'] : null);
 
         return new NotaAgilApiException($statusCode, $payload, $errors, $rejectionReason);
     }
