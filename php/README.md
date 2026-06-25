@@ -68,6 +68,22 @@ $v2->createDirectDocumentV2(
 
 $documentoV2 = NotaAgilClient::normalizeDocumentResponse($v2->waitDocumentV2('erp-v2-2026-0001'));
 
+$produto = $v2->createProductV2([
+    'cod_sku' => 'SKU-1',
+    'codigo_operacional' => 'ERP-1',
+    'descricao' => 'Produto fiscal completo',
+    'unidade' => 'UN',
+    'valor_padrao' => 100,
+    'produto_tipo' => 'NORMAL',
+    'tipo_item' => '00',
+    'natureza_item' => 'MERCADORIA',
+    'origem_mercadoria' => 0,
+    'ncm' => '84715010',
+    'fiscal_tags' => ['SUJEITO_ST'],
+]);
+
+$unidades = $v2->listProductCatalogV2('unidades-medida', ['ativo' => true]);
+
 $ibptItem = $client->consultIbptItem($companies[0]['id'], [
     'uf' => 'SP',
     'ncm' => '84715010',

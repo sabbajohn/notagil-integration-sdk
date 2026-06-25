@@ -16,6 +16,7 @@ import {
   assertCanonicalNfseNacionalPayload,
   normalizeDocumentResponse,
   type FiscalCanonicalPayloadV2,
+  type ProductPayload,
   type DirectNfseNacionalSubmitRequest,
   type FiscalDocumentAuthorizedWebhookPayload,
 } from '@notagil/integration-sdk';
@@ -77,6 +78,23 @@ await v2.createDirectDocumentV2(
 const v2Document = await v2.waitDocumentV2('erp-v2-2026-0001');
 const normalizedV2 = normalizeDocumentResponse(v2Document);
 console.log(normalizedV2.document_type, normalizedV2.fiscal_status, normalizedV2.access_key);
+
+const product: ProductPayload = await v2.createProductV2({
+  cod_sku: 'SKU-1',
+  codigo_operacional: 'ERP-1',
+  descricao: 'Produto fiscal completo',
+  unidade: 'UN',
+  valor_padrao: 100,
+  produto_tipo: 'NORMAL',
+  tipo_item: '00',
+  natureza_item: 'MERCADORIA',
+  origem_mercadoria: 0,
+  ncm: '84715010',
+  fiscal_tags: ['SUJEITO_ST'],
+});
+
+const unidades = await v2.listProductCatalogV2('unidades-medida', { ativo: true });
+console.log(product.cod_sku, product.fiscal_base?.apto_emissao, unidades.length);
 
 const ibptItem = await client.consultIbptItem(companyId, {
   uf: 'SP',

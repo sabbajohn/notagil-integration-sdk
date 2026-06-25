@@ -9,6 +9,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as ve
 ### Added
 - Suporte explicito a integracao v2 nos SDKs PHP e TypeScript, com factories `v2`, defaults para `/api/v2/integrations`, unwrap de envelope `dados` e leitura versionada de docs publicas.
 - Metodos v2 companyless para contratos fiscais, emissao direta, emissao por operacao, documentos, configuracao, certificados, catalogos fiscais, produtos, tomadores, webhooks, metricas e cobranca.
+- Contrato v2 evoluido de produtos nos SDKs e OpenAPI, com `cod_sku`, `codigo_operacional`, `produto_tipo`, `tipo_item`, `natureza_item`, `origem_mercadoria`, `servico_codigo`, `cod_classe_tributo`, `fiscal_tags` e `fiscal_base`.
+- CRUD v2 do catalogo auxiliar de produtos para unidades, conversoes, classificacoes, familias, codigos de barras, apresentacoes, precos, fornecedores, locais/endereco de estoque, lotes e saldos.
 - Metodos IBPT v1/v2 para consulta de item e cupom: `consultIbptItem`, `consultIbptCoupon`, `consultIbptItemV2` e `consultIbptCouponV2`.
 - Contrato `FiscalCanonicalPayloadV2` no TypeScript e helper PHP `FiscalCanonicalV2Contract`, com validacao local de campos publicos em portugues e builders por `document_type`.
 - OpenAPI v2 em `openapi/integration-v2.yaml` e tipos gerados em `typescript/src/openapi-types-v2.ts`.

@@ -262,6 +262,50 @@ test('v2 direct document helpers use Portuguese public contract paths', async ()
   assert.match(history[1].init.body, /"ambiente_fiscal"/);
 });
 
+test('v2 product helpers use the evolved product contract and auxiliary catalog paths', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      const body = history.length === 1
+        ? { dados: { id: 31, cod_sku: 'SKU-1', fiscal_tags: ['SUJEITO_ST'], fiscal_base: { apto_emissao: true } } }
+        : history.length === 2
+          ? { dados: [{ id: 1, codigo_fiscal: 'UN' }] }
+          : { dados: { id: 1, codigo_fiscal: 'UN' } };
+      return new Response(JSON.stringify(body), {
+        status: history.length === 4 ? 201 : 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  const product = await client.createProductV2({
+    cod_sku: 'SKU-1',
+    codigo_operacional: 'ERP-1',
+    descricao: 'Produto fiscal completo',
+    produto_tipo: 'NORMAL',
+    tipo_item: '00',
+    natureza_item: 'MERCADORIA',
+    origem_mercadoria: 0,
+    fiscal_tags: ['SUJEITO_ST'],
+  });
+  const units = await client.listProductCatalogV2('unidades-medida', { ativo: true });
+  const unit = await client.getProductCatalogV2('unidades-medida', 1);
+  const createdUnit = await client.createProductCatalogV2('unidades-medida', { codigo_fiscal: 'UN', descricao: 'Unidade' });
+
+  assert.deepEqual(product.fiscal_base, { apto_emissao: true });
+  assert.deepEqual(units, [{ id: 1, codigo_fiscal: 'UN' }]);
+  assert.deepEqual(unit, { id: 1, codigo_fiscal: 'UN' });
+  assert.deepEqual(createdUnit, { id: 1, codigo_fiscal: 'UN' });
+  assert.equal(history[0].input, `${DEFAULT_BASE_URL_V2}/produtos`);
+  assert.equal(history[1].input, `${DEFAULT_BASE_URL_V2}/produtos/catalogo/unidades-medida?ativo=true`);
+  assert.equal(history[2].input, `${DEFAULT_BASE_URL_V2}/produtos/catalogo/unidades-medida/1`);
+  assert.equal(history[3].input, `${DEFAULT_BASE_URL_V2}/produtos/catalogo/unidades-medida`);
+  assert.match(history[0].init.body, /"cod_sku":"SKU-1"/);
+  assert.match(history[0].init.body, /"fiscal_tags"/);
+});
+
 test('v2 IBPT helpers use companyless Portuguese utility paths', async () => {
   const history = [];
   const client = NotagilIntegrationClient.v2({

@@ -121,6 +121,46 @@ final class NotaAgilClientV2Test extends TestCase
         $this->assertSame('/api/v2/integrations/documentos/erp-1/cancelar', $history[4]['request']->getUri()->getPath());
     }
 
+    public function test_v2_product_methods_use_evolved_contract_and_auxiliary_catalog_paths(): void
+    {
+        $history = [];
+        $client = NotaAgilClient::v2(
+            token: 'test-token',
+            http: $this->http([
+                new Response(201, [], json_encode(['dados' => ['id' => 31, 'cod_sku' => 'SKU-1', 'fiscal_tags' => ['SUJEITO_ST'], 'fiscal_base' => ['apto_emissao' => true]]], JSON_THROW_ON_ERROR)),
+                new Response(200, [], json_encode(['dados' => [['id' => 1, 'codigo_fiscal' => 'UN']]], JSON_THROW_ON_ERROR)),
+                new Response(200, [], json_encode(['dados' => ['id' => 1, 'codigo_fiscal' => 'UN']], JSON_THROW_ON_ERROR)),
+                new Response(201, [], json_encode(['dados' => ['id' => 1, 'codigo_fiscal' => 'UN']], JSON_THROW_ON_ERROR)),
+            ], $history),
+        );
+
+        $product = $client->createProductV2([
+            'cod_sku' => 'SKU-1',
+            'codigo_operacional' => 'ERP-1',
+            'descricao' => 'Produto fiscal completo',
+            'produto_tipo' => 'NORMAL',
+            'tipo_item' => '00',
+            'natureza_item' => 'MERCADORIA',
+            'origem_mercadoria' => 0,
+            'fiscal_tags' => ['SUJEITO_ST'],
+        ]);
+        $units = $client->listProductCatalogV2('unidades-medida', ['ativo' => true]);
+        $unit = $client->getProductCatalogV2('unidades-medida', 1);
+        $createdUnit = $client->createProductCatalogV2('unidades-medida', ['codigo_fiscal' => 'UN', 'descricao' => 'Unidade']);
+
+        $this->assertSame(['apto_emissao' => true], $product['fiscal_base']);
+        $this->assertSame([['id' => 1, 'codigo_fiscal' => 'UN']], $units);
+        $this->assertSame(['id' => 1, 'codigo_fiscal' => 'UN'], $unit);
+        $this->assertSame(['id' => 1, 'codigo_fiscal' => 'UN'], $createdUnit);
+        $this->assertSame('/api/v2/integrations/produtos', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v2/integrations/produtos/catalogo/unidades-medida', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('ativo=1', $history[1]['request']->getUri()->getQuery());
+        $this->assertSame('/api/v2/integrations/produtos/catalogo/unidades-medida/1', $history[2]['request']->getUri()->getPath());
+        $this->assertSame('/api/v2/integrations/produtos/catalogo/unidades-medida', $history[3]['request']->getUri()->getPath());
+        $this->assertStringContainsString('"cod_sku":"SKU-1"', (string) $history[0]['request']->getBody());
+        $this->assertStringContainsString('"fiscal_tags"', (string) $history[0]['request']->getBody());
+    }
+
     public function test_v2_ibpt_helpers_use_companyless_portuguese_routes(): void
     {
         $history = [];

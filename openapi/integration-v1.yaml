@@ -2021,21 +2021,41 @@ components:
         id: { type: string }
         empresa_id: { type: string }
         tipo: { type: string }
+        produto_tipo: { type: [string, "null"] }
+        tipo_item: { type: [string, "null"] }
+        natureza_item: { type: [string, "null"] }
         codigo_interno: { type: [string, "null"] }
+        cod_sku: { type: [string, "null"] }
+        codigo_operacional: { type: [string, "null"] }
         descricao: { type: string }
+        descricao_curta: { type: [string, "null"] }
+        situacao: { type: [string, "null"] }
+        liberado: { type: [string, "null"] }
+        marca: { type: [string, "null"] }
         unidade: { type: string }
+        unidade_medida_id: { type: [string, "null"] }
         gtin: { type: [string, "null"] }
         codigo_servico_municipal: { type: [string, "null"] }
+        servico_codigo: { type: [string, "null"] }
         valor_padrao: { type: number }
         ativo: { type: boolean }
         ncm: { type: [string, "null"] }
+        ncm_descricao: { type: [string, "null"] }
         cest: { type: [string, "null"] }
         origin_code: { type: [string, "null"] }
+        origem_mercadoria: { type: [integer, "null"] }
         benefit_code: { type: [string, "null"] }
         tax_classification_code: { type: [string, "null"] }
         ibs_cbs_classification_code: { type: [string, "null"] }
         codigo_tributacao_nacional: { type: [string, "null"] }
         codigo_nbs: { type: [string, "null"] }
+        cod_classe_tributo: { type: [string, "null"] }
+        fiscal_tags:
+          type: array
+          items: { type: string }
+        fiscal_base:
+          type: object
+          additionalProperties: true
         codigo_cnae: { type: [string, "null"] }
         codigo_atividade: { type: [string, "null"] }
         st_applicable: { type: boolean }

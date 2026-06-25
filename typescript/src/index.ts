@@ -890,7 +890,96 @@ export interface CompanyListFilters {
   cnpj?: string;
 }
 
+export type ProductCatalogResource =
+  | 'unidades-medida'
+  | 'conversoes-unidade'
+  | 'classificacoes-mercadologicas'
+  | 'produtos-mestre'
+  | 'familias'
+  | 'categorias-pdv'
+  | 'codigos-barras'
+  | 'apresentacoes'
+  | 'precos'
+  | 'fornecedores'
+  | 'produto-fornecedores'
+  | 'locais-estoque'
+  | 'enderecos-estoque'
+  | 'lotes'
+  | 'saldos-estoque'
+  | (string & {});
+
+export interface ProductFiscalBase {
+  item_type?: 'PRODUCT' | 'SERVICE' | string;
+  doc_scope_preferencial?: string | null;
+  tipo_item?: string | null;
+  natureza_item?: string | null;
+  fiscal_tags?: string[];
+  ncm?: string | null;
+  ncm_descricao?: string | null;
+  cest?: string | null;
+  origem_mercadoria?: number | string | null;
+  servico_codigo?: string | null;
+  codigo_nbs?: string | null;
+  cod_classe_tributo?: string | null;
+  unidade_medida_id?: string | number | null;
+  unidade?: string | null;
+  unidade_codigo_fiscal?: string | null;
+  apto_emissao?: boolean;
+  pendencias?: string[];
+  [key: string]: unknown;
+}
+
 export interface ProductPayload {
+  id?: string | number;
+  empresa_id?: string | number;
+  tipo?: 'produto' | 'servico' | string;
+  cod_sku?: string | null;
+  codigo_interno?: string | null;
+  sku?: string | null;
+  codigo_operacional?: string | null;
+  codigo_operacional_manual?: boolean | null;
+  descricao?: string;
+  name?: string | null;
+  descricao_curta?: string | null;
+  produto_tipo?: 'NORMAL' | 'SERVICO' | string | null;
+  situacao?: 'ATIVO' | 'INATIVO' | string | null;
+  liberado?: 'sim' | 'nao' | string | null;
+  marca?: string | null;
+  unidade?: string | null;
+  unidade_medida_id?: string | number | null;
+  gtin?: string | null;
+  valor_padrao?: number | string | null;
+  price?: number | string | null;
+  ativo?: boolean | null;
+  tipo_item?: string | null;
+  natureza_item?: string | null;
+  ncm?: string | null;
+  ncm_descricao?: string | null;
+  cest?: string | null;
+  origem_mercadoria?: number | string | null;
+  origin_code?: string | null;
+  codigo_servico_municipal?: string | null;
+  servico_codigo?: string | null;
+  benefit_code?: string | null;
+  tax_classification_code?: string | null;
+  ibs_cbs_classification_code?: string | null;
+  codigo_tributacao_nacional?: string | null;
+  codigo_nbs?: string | null;
+  cod_classe_tributo?: string | null;
+  codigo_cnae?: string | null;
+  codigo_atividade?: string | null;
+  fiscal_tags?: string[];
+  fiscal_base?: ProductFiscalBase | null;
+  st_applicable?: boolean | null;
+  monophase_applicable?: boolean | null;
+  [key: string]: unknown;
+}
+
+export interface ProductCatalogPayload {
+  id?: string | number;
+  empresa_id?: string | number;
+  produto_id?: string | number;
+  ativo?: boolean;
   [key: string]: unknown;
 }
 
@@ -2497,24 +2586,44 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>(`/nfe/entrada/${encodeURIComponent(String(documentId))}/escrituracao/confirmar`, { method: 'POST', unwrapData: false });
   }
 
-  listProductsV2(): Promise<Record<string, unknown>[]> {
-    return this.request<Record<string, unknown>[]>('/produtos', { method: 'GET' });
+  listProductsV2(): Promise<ProductPayload[]> {
+    return this.request<ProductPayload[]>('/produtos', { method: 'GET' });
   }
 
-  getProductV2(productId: string | number): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'GET' });
+  getProductV2(productId: string | number): Promise<ProductPayload> {
+    return this.request<ProductPayload>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'GET' });
   }
 
-  createProductV2(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('/produtos', { method: 'POST', body: payload });
+  createProductV2(payload: ProductPayload): Promise<ProductPayload> {
+    return this.request<ProductPayload>('/produtos', { method: 'POST', body: payload });
   }
 
-  updateProductV2(productId: string | number, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'PUT', body: payload });
+  updateProductV2(productId: string | number, payload: ProductPayload): Promise<ProductPayload> {
+    return this.request<ProductPayload>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'PUT', body: payload });
   }
 
   deleteProductV2(productId: string | number): Promise<DeleteResult> {
     return this.request<DeleteResult>(`/produtos/${encodeURIComponent(String(productId))}`, { method: 'DELETE' });
+  }
+
+  listProductCatalogV2(resource: ProductCatalogResource, params: Record<string, string | number | boolean | null | undefined> = {}): Promise<ProductCatalogPayload[]> {
+    return this.request<ProductCatalogPayload[]>(this.withQuery(`/produtos/catalogo/${encodeURIComponent(resource)}`, params), { method: 'GET' });
+  }
+
+  getProductCatalogV2(resource: ProductCatalogResource, id: string | number): Promise<ProductCatalogPayload> {
+    return this.request<ProductCatalogPayload>(`/produtos/catalogo/${encodeURIComponent(resource)}/${encodeURIComponent(String(id))}`, { method: 'GET' });
+  }
+
+  createProductCatalogV2(resource: ProductCatalogResource, payload: ProductCatalogPayload): Promise<ProductCatalogPayload> {
+    return this.request<ProductCatalogPayload>(`/produtos/catalogo/${encodeURIComponent(resource)}`, { method: 'POST', body: payload });
+  }
+
+  updateProductCatalogV2(resource: ProductCatalogResource, id: string | number, payload: ProductCatalogPayload): Promise<ProductCatalogPayload> {
+    return this.request<ProductCatalogPayload>(`/produtos/catalogo/${encodeURIComponent(resource)}/${encodeURIComponent(String(id))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteProductCatalogV2(resource: ProductCatalogResource, id: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/produtos/catalogo/${encodeURIComponent(resource)}/${encodeURIComponent(String(id))}`, { method: 'DELETE' });
   }
 
   listTakersV2(): Promise<Record<string, unknown>[]> {

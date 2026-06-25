@@ -477,9 +477,91 @@ paths:
       operationId: criarProdutoV2
       description: Cria produto com campos publicos em portugues. origin_code e camelCase sao rejeitados.
       x-required-scopes: ["products:write"]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       responses:
         "201": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
+  /produtos/catalogo/{recurso}:
+    get:
+      tags: [Produtos]
+      operationId: listarCatalogoProdutoAuxiliarV2
+      description: "Lista recursos auxiliares do catalogo de produtos. Recursos: unidades-medida, conversoes-unidade, classificacoes-mercadologicas, produtos-mestre, familias, categorias-pdv, codigos-barras, apresentacoes, precos, fornecedores, produto-fornecedores, locais-estoque, enderecos-estoque, lotes, saldos-estoque."
+      x-required-scopes: ["products:read"]
+      parameters:
+        - name: recurso
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Produtos]
+      operationId: criarCatalogoProdutoAuxiliarV2
+      description: Cria recurso auxiliar do catalogo de produtos com campos publicos em portugues e snake_case.
+      x-required-scopes: ["products:write"]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      parameters:
+        - name: recurso
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "201": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /produtos/catalogo/{recurso}/{id}:
+    get:
+      tags: [Produtos]
+      operationId: obterCatalogoProdutoAuxiliarV2
+      description: Retorna recurso auxiliar do catalogo de produtos.
+      x-required-scopes: ["products:read"]
+      parameters:
+        - name: recurso
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+    put:
+      tags: [Produtos]
+      operationId: atualizarCatalogoProdutoAuxiliarV2
+      description: Atualiza recurso auxiliar do catalogo de produtos.
+      x-required-scopes: ["products:write"]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      parameters:
+        - name: recurso
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Produtos]
+      operationId: excluirCatalogoProdutoAuxiliarV2
+      description: Exclui recurso auxiliar do catalogo de produtos.
+      x-required-scopes: ["products:delete"]
+      parameters:
+        - name: recurso
+          in: path
+          required: true
+          schema: { type: string }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
   /produtos/{produto}:
     get:
       tags: [Produtos]
@@ -499,6 +581,7 @@ paths:
       operationId: atualizarProdutoV2
       description: Atualiza produto usando campos publicos em portugues.
       x-required-scopes: ["products:write"]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
       parameters:
         - name: produto
           in: path

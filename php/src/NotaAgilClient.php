@@ -875,6 +875,31 @@ class NotaAgilClient
         return $this->request('DELETE', '/produtos/'.rawurlencode((string) $productId));
     }
 
+    public function listProductCatalogV2(string $resource, array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/produtos/catalogo/'.rawurlencode($resource), $filters));
+    }
+
+    public function getProductCatalogV2(string $resource, string|int $id): array
+    {
+        return $this->request('GET', '/produtos/catalogo/'.rawurlencode($resource).'/'.rawurlencode((string) $id));
+    }
+
+    public function createProductCatalogV2(string $resource, array $payload): array
+    {
+        return $this->request('POST', '/produtos/catalogo/'.rawurlencode($resource), ['json' => $payload]);
+    }
+
+    public function updateProductCatalogV2(string $resource, string|int $id, array $payload): array
+    {
+        return $this->request('PUT', '/produtos/catalogo/'.rawurlencode($resource).'/'.rawurlencode((string) $id), ['json' => $payload]);
+    }
+
+    public function deleteProductCatalogV2(string $resource, string|int $id): array
+    {
+        return $this->request('DELETE', '/produtos/catalogo/'.rawurlencode($resource).'/'.rawurlencode((string) $id));
+    }
+
     public function takersV2(): array
     {
         return $this->request('GET', '/tomadores');

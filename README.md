@@ -18,11 +18,11 @@ A estrutura recomendada para preview e emissao fiscal por `operation_code`, alem
 
 `v0.4.0` adiciona uma superficie v2 explicita nos SDKs, com rotas companyless, envelope `dados`, contrato `FiscalCanonicalPayloadV2` e helpers de validacao/builders.
 
-Ele preserva a v1 compativel e acrescenta metodos v2 para contratos fiscais, emissao direta, emissao por operacao, consulta/cancelamento/correcao de documentos, configuracao, certificados, catalogos fiscais, produtos, tomadores, webhooks, metricas e billing.
+Ele preserva a v1 compativel e acrescenta metodos v2 para contratos fiscais, emissao direta, emissao por operacao, consulta/cancelamento/correcao de documentos, configuracao, certificados, catalogos fiscais, produtos, catalogo auxiliar de produtos, tomadores, webhooks, metricas e billing.
 
 Tambem inclui consulta IBPT de item e cupom em v1/v2, com helpers `consultIbptItem`, `consultIbptCoupon`, `consultIbptItemV2` e `consultIbptCouponV2`.
 
-Na v2, use nomes publicos em portugues e `snake_case`; aliases legados continuam restritos a v1.
+Na v2, use nomes publicos em portugues e `snake_case`; aliases legados continuam restritos a v1. Produtos v2 aceitam o contrato evoluido com `cod_sku`, `codigo_operacional`, `produto_tipo`, `tipo_item`, `natureza_item`, `origem_mercadoria`, `servico_codigo`, `cod_classe_tributo`, `fiscal_tags` e `fiscal_base`.
 
 ## Instalacao PHP
 

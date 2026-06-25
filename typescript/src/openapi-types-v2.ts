@@ -640,6 +640,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/produtos/catalogo/{recurso}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lista recursos auxiliares do catalogo de produtos. Recursos: unidades-medida, conversoes-unidade, classificacoes-mercadologicas, produtos-mestre, familias, categorias-pdv, codigos-barras, apresentacoes, precos, fornecedores, produto-fornecedores, locais-estoque, enderecos-estoque, lotes, saldos-estoque. */
+        get: operations["listarCatalogoProdutoAuxiliarV2"];
+        put?: never;
+        /** @description Cria recurso auxiliar do catalogo de produtos com campos publicos em portugues e snake_case. */
+        post: operations["criarCatalogoProdutoAuxiliarV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produtos/catalogo/{recurso}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Retorna recurso auxiliar do catalogo de produtos. */
+        get: operations["obterCatalogoProdutoAuxiliarV2"];
+        /** @description Atualiza recurso auxiliar do catalogo de produtos. */
+        put: operations["atualizarCatalogoProdutoAuxiliarV2"];
+        post?: never;
+        /** @description Exclui recurso auxiliar do catalogo de produtos. */
+        delete: operations["excluirCatalogoProdutoAuxiliarV2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/produtos/{produto}": {
         parameters: {
             query?: never;
@@ -2911,10 +2948,88 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: components["requestBodies"]["JsonObject"];
         responses: {
             201: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
+        };
+    };
+    listarCatalogoProdutoAuxiliarV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recurso: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["GenericCollectionResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    criarCatalogoProdutoAuxiliarV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recurso: string;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            201: components["responses"]["GenericResourceResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    obterCatalogoProdutoAuxiliarV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recurso: string;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["GenericResourceResponse"];
+            404: components["responses"]["ErrorResponse"];
+        };
+    };
+    atualizarCatalogoProdutoAuxiliarV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recurso: string;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["GenericResourceResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    excluirCatalogoProdutoAuxiliarV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recurso: string;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeleteResponse"];
+            404: components["responses"]["ErrorResponse"];
         };
     };
     obterProdutoV2: {
@@ -2941,7 +3056,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: components["requestBodies"]["JsonObject"];
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
