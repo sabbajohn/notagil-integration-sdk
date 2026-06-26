@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+    "/openapi.yaml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Retorna este documento OpenAPI v2 em YAML. Endpoint sem aliases. */
+        get: operations["baixarOpenApiIntegracoesV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/docs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Exibe Swagger UI apontando para /api/v2/integrations/openapi.yaml. Endpoint sem aliases. */
+        get: operations["visualizarDocsIntegracoesV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/contratos/{tipo_documento}": {
         parameters: {
             query?: never;
@@ -30,28 +64,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Requer Idempotency-Key. Enfileira uma emissao direta usando FiscalCanonicalPayloadV2 estrito. O payload aceita somente campos publicos em portugues, snake_case, sem aliases legados e sem nomes de XML ou provider. */
+        /** @description Requer Idempotency-Key. Enfileira uma emissao direta usando FiscalCanonicalPayloadV2 estrito. O envelope usa tipo_documento e metadados; document_type, metadata e demais aliases legados sao rejeitados. */
         post: operations["criarDocumentoDiretoV2"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/contracts/{document_type}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * @deprecated
-         * @description Alias compatível de /contratos/{tipo_documento}. A resposta ja usa campos em portugues.
-         */
-        get: operations["getFiscalContractV2"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -425,10 +439,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /** @description Gera modelo de consequencia tributaria usando codigo_classificacao e campos publicos em portugues. */
-        post: operations["gerarModeloConsequenciaTributariaV2"];
+        get: operations["gerarModeloConsequenciaTributariaV2"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -884,7 +898,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Resolve a operacao fiscal pelo codigo e retorna a pre-visualizacao do retrato para a empresa vinculada ao token. snapshot, emission_mode, synchronous e camelCase no envelope sao rejeitados. */
+        /** @description Resolve a operacao fiscal pelo codigo e retorna a pre-visualizacao do retrato para a empresa vinculada ao token. Use tipo_documento e metadados; document_type, metadata, snapshot, emission_mode, synchronous e camelCase no envelope sao rejeitados. */
         post: operations["previsualizarEmissaoPorOperacaoV2"];
         delete?: never;
         options?: never;
@@ -901,7 +915,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Requer Idempotency-Key. Enfileira ou emite NFCe de forma sincrona a partir de um retrato operacional e do codigo da operacao fiscal. */
+        /** @description Requer Idempotency-Key. Enfileira ou emite NFCe de forma sincrona a partir de um retrato operacional e do codigo da operacao fiscal. Use tipo_documento e metadados; document_type e metadata sao rejeitados. */
         post: operations["emitirDocumentoPorOperacaoV2"];
         delete?: never;
         options?: never;
@@ -1168,20 +1182,351 @@ export interface components {
         DirectDocumentRequestV2: {
             external_id: string;
             /** @enum {string} */
-            document_type: "nfe" | "nfce" | "nfse";
+            tipo_documento: "nfe" | "nfce" | "nfse";
             municipio?: string;
             /** @enum {string} */
             ambiente_fiscal?: "homologacao" | "producao";
             /**
-             * @description Use sincrono somente com document_type=nfce.
+             * @description Use sincrono somente com tipo_documento=nfce.
              * @enum {string}
              */
             modo_emissao?: "fila" | "sincrono";
             sincrono?: boolean;
             payload: components["schemas"]["FiscalCanonicalPayloadV2"];
-            metadata?: {
+            metadados?: {
                 [key: string]: unknown;
             };
+        };
+        DirectXmlDocumentRequestV2: {
+            external_id: string;
+            /** @enum {string} */
+            tipo_documento: "nfe" | "nfce";
+            municipio?: string;
+            /** @enum {string} */
+            ambiente_fiscal?: "homologacao" | "producao";
+            /** @description XML fiscal em texto. */
+            xml?: string;
+            /** @description XML fiscal codificado em base64. Use xml ou xml_em_base64. */
+            xml_em_base64?: string;
+            /** @default false */
+            ja_assinado: boolean;
+            id_lote?: string;
+            /** @enum {integer} */
+            indicador_sincrono?: 0 | 1;
+            /**
+             * @description Use sincrono somente com tipo_documento=nfce.
+             * @enum {string}
+             */
+            modo_emissao?: "fila" | "sincrono";
+            sincrono?: boolean;
+            metadados?: {
+                [key: string]: unknown;
+            };
+        } | unknown | unknown;
+        ImportacaoImplantacaoRequestV2: {
+            /** @enum {string} */
+            tipo_origem: "xml" | "csv" | "documento";
+            /** @enum {string|null} */
+            fluxo?: "entrada" | "saida" | null;
+            nome_arquivo?: string | null;
+            /** @description Obrigatorio quando tipo_origem=xml. */
+            xml?: string | null;
+            /** @description Obrigatorio quando tipo_origem=csv. */
+            linhas?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** @description Obrigatorio quando tipo_origem=documento. */
+            documento?: {
+                [key: string]: unknown;
+            } | null;
+            itens?: {
+                [key: string]: unknown;
+            }[] | null;
+        };
+        RevisarImportacaoImplantacaoRequestV2: {
+            aprovar_todos?: boolean;
+            itens?: ({
+                id: number;
+                /** @enum {string} */
+                status: "aprovado" | "rejeitado" | "pendente_revisao";
+            } & {
+                [key: string]: unknown;
+            })[];
+        };
+        PromoverImportacaoImplantacaoRequestV2: {
+            aprovar_todos?: boolean;
+        };
+        IbptItemRequestV2: {
+            uf: string;
+            ncm: string;
+            valor: number;
+            /** @default 0 */
+            extarif: number;
+            descricao?: string | null;
+            unidade?: string | null;
+            gtin?: string | null;
+            codigo_interno?: string | null;
+            codigo_origem?: string | null;
+            /** @enum {string|null} */
+            tipo_mercadoria?: "nacional" | "importada" | null;
+            importado?: boolean | null;
+        };
+        IbptCupomRequestV2: {
+            /** @description UF padrao aplicada aos itens que nao informarem UF. */
+            uf?: string | null;
+            itens: ({
+                id?: unknown;
+                linha?: unknown;
+                uf?: string;
+                ncm?: string;
+                valor?: number;
+                /** @default 0 */
+                extarif: number;
+                descricao?: string;
+                unidade?: string;
+                gtin?: string;
+                codigo_interno?: string;
+                codigo_origem?: string;
+                /** @enum {string} */
+                tipo_mercadoria?: "nacional" | "importada";
+                importado?: boolean;
+            } & {
+                [key: string]: unknown;
+            })[];
+        };
+        /** @description Campos aceitos variam por recurso. product_id e aliases em ingles sao rejeitados; use produto_id. */
+        CatalogoProdutoAuxiliarRequestV2: {
+            unidade?: string;
+            descricao?: string;
+            descricao_plural?: string | null;
+            decimais?: number | null;
+            artigo?: string | null;
+            codigo_fiscal?: string | null;
+            status?: string | boolean;
+            codigo?: string | null;
+            unidade_origem_id?: number | null;
+            unidade_destino_id?: number | null;
+            unidade_origem?: string;
+            unidade_destino?: string;
+            fator?: number;
+            ativo?: boolean | null;
+            observacao?: string | null;
+            parent_id?: number | null;
+            descricao_reduzida?: string | null;
+            nivel?: number | null;
+            path?: string | null;
+            ordem?: number | null;
+            tipo_item_default?: string | null;
+            natureza_item_default?: string | null;
+            fiscal_tags_default?: unknown[] | null;
+            sku?: string | null;
+            descricao_curta?: string | null;
+            marca?: string | null;
+            produto_tipo?: string | null;
+            unidade_medida_id?: number | null;
+            classificacao_mercadologica_id?: number | null;
+            atributos_logisticos?: {
+                [key: string]: unknown;
+            } | null;
+            nome?: string;
+            codigo_prefixo?: string | null;
+            modo_geracao_codigo?: string | null;
+            faixa_inicial?: number | null;
+            faixa_final?: number | null;
+            proximo_numero?: number | null;
+            produto_id?: number;
+            produto_apresentacao_id?: number | null;
+            tipo_codigo?: string | null;
+            principal?: boolean | null;
+            informacoes_complementares?: string | null;
+            descricao_embalagem?: string;
+            quantidade_unidade_base?: number | null;
+            tipo_apresentacao?: string | null;
+            tipo?: string;
+            canal?: string | null;
+            valor?: number;
+            percentual?: number | null;
+            custo_referencial?: number | null;
+            margem?: number | null;
+            margem_preco_minimo?: number | null;
+            /** Format: date */
+            vigencia_inicio?: string | null;
+            /** Format: date */
+            vigencia_fim?: string | null;
+            documento?: string | null;
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+            fornecedor_id?: number;
+            unidade_medida_compra_id?: number | null;
+            embalagem_compra_descricao?: string | null;
+            codigo_produto_fornecedor?: string | null;
+            codigo_barras_fornecedor?: string | null;
+            fator_conversao_compra?: number | null;
+            lead_time_dias?: number | null;
+            lote_minimo?: number | null;
+            multiplo_compra?: number | null;
+            quantidade_minima_compra?: number | null;
+            custo_ultima_compra?: number | null;
+            custo_negociado?: number | null;
+            /** Format: date */
+            ultimo_orcado_em?: string | null;
+            fornecedor_preferencial?: boolean | null;
+            homologado?: boolean | null;
+            /** Format: date */
+            inicio_vigencia?: string | null;
+            /** Format: date */
+            fim_vigencia?: string | null;
+            estoque_local_id?: number;
+            rua?: string | null;
+            modulo?: string | null;
+            prateleira?: string | null;
+            box?: string | null;
+            numero_lote?: string;
+            /** Format: date */
+            data_fabricacao?: string | null;
+            /** Format: date */
+            data_validade?: string | null;
+            estoque_endereco_id?: number | null;
+            produto_lote_id?: number | null;
+            quantidade?: number;
+        };
+        CertificadoRequestV2: {
+            nome?: string | null;
+            nome_arquivo?: string | null;
+            /** @description Conteudo do certificado A1 em base64. */
+            arquivo_base64: string;
+            senha: string;
+        };
+        AtualizarCertificadoRequestV2: {
+            /** @enum {string} */
+            situacao: "ativo" | "expirado" | "active" | "expired";
+        };
+        ConsultaNotasRequestV2: {
+            chave_documento: string;
+            /** @enum {string|null} */
+            tipo_documento?: "nfe" | "nfce" | "nfse" | null;
+            /** @default true */
+            consulta_remota: boolean | null;
+            /** @default false */
+            forcar_consulta_remota: boolean | null;
+            /** @enum {string|null} */
+            ambiente_fiscal?: "homologacao" | "producao" | null;
+        };
+        SincronizarNfeEntradaRequestV2: {
+            ultimo_nsu?: string | null;
+            nsu?: string | null;
+            /** @enum {string|null} */
+            ambiente_fiscal?: "homologacao" | "producao" | null;
+        };
+        ManifestarNfeEntradaRequestV2: {
+            tipo_manifestacao: string;
+            justificativa?: string | null;
+            /** @enum {string|null} */
+            ambiente_fiscal?: "homologacao" | "producao" | null;
+        };
+        BaixarXmlNfeEntradaRequestV2: {
+            /** @enum {string|null} */
+            ambiente_fiscal?: "homologacao" | "producao" | null;
+        };
+        EscriturarNfeEntradaRequestV2: {
+            finalidade_entrada?: string | null;
+            finalidades_itens?: ({
+                numero_linha: number;
+                finalidade_entrada?: string | null;
+            } & {
+                [key: string]: unknown;
+            })[] | null;
+        };
+        ProdutoRequestV2: {
+            tipo?: string | null;
+            codigo_interno?: string | null;
+            cod_sku?: string | null;
+            codigo_operacional?: string | null;
+            codigo_operacional_manual?: boolean | null;
+            descricao: string;
+            descricao_curta?: string | null;
+            produto_tipo?: string | null;
+            situacao?: string | null;
+            /** @enum {string|null} */
+            liberado?: "sim" | "nao" | null;
+            marca?: string | null;
+            palavra_chave?: string | null;
+            permite_fracionamento?: boolean | null;
+            atributos_logisticos?: {
+                [key: string]: unknown;
+            } | null;
+            unidade?: string | null;
+            unidade_medida_id?: number | null;
+            produto_mestre_id?: number | null;
+            produto_familia_id?: number | null;
+            pdv_category_id?: number | null;
+            classificacao_mercadologica_id?: number | null;
+            gtin?: string | null;
+            codigo_servico_municipal?: string | null;
+            servico_codigo?: string | null;
+            valor_padrao?: number | null;
+            ativo?: boolean | null;
+            tipo_item?: string | null;
+            natureza_item?: string | null;
+            ncm?: string | null;
+            ncm_descricao?: string | null;
+            cest?: string | null;
+            codigo_origem?: string | null;
+            origem_mercadoria?: number | null;
+            codigo_beneficio?: string | null;
+            codigo_classificacao_tributaria?: string | null;
+            codigo_classificacao_ibs_cbs?: string | null;
+            codigo_tributacao_nacional?: string | null;
+            codigo_nbs?: string | null;
+            cod_classe_tributo?: string | null;
+            ipi_classe?: string | null;
+            ipi_cod_enquadramento?: string | null;
+            ipi_selo_cod?: string | null;
+            cod_iat?: string | null;
+            cod_ippt?: string | null;
+            codigo_cnae?: string | null;
+            codigo_atividade?: string | null;
+            substituicao_tributaria_aplicavel?: boolean | null;
+            monofasico_aplicavel?: boolean | null;
+            fiscal_tags?: string[] | null;
+        };
+        TomadorRequestV2: {
+            /** @enum {string|null} */
+            tipo?: "pf" | "pj" | null;
+            /** @enum {string|null} */
+            tipo_pessoa?: "pf" | "pj" | null;
+            documento: string;
+            nome: string;
+            /** Format: email */
+            email?: string | null;
+            logradouro?: string | null;
+            numero?: string | null;
+            complemento?: string | null;
+            bairro?: string | null;
+            cep?: string | null;
+            municipio?: string | null;
+            uf?: string | null;
+            codigo_ibge?: string | null;
+            /** @enum {string|null} */
+            indicador_ie?: "1" | "2" | "9" | null;
+            inscricao_estadual?: string | null;
+            inscricao_municipal?: string | null;
+            suframa?: string | null;
+            codigo_natureza_juridica?: string | null;
+            entidade_sem_fins_lucrativos?: boolean | null;
+            entidade_publica?: boolean | null;
+            produtor_rural?: boolean | null;
+            parte_estrangeira?: boolean | null;
+            codigo_pais?: string | null;
+            contribuinte_iss?: boolean | null;
+            caepf?: string | null;
+            regime_tributario?: string | null;
+            fonte_classificacao?: string | null;
+            /** @enum {string|null} */
+            situacao_revisao?: "aprovado" | "pendente_revisao" | "bloqueado" | "rejeitado" | null;
+            score_confianca?: number | null;
+            ativo?: boolean | null;
         };
         AtualizarConfiguracaoEmpresaV2: {
             cnpj?: string;
@@ -1238,26 +1583,26 @@ export interface components {
         OperationPreviewRequestV2: {
             external_id?: string;
             /** @enum {string} */
-            document_type: "nfe" | "nfce" | "nfse";
+            tipo_documento: "nfe" | "nfce" | "nfse";
             municipio?: string;
             retrato: components["schemas"]["RetratoOperacionalRequestV2"];
-            metadata?: {
+            metadados?: {
                 [key: string]: unknown;
             };
         };
         OperationDocumentRequestV2: {
             external_id: string;
             /** @enum {string} */
-            document_type: "nfe" | "nfce" | "nfse";
+            tipo_documento: "nfe" | "nfce" | "nfse";
             municipio?: string;
             /**
-             * @description Use sincrono somente com document_type=nfce.
+             * @description Use sincrono somente com tipo_documento=nfce.
              * @enum {string}
              */
             modo_emissao?: "fila" | "sincrono";
             sincrono?: boolean;
             retrato: components["schemas"]["RetratoOperacionalRequestV2"];
-            metadata?: {
+            metadados?: {
                 [key: string]: unknown;
             };
         };
@@ -1319,6 +1664,9 @@ export interface components {
             referencias?: components["schemas"]["ReferenciaFiscalV2"][];
             totais?: components["schemas"]["TotaisFiscalV2"];
             impostos?: components["schemas"]["ImpostosFiscalV2"];
+            valores_nfse?: components["schemas"]["ValoresNfseFiscalV2"];
+            tributacao?: components["schemas"]["TributacaoNfseFiscalV2"];
+            ibs_cbs?: components["schemas"]["IbsCbsNfseFiscalV2"];
             observacoes?: components["schemas"]["ObservacoesFiscalV2"];
             extensoes?: {
                 [key: string]: unknown;
@@ -1339,10 +1687,9 @@ export interface components {
             intermediador?: number;
         };
         ParteFiscalV2: {
-            documento?: string;
-            cpf?: string;
-            cnpj?: string;
-            nome?: string;
+            /** @description CPF ou CNPJ da parte fiscal, aceitando pessoa fisica ou juridica no mesmo campo. */
+            cpf_cnpj?: string;
+            /** @description Nome civil ou razao social da parte fiscal. */
             razao_social?: string;
             nome_fantasia?: string;
             /** @enum {string} */
@@ -1384,12 +1731,102 @@ export interface components {
             codigo_municipio_prestacao?: string;
             municipio_prestacao_codigo?: string;
             descricao?: string;
-            aliquota_iss?: number;
-            aliquota?: number;
-            iss_retido?: boolean;
+        };
+        ValoresNfseFiscalV2: {
+            valor_recebido?: number;
+            desconto_incondicionado?: number;
+            desconto_condicionado?: number;
+            /** @description Informe percentual ou valor, nunca ambos. */
+            deducao_reducao?: {
+                percentual?: number;
+                valor?: number;
+            };
+        };
+        TributacaoNfseFiscalV2: {
+            municipal?: components["schemas"]["TributacaoMunicipalNfseFiscalV2"];
+            federal?: components["schemas"]["TributacaoFederalNfseFiscalV2"];
+            total?: components["schemas"]["TotalTributosNfseFiscalV2"];
+        };
+        TributacaoMunicipalNfseFiscalV2: {
             tributacao_iss?: string;
-            valor_irrf?: number;
-            valor_ir?: number;
+            pais_resultado?: string;
+            tipo_imunidade?: string;
+            exigibilidade_suspensa?: {
+                tipo_suspensao?: string;
+                numero_processo?: string;
+            };
+            /** @description Informe percentual_reducao_bc ou valor_reducao_bc, nunca ambos. */
+            beneficio_municipal?: {
+                numero_beneficio?: string;
+                percentual_reducao_bc?: number;
+                valor_reducao_bc?: number;
+            };
+            /**
+             * @description 1=nao retido, 2=retido pelo tomador, 3=retido pelo intermediario.
+             * @enum {string}
+             */
+            tipo_retencao_iss?: "1" | "2" | "3";
+            aliquota_iss?: number;
+            enviar_aliquota_iss?: boolean;
+        };
+        TributacaoFederalNfseFiscalV2: {
+            pis_cofins?: components["schemas"]["PisCofinsNfseFiscalV2"];
+            valor_retido_cp?: number;
+            valor_retido_irrf?: number;
+            valor_retido_csll?: number;
+        };
+        PisCofinsNfseFiscalV2: {
+            cst?: string;
+            base_calculo?: number;
+            aliquota_pis?: number;
+            aliquota_cofins?: number;
+            valor_pis?: number;
+            valor_cofins?: number;
+            /** @enum {string} */
+            tipo_retencao?: "1" | "2" | "3";
+        };
+        /** @description Informe apenas uma modalidade de total de tributos. */
+        TotalTributosNfseFiscalV2: {
+            /** @enum {string} */
+            indicador_sem_total?: "0";
+            percentual_simples_nacional?: number;
+            percentuais?: {
+                federal?: number;
+                estadual?: number;
+                municipal?: number;
+            };
+            valores?: {
+                federal?: number;
+                estadual?: number;
+                municipal?: number;
+            };
+        };
+        IbsCbsNfseFiscalV2: {
+            finalidade_nfse?: string;
+            indicador_final?: string;
+            codigo_indicador_operacao?: string;
+            tipo_operacao?: string;
+            referencias_nfse?: string[];
+            tipo_ente_governamental?: string;
+            indicador_destinatario?: string;
+            destinatario?: {
+                cpf_cnpj?: string;
+                razao_social?: string;
+            };
+            tributos?: {
+                cst?: string;
+                codigo_classificacao?: string;
+                codigo_credito_presumido?: string;
+                tributacao_regular?: {
+                    cst?: string;
+                    codigo_classificacao?: string;
+                };
+                diferimento?: {
+                    percentual_uf?: number;
+                    percentual_municipal?: number;
+                    percentual_cbs?: number;
+                };
+            };
         };
         PagamentoFiscalV2: {
             meios?: {
@@ -2333,7 +2770,6 @@ export interface components {
     parameters: {
         /** @description Identificador externo informado no envelope de criacao. */
         ExternalId: string;
-        DocumentType: "nfe" | "nfce" | "nfse";
         TipoDocumento: "nfe" | "nfce" | "nfse";
         AmbienteFiscal: "homologacao" | "producao";
         /** @description Chave idempotente obrigatoria para emissao direta. */
@@ -2346,20 +2782,52 @@ export interface components {
         AgendamentoId: string;
         NotificacaoWebId: number;
     };
-    requestBodies: {
-        JsonObject: {
-            content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
-            };
-        };
-    };
+    requestBodies: never;
     headers: never;
     pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    baixarOpenApiIntegracoesV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Documento OpenAPI v2 em YAML. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/yaml": string;
+                };
+            };
+        };
+    };
+    visualizarDocsIntegracoesV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description HTML da documentacao interativa. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+        };
+    };
     obterContratoFiscalV2: {
         parameters: {
             query?: never;
@@ -2393,21 +2861,6 @@ export interface operations {
         responses: {
             200: components["responses"]["DirectDocumentAcceptedResponse"];
             202: components["responses"]["DirectDocumentAcceptedResponse"];
-            422: components["responses"]["ErrorResponse"];
-        };
-    };
-    getFiscalContractV2: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                document_type: components["parameters"]["DocumentType"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: components["responses"]["ContractInfoResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };
@@ -2506,7 +2959,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificadoRequestV2"];
+            };
+        };
         responses: {
             201: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2521,7 +2978,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarCertificadoRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             404: components["responses"]["ErrorResponse"];
@@ -2575,9 +3036,13 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportacaoImplantacaoRequestV2"];
+            };
+        };
         responses: {
-            202: components["responses"]["GenericResourceResponse"];
+            201: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };
@@ -2605,7 +3070,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RevisarImportacaoImplantacaoRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2620,7 +3089,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PromoverImportacaoImplantacaoRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2652,7 +3125,11 @@ export interface operations {
     };
     listarMunicipiosV2: {
         parameters: {
-            query?: never;
+            query?: {
+                uf?: string;
+                busca?: string;
+                limite?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2660,11 +3137,15 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["GenericCollectionResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     listarNcmsV2: {
         parameters: {
-            query?: never;
+            query: {
+                busca: string;
+                limite?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2672,6 +3153,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["GenericCollectionResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     consultarIbptItemV2: {
@@ -2681,7 +3163,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: components["requestBodies"]["JsonObject"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IbptItemRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2694,7 +3180,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: components["requestBodies"]["JsonObject"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IbptCupomRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2702,7 +3192,10 @@ export interface operations {
     };
     listarCatalogosTributariosV2: {
         parameters: {
-            query?: never;
+            query?: {
+                familia_tributaria?: string;
+                ativo?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2710,14 +3203,19 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["GenericCollectionResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     listarSituacoesTributariasV2: {
         parameters: {
-            query?: never;
+            query?: {
+                codigo?: string;
+                tipo_codigo?: string;
+                ativo?: boolean;
+            };
             header?: never;
             path: {
-                catalogo: number;
+                catalogo: string;
             };
             cookie?: never;
         };
@@ -2725,14 +3223,17 @@ export interface operations {
         responses: {
             200: components["responses"]["GenericCollectionResponse"];
             404: components["responses"]["ErrorResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     listarClassificacoesTributariasV2: {
         parameters: {
-            query?: never;
+            query?: {
+                tributo?: string;
+            };
             header?: never;
             path: {
-                situacao: number;
+                situacao: string;
             };
             cookie?: never;
         };
@@ -2740,20 +3241,25 @@ export interface operations {
         responses: {
             200: components["responses"]["GenericCollectionResponse"];
             404: components["responses"]["ErrorResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     gerarModeloConsequenciaTributariaV2: {
         parameters: {
-            query?: never;
+            query?: {
+                tributo?: string;
+                codigo_classificacao?: string;
+            };
             header?: never;
             path: {
-                situacao: number;
+                situacao: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
             200: components["responses"]["GenericResourceResponse"];
+            404: components["responses"]["ErrorResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };
@@ -2767,7 +3273,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectXmlDocumentRequestV2"];
+            };
+        };
         responses: {
             202: components["responses"]["DirectDocumentAcceptedResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2775,7 +3285,19 @@ export interface operations {
     };
     listarConsultaNotasV2: {
         parameters: {
-            query?: never;
+            query?: {
+                busca?: string;
+                chave?: string;
+                chave_documento?: string;
+                direcao?: "entrada" | "saida";
+                tipo_documento?: "nfe" | "nfce" | "nfse";
+                status?: string;
+                data_de?: string;
+                data_ate?: string;
+                pagina?: number;
+                por_pagina?: number;
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2793,7 +3315,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsultaNotasRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2801,7 +3327,9 @@ export interface operations {
     };
     baixarXmlConsultaNotasV2: {
         parameters: {
-            query?: never;
+            query?: {
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+            };
             header?: never;
             path: {
                 origem: string;
@@ -2819,11 +3347,14 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["ErrorResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     baixarPdfConsultaNotasV2: {
         parameters: {
-            query?: never;
+            query?: {
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+            };
             header?: never;
             path: {
                 origem: string;
@@ -2841,11 +3372,21 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["ErrorResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     listarNfeEntradaV2: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: string;
+                chave?: string;
+                chave_documento?: string;
+                emitente?: string;
+                data_emissao_de?: string;
+                data_emissao_ate?: string;
+                por_pagina?: number;
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2853,6 +3394,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["GenericCollectionResponse"];
+            422: components["responses"]["ErrorResponse"];
         };
     };
     sincronizarNfeEntradaV2: {
@@ -2862,9 +3404,13 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SincronizarNfeEntradaRequestV2"];
+            };
+        };
         responses: {
-            202: components["responses"]["GenericResourceResponse"];
+            200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };
@@ -2877,7 +3423,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManifestarNfeEntradaRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2892,7 +3442,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BaixarXmlNfeEntradaRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2907,7 +3461,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EscriturarNfeEntradaRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2948,7 +3506,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: components["requestBodies"]["JsonObject"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProdutoRequestV2"];
+            };
+        };
         responses: {
             201: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -2956,7 +3518,17 @@ export interface operations {
     };
     listarCatalogoProdutoAuxiliarV2: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filtro aplicavel a recursos vinculados a produto. */
+                produto_id?: number;
+                /** @description Filtro aplicavel a produto-fornecedores. */
+                fornecedor_id?: number;
+                /** @description Filtro aplicavel a recursos com campo ativo. */
+                ativo?: boolean;
+                /** @description Filtro aplicavel a recursos com campo status. */
+                status?: string | boolean;
+                limite?: number;
+            };
             header?: never;
             path: {
                 recurso: string;
@@ -2978,7 +3550,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: components["requestBodies"]["JsonObject"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogoProdutoAuxiliarRequestV2"];
+            };
+        };
         responses: {
             201: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -3010,7 +3586,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: components["requestBodies"]["JsonObject"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogoProdutoAuxiliarRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -3056,7 +3636,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: components["requestBodies"]["JsonObject"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProdutoRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -3097,7 +3681,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TomadorRequestV2"];
+            };
+        };
         responses: {
             201: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];
@@ -3127,7 +3715,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TomadorRequestV2"];
+            };
+        };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             422: components["responses"]["ErrorResponse"];

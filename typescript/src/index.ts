@@ -76,6 +76,57 @@ export const NFSE_NACIONAL_EXPECTED_FIELDS = [
   'servico.valor_ir',
   'servico.iss_retido',
   'valor_servicos',
+  'valores.vReceb',
+  'valores.vDescIncond',
+  'valores.vDescCond',
+  'valores.deducao_reducao.percentual',
+  'valores.deducao_reducao.valor',
+  'tributacao.municipal.tribISSQN',
+  'tributacao.municipal.cPaisResult',
+  'tributacao.municipal.tpImunidade',
+  'tributacao.municipal.exigSusp.tpSusp',
+  'tributacao.municipal.exigSusp.nProcesso',
+  'tributacao.municipal.BM.nBM',
+  'tributacao.municipal.BM.pRedBCBM',
+  'tributacao.municipal.BM.vRedBCBM',
+  'tributacao.municipal.tpRetISSQN',
+  'tributacao.municipal.pAliq',
+  'tributacao.municipal.enviarPAliq',
+  'tributacao.federal.piscofins.CST',
+  'tributacao.federal.piscofins.vBCPisCofins',
+  'tributacao.federal.piscofins.pAliqPis',
+  'tributacao.federal.piscofins.pAliqCofins',
+  'tributacao.federal.piscofins.vPis',
+  'tributacao.federal.piscofins.vCofins',
+  'tributacao.federal.piscofins.tpRetPisCofins',
+  'tributacao.federal.vRetCP',
+  'tributacao.federal.vRetIRRF',
+  'tributacao.federal.vRetCSLL',
+  'tributacao.total.indTotTrib',
+  'tributacao.total.pTotTribSN',
+  'tributacao.total.pTotTrib.pTotTribFed',
+  'tributacao.total.pTotTrib.pTotTribEst',
+  'tributacao.total.pTotTrib.pTotTribMun',
+  'tributacao.total.vTotTrib.vTotTribFed',
+  'tributacao.total.vTotTrib.vTotTribEst',
+  'tributacao.total.vTotTrib.vTotTribMun',
+  'ibscbs.finNFSe',
+  'ibscbs.indFinal',
+  'ibscbs.cIndOp',
+  'ibscbs.tpOper',
+  'ibscbs.gRefNFSe.refNFSe',
+  'ibscbs.tpEnteGov',
+  'ibscbs.indDest',
+  'ibscbs.dest.documento',
+  'ibscbs.dest.razaoSocial',
+  'ibscbs.valores.trib.gIBSCBS.CST',
+  'ibscbs.valores.trib.gIBSCBS.cClassTrib',
+  'ibscbs.valores.trib.gIBSCBS.cCredPres',
+  'ibscbs.valores.trib.gIBSCBS.gTribRegular.CSTReg',
+  'ibscbs.valores.trib.gIBSCBS.gTribRegular.cClassTribReg',
+  'ibscbs.valores.trib.gIBSCBS.gDif.pDifUF',
+  'ibscbs.valores.trib.gIBSCBS.gDif.pDifMun',
+  'ibscbs.valores.trib.gIBSCBS.gDif.pDifCBS',
 ] as const;
 
 type NfseCanonicalScalar = string | number | boolean | null;
@@ -144,6 +195,9 @@ export interface NfseCanonicalPayload extends Record<string, unknown> {
   tomador?: NfseTomador;
   servico?: NfseServico;
   valor_servicos?: NfseCanonicalScalar;
+  valores?: Record<string, unknown>;
+  tributacao?: Record<string, unknown>;
+  ibscbs?: Record<string, unknown>;
 }
 
 export type NfseNacionalPrestador = NfsePrestador;
@@ -213,6 +267,101 @@ const NFSE_NACIONAL_SCHEMA: CanonicalSchema = {
     iss_retido: true,
   },
   valor_servicos: true,
+  valores: {
+    vReceb: true,
+    vDescIncond: true,
+    vDescCond: true,
+    desconto_incondicionado: true,
+    desconto_condicionado: true,
+    deducao_reducao: {
+      pDR: true,
+      vDR: true,
+      percentual: true,
+      valor: true,
+    },
+  },
+  tributacao: {
+    municipal: {
+      tribISSQN: true,
+      cPaisResult: true,
+      tpImunidade: true,
+      exigSusp: {
+        tpSusp: true,
+        nProcesso: true,
+      },
+      BM: {
+        nBM: true,
+        pRedBCBM: true,
+        vRedBCBM: true,
+      },
+      tpRetISSQN: true,
+      pAliq: true,
+      aliquota: true,
+      enviarPAliq: true,
+    },
+    federal: {
+      piscofins: {
+        CST: true,
+        cst: true,
+        vBCPisCofins: true,
+        pAliqPis: true,
+        pAliqCofins: true,
+        vPis: true,
+        vCofins: true,
+        tpRetPisCofins: true,
+      },
+      vRetCP: true,
+      vRetIRRF: true,
+      vRetCSLL: true,
+    },
+    total: {
+      indTotTrib: true,
+      pTotTribSN: true,
+      pTotTrib: {
+        pTotTribFed: true,
+        pTotTribEst: true,
+        pTotTribMun: true,
+      },
+      vTotTrib: {
+        vTotTribFed: true,
+        vTotTribEst: true,
+        vTotTribMun: true,
+      },
+    },
+  },
+  ibscbs: {
+    finNFSe: true,
+    indFinal: true,
+    cIndOp: true,
+    tpOper: true,
+    gRefNFSe: {
+      refNFSe: true,
+    },
+    tpEnteGov: true,
+    indDest: true,
+    dest: {
+      documento: true,
+      razaoSocial: true,
+    },
+    valores: {
+      trib: {
+        gIBSCBS: {
+          CST: true,
+          cClassTrib: true,
+          cCredPres: true,
+          gTribRegular: {
+            CSTReg: true,
+            cClassTribReg: true,
+          },
+          gDif: {
+            pDifUF: true,
+            pDifMun: true,
+            pDifCBS: true,
+          },
+        },
+      },
+    },
+  },
 };
 
 export interface NfseFieldSchema {
@@ -427,10 +576,7 @@ export interface EnderecoFiscalV2 extends Record<string, unknown> {
 }
 
 export interface ParteFiscalV2 extends Record<string, unknown> {
-  documento?: string;
-  cpf?: string;
-  cnpj?: string;
-  nome?: string;
+  cpf_cnpj?: string;
   razao_social?: string;
   nome_fantasia?: string;
   tipo_pessoa?: 'fisica' | 'juridica' | 'estrangeiro' | string;
@@ -478,12 +624,105 @@ export interface ServicoFiscalV2 extends Record<string, unknown> {
   codigo_municipio_prestacao?: string;
   municipio_prestacao_codigo?: string;
   descricao?: string;
-  aliquota_iss?: number;
-  aliquota?: number;
-  iss_retido?: boolean;
-  tributacao_iss?: string;
-  valor_irrf?: number;
-  valor_ir?: number;
+}
+
+export interface ValoresNfseFiscalV2 extends Record<string, unknown> {
+  valor_recebido?: number;
+  desconto_incondicionado?: number;
+  desconto_condicionado?: number;
+  deducao_reducao?: {
+    percentual?: number;
+    valor?: number;
+    [key: string]: unknown;
+  };
+}
+
+export interface TributacaoNfseFiscalV2 extends Record<string, unknown> {
+  municipal?: {
+    tributacao_iss?: string;
+    pais_resultado?: string;
+    tipo_imunidade?: string;
+    exigibilidade_suspensa?: {
+      tipo_suspensao?: string;
+      numero_processo?: string;
+      [key: string]: unknown;
+    };
+    beneficio_municipal?: {
+      numero_beneficio?: string;
+      percentual_reducao_bc?: number;
+      valor_reducao_bc?: number;
+      [key: string]: unknown;
+    };
+    tipo_retencao_iss?: '1' | '2' | '3' | string;
+    aliquota_iss?: number;
+    enviar_aliquota_iss?: boolean;
+    [key: string]: unknown;
+  };
+  federal?: {
+    pis_cofins?: {
+      cst?: string;
+      base_calculo?: number;
+      aliquota_pis?: number;
+      aliquota_cofins?: number;
+      valor_pis?: number;
+      valor_cofins?: number;
+      tipo_retencao?: '1' | '2' | '3' | string;
+      [key: string]: unknown;
+    };
+    valor_retido_cp?: number;
+    valor_retido_irrf?: number;
+    valor_retido_csll?: number;
+    [key: string]: unknown;
+  };
+  total?: {
+    indicador_sem_total?: '0' | string;
+    percentual_simples_nacional?: number;
+    percentuais?: {
+      federal?: number;
+      estadual?: number;
+      municipal?: number;
+      [key: string]: unknown;
+    };
+    valores?: {
+      federal?: number;
+      estadual?: number;
+      municipal?: number;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
+}
+
+export interface IbsCbsNfseFiscalV2 extends Record<string, unknown> {
+  finalidade_nfse?: string;
+  indicador_final?: string;
+  codigo_indicador_operacao?: string;
+  tipo_operacao?: string;
+  referencias_nfse?: string[];
+  tipo_ente_governamental?: string;
+  indicador_destinatario?: string;
+  destinatario?: {
+    cpf_cnpj?: string;
+    razao_social?: string;
+    [key: string]: unknown;
+  };
+  tributos?: {
+    cst?: string;
+    codigo_classificacao?: string;
+    codigo_credito_presumido?: string;
+    tributacao_regular?: {
+      cst?: string;
+      codigo_classificacao?: string;
+      [key: string]: unknown;
+    };
+    diferimento?: {
+      percentual_uf?: number;
+      percentual_municipal?: number;
+      percentual_cbs?: number;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
 }
 
 export interface PagamentoFiscalV2 extends Record<string, unknown> {
@@ -527,6 +766,9 @@ export interface FiscalCanonicalPayloadV2 extends Record<string, unknown> {
   referencias?: ReferenciaFiscalV2[];
   totais?: TotaisFiscalV2;
   impostos?: ImpostosFiscalV2;
+  valores_nfse?: ValoresNfseFiscalV2;
+  tributacao?: TributacaoNfseFiscalV2;
+  ibs_cbs?: IbsCbsNfseFiscalV2;
   observacoes?: ObservacoesFiscalV2;
   extensoes?: Record<string, unknown>;
 }
@@ -551,13 +793,13 @@ export interface FiscalContractInfo {
 
 export interface DirectDocumentSubmitRequestV2 {
   external_id: string;
-  document_type: DocumentType;
+  tipo_documento: DocumentType;
   municipio?: string | null;
   ambiente_fiscal?: FiscalEnvironment;
   modo_emissao?: 'fila' | 'sincrono';
   sincrono?: boolean;
   payload: FiscalCanonicalPayloadV2;
-  metadata?: Record<string, unknown>;
+  metadados?: Record<string, unknown>;
 }
 
 export interface DirectDocumentRequestV2Options {
@@ -1151,10 +1393,7 @@ export const FISCAL_CANONICAL_V2_EXPECTED_FIELDS = [
   'identificacao.presenca',
   'identificacao.intermediador',
   'emitente',
-  'emitente.documento',
-  'emitente.cpf',
-  'emitente.cnpj',
-  'emitente.nome',
+  'emitente.cpf_cnpj',
   'emitente.razao_social',
   'emitente.nome_fantasia',
   'emitente.tipo_pessoa',
@@ -1165,10 +1404,7 @@ export const FISCAL_CANONICAL_V2_EXPECTED_FIELDS = [
   'emitente.telefone',
   'emitente.endereco',
   'tomador',
-  'tomador.documento',
-  'tomador.cpf',
-  'tomador.cnpj',
-  'tomador.nome',
+  'tomador.cpf_cnpj',
   'tomador.razao_social',
   'tomador.nome_fantasia',
   'tomador.tipo_pessoa',
@@ -1195,12 +1431,6 @@ export const FISCAL_CANONICAL_V2_EXPECTED_FIELDS = [
   'servico.codigo_municipio_prestacao',
   'servico.municipio_prestacao_codigo',
   'servico.descricao',
-  'servico.aliquota_iss',
-  'servico.aliquota',
-  'servico.iss_retido',
-  'servico.tributacao_iss',
-  'servico.valor_irrf',
-  'servico.valor_ir',
   'pagamento',
   'pagamento.meios',
   'transporte',
@@ -1220,6 +1450,60 @@ export const FISCAL_CANONICAL_V2_EXPECTED_FIELDS = [
   'impostos.cofins',
   'impostos.ibs',
   'impostos.cbs',
+  'valores_nfse',
+  'valores_nfse.valor_recebido',
+  'valores_nfse.desconto_incondicionado',
+  'valores_nfse.desconto_condicionado',
+  'valores_nfse.deducao_reducao.percentual',
+  'valores_nfse.deducao_reducao.valor',
+  'tributacao',
+  'tributacao.municipal.tributacao_iss',
+  'tributacao.municipal.pais_resultado',
+  'tributacao.municipal.tipo_imunidade',
+  'tributacao.municipal.exigibilidade_suspensa.tipo_suspensao',
+  'tributacao.municipal.exigibilidade_suspensa.numero_processo',
+  'tributacao.municipal.beneficio_municipal.numero_beneficio',
+  'tributacao.municipal.beneficio_municipal.percentual_reducao_bc',
+  'tributacao.municipal.beneficio_municipal.valor_reducao_bc',
+  'tributacao.municipal.tipo_retencao_iss',
+  'tributacao.municipal.aliquota_iss',
+  'tributacao.municipal.enviar_aliquota_iss',
+  'tributacao.federal.pis_cofins.cst',
+  'tributacao.federal.pis_cofins.base_calculo',
+  'tributacao.federal.pis_cofins.aliquota_pis',
+  'tributacao.federal.pis_cofins.aliquota_cofins',
+  'tributacao.federal.pis_cofins.valor_pis',
+  'tributacao.federal.pis_cofins.valor_cofins',
+  'tributacao.federal.pis_cofins.tipo_retencao',
+  'tributacao.federal.valor_retido_cp',
+  'tributacao.federal.valor_retido_irrf',
+  'tributacao.federal.valor_retido_csll',
+  'tributacao.total.indicador_sem_total',
+  'tributacao.total.percentual_simples_nacional',
+  'tributacao.total.percentuais.federal',
+  'tributacao.total.percentuais.estadual',
+  'tributacao.total.percentuais.municipal',
+  'tributacao.total.valores.federal',
+  'tributacao.total.valores.estadual',
+  'tributacao.total.valores.municipal',
+  'ibs_cbs',
+  'ibs_cbs.finalidade_nfse',
+  'ibs_cbs.indicador_final',
+  'ibs_cbs.codigo_indicador_operacao',
+  'ibs_cbs.tipo_operacao',
+  'ibs_cbs.referencias_nfse',
+  'ibs_cbs.tipo_ente_governamental',
+  'ibs_cbs.indicador_destinatario',
+  'ibs_cbs.destinatario.cpf_cnpj',
+  'ibs_cbs.destinatario.razao_social',
+  'ibs_cbs.tributos.cst',
+  'ibs_cbs.tributos.codigo_classificacao',
+  'ibs_cbs.tributos.codigo_credito_presumido',
+  'ibs_cbs.tributos.tributacao_regular.cst',
+  'ibs_cbs.tributos.tributacao_regular.codigo_classificacao',
+  'ibs_cbs.tributos.diferimento.percentual_uf',
+  'ibs_cbs.tributos.diferimento.percentual_municipal',
+  'ibs_cbs.tributos.diferimento.percentual_cbs',
   'observacoes',
   'observacoes.contribuinte',
   'observacoes.fisco',
@@ -1240,10 +1524,7 @@ export class FiscalCanonicalPayloadV2Error extends Error {
 }
 
 const FISCAL_CANONICAL_V2_PART_SCHEMA: CanonicalSchema = {
-  documento: true,
-  cpf: true,
-  cnpj: true,
-  nome: true,
+  cpf_cnpj: true,
   razao_social: true,
   nome_fantasia: true,
   tipo_pessoa: true,
@@ -1316,12 +1597,6 @@ const FISCAL_CANONICAL_V2_SCHEMA: CanonicalSchema = {
     codigo_municipio_prestacao: true,
     municipio_prestacao_codigo: true,
     descricao: true,
-    aliquota_iss: true,
-    aliquota: true,
-    iss_retido: true,
-    tributacao_iss: true,
-    valor_irrf: true,
-    valor_ir: true,
   },
   pagamento: {
     meios: {
@@ -1347,6 +1622,89 @@ const FISCAL_CANONICAL_V2_SCHEMA: CanonicalSchema = {
     valor_documento: true,
   },
   impostos: FISCAL_CANONICAL_V2_IMPOSTOS_SCHEMA,
+  valores_nfse: {
+    valor_recebido: true,
+    desconto_incondicionado: true,
+    desconto_condicionado: true,
+    deducao_reducao: {
+      percentual: true,
+      valor: true,
+    },
+  },
+  tributacao: {
+    municipal: {
+      tributacao_iss: true,
+      pais_resultado: true,
+      tipo_imunidade: true,
+      exigibilidade_suspensa: {
+        tipo_suspensao: true,
+        numero_processo: true,
+      },
+      beneficio_municipal: {
+        numero_beneficio: true,
+        percentual_reducao_bc: true,
+        valor_reducao_bc: true,
+      },
+      tipo_retencao_iss: true,
+      aliquota_iss: true,
+      enviar_aliquota_iss: true,
+    },
+    federal: {
+      pis_cofins: {
+        cst: true,
+        base_calculo: true,
+        aliquota_pis: true,
+        aliquota_cofins: true,
+        valor_pis: true,
+        valor_cofins: true,
+        tipo_retencao: true,
+      },
+      valor_retido_cp: true,
+      valor_retido_irrf: true,
+      valor_retido_csll: true,
+    },
+    total: {
+      indicador_sem_total: true,
+      percentual_simples_nacional: true,
+      percentuais: {
+        federal: true,
+        estadual: true,
+        municipal: true,
+      },
+      valores: {
+        federal: true,
+        estadual: true,
+        municipal: true,
+      },
+    },
+  },
+  ibs_cbs: {
+    finalidade_nfse: true,
+    indicador_final: true,
+    codigo_indicador_operacao: true,
+    tipo_operacao: true,
+    referencias_nfse: true,
+    tipo_ente_governamental: true,
+    indicador_destinatario: true,
+    destinatario: {
+      cpf_cnpj: true,
+      razao_social: true,
+    },
+    tributos: {
+      cst: true,
+      codigo_classificacao: true,
+      codigo_credito_presumido: true,
+      tributacao_regular: {
+        cst: true,
+        codigo_classificacao: true,
+      },
+      diferimento: {
+        percentual_uf: true,
+        percentual_municipal: true,
+        percentual_cbs: true,
+      },
+    },
+  },
   observacoes: {
     contribuinte: true,
     fisco: true,
@@ -1376,13 +1734,13 @@ export function buildDirectDocumentRequestV2(
 
   return {
     external_id: options.external_id,
-    document_type: documentType,
+    tipo_documento: documentType,
     ...(options.municipio === undefined ? {} : { municipio: options.municipio }),
     ...(options.ambiente_fiscal === undefined ? {} : { ambiente_fiscal: options.ambiente_fiscal }),
     ...(options.modo_emissao === undefined ? {} : { modo_emissao: options.modo_emissao }),
     ...(options.sincrono === undefined ? {} : { sincrono: options.sincrono }),
     payload,
-    ...(options.metadata === undefined ? {} : { metadata: options.metadata }),
+    ...(options.metadata === undefined ? {} : { metadados: options.metadata }),
   };
 }
 

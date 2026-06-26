@@ -70,16 +70,30 @@ para `document_type = nfse` no ambiente nacional, padronize `payload` no contrat
       "cTribNac": "0107",
       "cTribMun": "0107",
       "cNBS": "1.0101.00.00",
-      "descricao": "Servico de exemplo",
-      "tribISSQN": "1",
-      "tpRetISSQN": "1",
-      "aliquota": 0.02,
-      "enviarPAliq": true,
-      "valor_irrf": 0,
-      "valor_ir": 0,
-      "iss_retido": false
+      "descricao": "Servico de exemplo"
     },
-    "valor_servicos": 100
+    "valor_servicos": 100,
+    "tributacao": {
+      "municipal": {
+        "tribISSQN": "1",
+        "tpRetISSQN": "1",
+        "pAliq": 2,
+        "enviarPAliq": true
+      },
+      "federal": {
+        "piscofins": {
+          "CST": "01",
+          "vBCPisCofins": 100,
+          "pAliqPis": 1.65,
+          "pAliqCofins": 7.6,
+          "vPis": 1.65,
+          "vCofins": 7.6,
+          "tpRetPisCofins": "3"
+        },
+        "vRetIRRF": 0,
+        "vRetCSLL": 0
+      }
+    }
   }
 }
 ```
@@ -118,14 +132,15 @@ Campos aceitos no payload canonico:
 - `servico.cTribMun`
 - `servico.cNBS`
 - `servico.descricao`
-- `servico.tribISSQN`
-- `servico.tpRetISSQN`
-- `servico.aliquota`
-- `servico.enviarPAliq`
-- `servico.valor_irrf`
-- `servico.valor_ir`
-- `servico.iss_retido`
 - `valor_servicos`
+- `tributacao.municipal.tribISSQN`
+- `tributacao.municipal.tpRetISSQN`
+- `tributacao.municipal.pAliq`
+- `tributacao.federal.piscofins.CST`
+- `tributacao.federal.piscofins.vBCPisCofins`
+- `tributacao.federal.vRetCP`
+- `tributacao.federal.vRetIRRF`
+- `tributacao.federal.vRetCSLL`
 
 ## Envelope Principal
 

@@ -8,6 +8,32 @@ servers:
 security:
   - bearerAuth: []
 paths:
+  /openapi.yaml:
+    get:
+      tags: [Documentacao]
+      operationId: baixarOpenApiIntegracoesV2
+      description: Retorna este documento OpenAPI v2 em YAML. Endpoint sem aliases.
+      security: []
+      responses:
+        "200":
+          description: Documento OpenAPI v2 em YAML.
+          content:
+            application/yaml:
+              schema:
+                type: string
+  /docs:
+    get:
+      tags: [Documentacao]
+      operationId: visualizarDocsIntegracoesV2
+      description: Exibe Swagger UI apontando para /api/v2/integrations/openapi.yaml. Endpoint sem aliases.
+      security: []
+      responses:
+        "200":
+          description: HTML da documentacao interativa.
+          content:
+            text/html:
+              schema:
+                type: string
   /contratos/{tipo_documento}:
     get:
       tags: [Contratos]
@@ -23,7 +49,7 @@ paths:
     post:
       tags: [Documents]
       operationId: criarDocumentoDiretoV2
-      description: Requer Idempotency-Key. Enfileira uma emissao direta usando FiscalCanonicalPayloadV2 estrito. O payload aceita somente campos publicos em portugues, snake_case, sem aliases legados e sem nomes de XML ou provider.
+      description: Requer Idempotency-Key. Enfileira uma emissao direta usando FiscalCanonicalPayloadV2 estrito. O envelope usa tipo_documento e metadados; document_type, metadata e demais aliases legados sao rejeitados.
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/IdempotencyKey"
@@ -36,18 +62,6 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
-        "422": { $ref: "#/components/responses/ErrorResponse" }
-  /contracts/{document_type}:
-    get:
-      tags: [Contratos]
-      operationId: getFiscalContractV2
-      deprecated: true
-      description: Alias compatível de /contratos/{tipo_documento}. A resposta ja usa campos em portugues.
-      x-required-scopes: ["configuration:read", "documents:direct"]
-      parameters:
-        - $ref: "#/components/parameters/DocumentType"
-      responses:
-        "200": { $ref: "#/components/responses/ContractInfoResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
   /nfse/informacoes-provedor:
     get:
@@ -124,6 +138,12 @@ paths:
       operationId: criarCertificadoV2
       description: Cria certificado usando nome, nome_arquivo, arquivo_base64 e senha. name, file_name, file_base64 e camelCase sao rejeitados.
       x-required-scopes: ["certificates:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CertificadoRequestV2"
       responses:
         "201": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -138,6 +158,12 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AtualizarCertificadoRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "404": { $ref: "#/components/responses/ErrorResponse" }
@@ -178,8 +204,14 @@ paths:
       operationId: criarImportacaoImplantacaoV2
       description: Cria importacao de implantacao usando campos publicos em portugues.
       x-required-scopes: ["onboarding:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportacaoImplantacaoRequestV2"
       responses:
-        "202": { $ref: "#/components/responses/GenericResourceResponse" }
+        "201": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
   /implantacao/importacoes/{importacao}:
     get:
@@ -206,6 +238,12 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevisarImportacaoImplantacaoRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -220,6 +258,12 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromoverImportacaoImplantacaoRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -245,23 +289,48 @@ paths:
       operationId: listarMunicipiosV2
       description: Pesquisa municipios por codigo ou termo em portugues.
       x-required-scopes: ["fiscal_catalog:read"]
+      parameters:
+        - name: uf
+          in: query
+          schema: { type: string, minLength: 2, maxLength: 2 }
+        - name: busca
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: limite
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /fiscal/utilitarios/ncms:
     get:
       tags: [Catalogos Fiscais]
       operationId: listarNcmsV2
       description: Pesquisa NCMs por codigo ou termo em portugues.
       x-required-scopes: ["fiscal_catalog:read"]
+      parameters:
+        - name: busca
+          in: query
+          required: true
+          schema: { type: string, maxLength: 120 }
+        - name: limite
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /fiscal/utilitarios/ibpt:
     post:
       tags: [Catalogos Fiscais]
       operationId: consultarIbptItemV2
       description: Consulta aliquotas IBPT por UF/NCM/EX e calcula tributos aproximados de um item usando somente campos publicos em portugues e snake_case.
       x-required-scopes: ["fiscal_catalog:read"]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IbptItemRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -271,7 +340,12 @@ paths:
       operationId: consultarIbptCupomV2
       description: Consulta aliquotas IBPT para os itens enviados e retorna totais aproximados do cupom.
       x-required-scopes: ["fiscal_catalog:read"]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IbptCupomRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -281,8 +355,16 @@ paths:
       operationId: listarCatalogosTributariosV2
       description: Lista catalogos tributarios aplicaveis a empresa vinculada ao token.
       x-required-scopes: ["fiscal_catalog:read"]
+      parameters:
+        - name: familia_tributaria
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: ativo
+          in: query
+          schema: { type: boolean, default: true }
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /fiscal/catalogos-tributarios/{catalogo}/situacoes:
     get:
       tags: [Catalogos Fiscais]
@@ -293,10 +375,20 @@ paths:
         - name: catalogo
           in: path
           required: true
-          schema: { type: integer }
+          schema: { type: string }
+        - name: codigo
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: tipo_codigo
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: ativo
+          in: query
+          schema: { type: boolean, default: true }
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
         "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /fiscal/situacoes-tributarias/{situacao}/classificacoes:
     get:
       tags: [Catalogos Fiscais]
@@ -307,12 +399,16 @@ paths:
         - name: situacao
           in: path
           required: true
-          schema: { type: integer }
+          schema: { type: string }
+        - name: tributo
+          in: query
+          schema: { type: string, maxLength: 40 }
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
         "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /fiscal/situacoes-tributarias/{situacao}/modelo-consequencia:
-    post:
+    get:
       tags: [Catalogos Fiscais]
       operationId: gerarModeloConsequenciaTributariaV2
       description: Gera modelo de consequencia tributaria usando codigo_classificacao e campos publicos em portugues.
@@ -321,9 +417,16 @@ paths:
         - name: situacao
           in: path
           required: true
-          schema: { type: integer }
+          schema: { type: string }
+        - name: tributo
+          in: query
+          schema: { type: string, maxLength: 40, default: ibs }
+        - name: codigo_classificacao
+          in: query
+          schema: { type: string, maxLength: 80 }
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
   /direto/documentos/xml:
     post:
@@ -333,6 +436,12 @@ paths:
       x-required-scopes: ["documents:direct"]
       parameters:
         - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DirectXmlDocumentRequestV2"
       responses:
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -342,6 +451,38 @@ paths:
       operationId: listarConsultaNotasV2
       description: Lista documentos por origem usando a empresa vinculada ao token.
       x-required-scopes: ["documents:read"]
+      parameters:
+        - name: busca
+          in: query
+          schema: { type: string, maxLength: 255 }
+        - name: chave
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: chave_documento
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: direcao
+          in: query
+          schema: { type: string, enum: [entrada, saida] }
+        - name: tipo_documento
+          in: query
+          schema: { type: string, enum: [nfe, nfce, nfse] }
+        - name: status
+          in: query
+          schema: { type: string, maxLength: 120 }
+        - name: data_de
+          in: query
+          schema: { type: string, format: date }
+        - name: data_ate
+          in: query
+          schema: { type: string, format: date }
+        - name: pagina
+          in: query
+          schema: { type: integer, minimum: 1 }
+        - name: por_pagina
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - $ref: "#/components/parameters/AmbienteFiscal"
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -351,6 +492,12 @@ paths:
       operationId: consultarNotasV2
       description: Consulta documento fiscal por origem e identificador usando campos publicos em portugues.
       x-required-scopes: ["documents:read"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaNotasRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -369,9 +516,11 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: "#/components/parameters/AmbienteFiscal"
       responses:
         "200": { description: XML do documento fiscal. }
         "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /consulta-notas/{origem}/{documento}/pdf:
     get:
       tags: [Documents]
@@ -387,25 +536,57 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: "#/components/parameters/AmbienteFiscal"
       responses:
         "200": { description: PDF do documento fiscal. }
         "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /nfe/entrada:
     get:
       tags: [NFe Entrada]
       operationId: listarNfeEntradaV2
       description: Lista NFes de entrada da empresa vinculada ao token.
       x-required-scopes: ["documents:read"]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: chave
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: chave_documento
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: emitente
+          in: query
+          schema: { type: string, maxLength: 255 }
+        - name: data_emissao_de
+          in: query
+          schema: { type: string, format: date }
+        - name: data_emissao_ate
+          in: query
+          schema: { type: string, format: date }
+        - name: por_pagina
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - $ref: "#/components/parameters/AmbienteFiscal"
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /nfe/entrada/sincronizar:
     post:
       tags: [NFe Entrada]
       operationId: sincronizarNfeEntradaV2
       description: Solicita sincronizacao de NFes de entrada usando ambiente_fiscal opcional.
       x-required-scopes: ["documents:read"]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SincronizarNfeEntradaRequestV2"
       responses:
-        "202": { $ref: "#/components/responses/GenericResourceResponse" }
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
   /nfe/entrada/{documento}/manifestar:
     post:
@@ -418,6 +599,12 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManifestarNfeEntradaRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -432,6 +619,12 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BaixarXmlNfeEntradaRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -446,6 +639,12 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EscriturarNfeEntradaRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -477,7 +676,12 @@ paths:
       operationId: criarProdutoV2
       description: Cria produto com campos publicos em portugues. origin_code e camelCase sao rejeitados.
       x-required-scopes: ["products:write"]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProdutoRequestV2"
       responses:
         "201": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -492,6 +696,28 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: produto_id
+          in: query
+          schema: { type: integer }
+          description: Filtro aplicavel a recursos vinculados a produto.
+        - name: fornecedor_id
+          in: query
+          schema: { type: integer }
+          description: Filtro aplicavel a produto-fornecedores.
+        - name: ativo
+          in: query
+          schema: { type: boolean }
+          description: Filtro aplicavel a recursos com campo ativo.
+        - name: status
+          in: query
+          schema:
+            oneOf:
+              - type: string
+              - type: boolean
+          description: Filtro aplicavel a recursos com campo status.
+        - name: limite
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
       responses:
         "200": { $ref: "#/components/responses/GenericCollectionResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -500,7 +726,12 @@ paths:
       operationId: criarCatalogoProdutoAuxiliarV2
       description: Cria recurso auxiliar do catalogo de produtos com campos publicos em portugues e snake_case.
       x-required-scopes: ["products:write"]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogoProdutoAuxiliarRequestV2"
       parameters:
         - name: recurso
           in: path
@@ -532,7 +763,12 @@ paths:
       operationId: atualizarCatalogoProdutoAuxiliarV2
       description: Atualiza recurso auxiliar do catalogo de produtos.
       x-required-scopes: ["products:write"]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogoProdutoAuxiliarRequestV2"
       parameters:
         - name: recurso
           in: path
@@ -581,7 +817,12 @@ paths:
       operationId: atualizarProdutoV2
       description: Atualiza produto usando campos publicos em portugues.
       x-required-scopes: ["products:write"]
-      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProdutoRequestV2"
       parameters:
         - name: produto
           in: path
@@ -617,6 +858,12 @@ paths:
       operationId: criarTomadorV2
       description: Cria tomador com campos publicos em portugues. person_type e camelCase sao rejeitados.
       x-required-scopes: ["takers:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TomadorRequestV2"
       responses:
         "201": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -644,6 +891,12 @@ paths:
           in: path
           required: true
           schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TomadorRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -858,7 +1111,7 @@ paths:
     post:
       tags: [Emissoes]
       operationId: previsualizarEmissaoPorOperacaoV2
-      description: Resolve a operacao fiscal pelo codigo e retorna a pre-visualizacao do retrato para a empresa vinculada ao token. snapshot, emission_mode, synchronous e camelCase no envelope sao rejeitados.
+      description: Resolve a operacao fiscal pelo codigo e retorna a pre-visualizacao do retrato para a empresa vinculada ao token. Use tipo_documento e metadados; document_type, metadata, snapshot, emission_mode, synchronous e camelCase no envelope sao rejeitados.
       x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CodigoOperacao"
@@ -875,7 +1128,7 @@ paths:
     post:
       tags: [Emissoes]
       operationId: emitirDocumentoPorOperacaoV2
-      description: Requer Idempotency-Key. Enfileira ou emite NFCe de forma sincrona a partir de um retrato operacional e do codigo da operacao fiscal.
+      description: Requer Idempotency-Key. Enfileira ou emite NFCe de forma sincrona a partir de um retrato operacional e do codigo da operacao fiscal. Use tipo_documento e metadados; document_type e metadata sao rejeitados.
       x-required-scopes: ["documents:write"]
       parameters:
         - $ref: "#/components/parameters/CodigoOperacao"
@@ -1165,13 +1418,6 @@ components:
       required: true
       schema: { type: string, maxLength: 120 }
       description: Identificador externo informado no envelope de criacao.
-    DocumentType:
-      name: document_type
-      in: path
-      required: true
-      schema:
-        type: string
-        enum: [nfe, nfce, nfse]
     TipoDocumento:
       name: tipo_documento
       in: path
@@ -1223,14 +1469,6 @@ components:
       in: path
       required: true
       schema: { type: integer }
-  requestBodies:
-    JsonObject:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            additionalProperties: true
   responses:
     DirectDocumentAcceptedResponse:
       description: Documento aceito ou replay idempotente.
@@ -1421,13 +1659,13 @@ components:
   schemas:
     DirectDocumentRequestV2:
       type: object
-      required: [external_id, document_type, payload]
+      required: [external_id, tipo_documento, payload]
       additionalProperties: false
       properties:
         external_id:
           type: string
           maxLength: 120
-        document_type:
+        tipo_documento:
           type: string
           enum: [nfe, nfce, nfse]
         municipio:
@@ -1439,14 +1677,468 @@ components:
         modo_emissao:
           type: string
           enum: [fila, sincrono]
-          description: Use sincrono somente com document_type=nfce.
+          description: Use sincrono somente com tipo_documento=nfce.
         sincrono:
           type: boolean
         payload:
           $ref: "#/components/schemas/FiscalCanonicalPayloadV2"
-        metadata:
+        metadados:
           type: object
           additionalProperties: true
+    DirectXmlDocumentRequestV2:
+      type: object
+      required: [external_id, tipo_documento]
+      anyOf:
+        - required: [xml]
+        - required: [xml_em_base64]
+      additionalProperties: false
+      properties:
+        external_id:
+          type: string
+          maxLength: 120
+        tipo_documento:
+          type: string
+          enum: [nfe, nfce]
+        municipio:
+          type: string
+          maxLength: 120
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+        xml:
+          type: string
+          description: XML fiscal em texto.
+        xml_em_base64:
+          type: string
+          description: XML fiscal codificado em base64. Use xml ou xml_em_base64.
+        ja_assinado:
+          type: boolean
+          default: false
+        id_lote:
+          type: string
+          maxLength: 30
+        indicador_sincrono:
+          type: integer
+          enum: [0, 1]
+        modo_emissao:
+          type: string
+          enum: [fila, sincrono]
+          description: Use sincrono somente com tipo_documento=nfce.
+        sincrono:
+          type: boolean
+        metadados:
+          type: object
+          additionalProperties: true
+    ImportacaoImplantacaoRequestV2:
+      type: object
+      required: [tipo_origem]
+      additionalProperties: false
+      properties:
+        tipo_origem:
+          type: string
+          enum: [xml, csv, documento]
+        fluxo:
+          type: string
+          enum: [entrada, saida]
+          nullable: true
+        nome_arquivo:
+          type: string
+          maxLength: 255
+          nullable: true
+        xml:
+          type: string
+          nullable: true
+          description: Obrigatorio quando tipo_origem=xml.
+        linhas:
+          type: array
+          nullable: true
+          description: Obrigatorio quando tipo_origem=csv.
+          items:
+            type: object
+            additionalProperties: true
+        documento:
+          type: object
+          nullable: true
+          description: Obrigatorio quando tipo_origem=documento.
+          additionalProperties: true
+        itens:
+          type: array
+          nullable: true
+          items:
+            type: object
+            additionalProperties: true
+    RevisarImportacaoImplantacaoRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        aprovar_todos:
+          type: boolean
+        itens:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [id, status]
+            properties:
+              id: { type: integer }
+              status:
+                type: string
+                enum: [aprovado, rejeitado, pendente_revisao]
+    PromoverImportacaoImplantacaoRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        aprovar_todos:
+          type: boolean
+    IbptItemRequestV2:
+      type: object
+      required: [uf, ncm, valor]
+      additionalProperties: false
+      properties:
+        uf: { type: string, minLength: 2, maxLength: 2 }
+        ncm: { type: string, minLength: 8, maxLength: 20 }
+        valor: { type: number, minimum: 0 }
+        extarif: { type: integer, minimum: 0, default: 0 }
+        descricao: { type: string, nullable: true }
+        unidade: { type: string, nullable: true }
+        gtin: { type: string, nullable: true }
+        codigo_interno: { type: string, nullable: true }
+        codigo_origem: { type: string, nullable: true }
+        tipo_mercadoria:
+          type: string
+          enum: [nacional, importada]
+          nullable: true
+        importado:
+          type: boolean
+          nullable: true
+    IbptCupomRequestV2:
+      type: object
+      required: [itens]
+      additionalProperties: false
+      properties:
+        uf:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+          description: UF padrao aplicada aos itens que nao informarem UF.
+        itens:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: object
+            additionalProperties: true
+            properties:
+              id: {}
+              linha: {}
+              uf: { type: string, minLength: 2, maxLength: 2 }
+              ncm: { type: string, minLength: 8, maxLength: 20 }
+              valor: { type: number, minimum: 0 }
+              extarif: { type: integer, minimum: 0, default: 0 }
+              descricao: { type: string }
+              unidade: { type: string }
+              gtin: { type: string }
+              codigo_interno: { type: string }
+              codigo_origem: { type: string }
+              tipo_mercadoria: { type: string, enum: [nacional, importada] }
+              importado: { type: boolean }
+    CatalogoProdutoAuxiliarRequestV2:
+      type: object
+      additionalProperties: false
+      description: Campos aceitos variam por recurso. product_id e aliases em ingles sao rejeitados; use produto_id.
+      properties:
+        unidade: { type: string, maxLength: 20 }
+        descricao: { type: string, maxLength: 255 }
+        descricao_plural: { type: string, maxLength: 120, nullable: true }
+        decimais: { type: integer, minimum: 0, maximum: 8, nullable: true }
+        artigo: { type: string, maxLength: 20, nullable: true }
+        codigo_fiscal: { type: string, maxLength: 30, nullable: true }
+        status:
+          oneOf:
+            - type: string
+            - type: boolean
+        codigo: { type: string, maxLength: 100, nullable: true }
+        unidade_origem_id: { type: integer, nullable: true }
+        unidade_destino_id: { type: integer, nullable: true }
+        unidade_origem: { type: string, maxLength: 20 }
+        unidade_destino: { type: string, maxLength: 20 }
+        fator: { type: number }
+        ativo: { type: boolean, nullable: true }
+        observacao: { type: string, maxLength: 255, nullable: true }
+        parent_id: { type: integer, nullable: true }
+        descricao_reduzida: { type: string, maxLength: 40, nullable: true }
+        nivel: { type: integer, minimum: 1, nullable: true }
+        path: { type: string, maxLength: 255, nullable: true }
+        ordem: { type: integer, minimum: 0, nullable: true }
+        tipo_item_default: { type: string, maxLength: 2, nullable: true }
+        natureza_item_default: { type: string, maxLength: 40, nullable: true }
+        fiscal_tags_default:
+          type: array
+          nullable: true
+          items: {}
+        sku: { type: string, maxLength: 100, nullable: true }
+        descricao_curta: { type: string, maxLength: 255, nullable: true }
+        marca: { type: string, maxLength: 100, nullable: true }
+        produto_tipo: { type: string, maxLength: 50, nullable: true }
+        unidade_medida_id: { type: integer, nullable: true }
+        classificacao_mercadologica_id: { type: integer, nullable: true }
+        atributos_logisticos:
+          type: object
+          nullable: true
+          additionalProperties: true
+        nome: { type: string, maxLength: 255 }
+        codigo_prefixo: { type: string, maxLength: 30, nullable: true }
+        modo_geracao_codigo: { type: string, maxLength: 40, nullable: true }
+        faixa_inicial: { type: integer, minimum: 0, nullable: true }
+        faixa_final: { type: integer, minimum: 0, nullable: true }
+        proximo_numero: { type: integer, minimum: 0, nullable: true }
+        produto_id: { type: integer }
+        produto_apresentacao_id: { type: integer, nullable: true }
+        tipo_codigo: { type: string, maxLength: 20, nullable: true }
+        principal: { type: boolean, nullable: true }
+        informacoes_complementares: { type: string, maxLength: 255, nullable: true }
+        descricao_embalagem: { type: string, maxLength: 255 }
+        quantidade_unidade_base: { type: number, nullable: true }
+        tipo_apresentacao: { type: string, maxLength: 30, nullable: true }
+        tipo: { type: string, maxLength: 50 }
+        canal: { type: string, maxLength: 50, nullable: true }
+        valor: { type: number }
+        percentual: { type: number, nullable: true }
+        custo_referencial: { type: number, nullable: true }
+        margem: { type: number, nullable: true }
+        margem_preco_minimo: { type: number, nullable: true }
+        vigencia_inicio: { type: string, format: date, nullable: true }
+        vigencia_fim: { type: string, format: date, nullable: true }
+        documento: { type: string, maxLength: 20, nullable: true }
+        payload:
+          type: object
+          nullable: true
+          additionalProperties: true
+        fornecedor_id: { type: integer }
+        unidade_medida_compra_id: { type: integer, nullable: true }
+        embalagem_compra_descricao: { type: string, maxLength: 120, nullable: true }
+        codigo_produto_fornecedor: { type: string, maxLength: 100, nullable: true }
+        codigo_barras_fornecedor: { type: string, maxLength: 30, nullable: true }
+        fator_conversao_compra: { type: number, nullable: true }
+        lead_time_dias: { type: integer, minimum: 0, nullable: true }
+        lote_minimo: { type: number, nullable: true }
+        multiplo_compra: { type: number, nullable: true }
+        quantidade_minima_compra: { type: number, nullable: true }
+        custo_ultima_compra: { type: number, nullable: true }
+        custo_negociado: { type: number, nullable: true }
+        ultimo_orcado_em: { type: string, format: date, nullable: true }
+        fornecedor_preferencial: { type: boolean, nullable: true }
+        homologado: { type: boolean, nullable: true }
+        inicio_vigencia: { type: string, format: date, nullable: true }
+        fim_vigencia: { type: string, format: date, nullable: true }
+        estoque_local_id: { type: integer }
+        rua: { type: string, maxLength: 30, nullable: true }
+        modulo: { type: string, maxLength: 30, nullable: true }
+        prateleira: { type: string, maxLength: 30, nullable: true }
+        box: { type: string, maxLength: 30, nullable: true }
+        numero_lote: { type: string, maxLength: 255 }
+        data_fabricacao: { type: string, format: date, nullable: true }
+        data_validade: { type: string, format: date, nullable: true }
+        estoque_endereco_id: { type: integer, nullable: true }
+        produto_lote_id: { type: integer, nullable: true }
+        quantidade: { type: number }
+    CertificadoRequestV2:
+      type: object
+      required: [arquivo_base64, senha]
+      additionalProperties: false
+      properties:
+        nome: { type: string, maxLength: 255, nullable: true }
+        nome_arquivo: { type: string, maxLength: 255, nullable: true }
+        arquivo_base64:
+          type: string
+          description: Conteudo do certificado A1 em base64.
+        senha: { type: string, maxLength: 255 }
+    AtualizarCertificadoRequestV2:
+      type: object
+      required: [situacao]
+      additionalProperties: false
+      properties:
+        situacao:
+          type: string
+          maxLength: 40
+          enum: [ativo, expirado, active, expired]
+    ConsultaNotasRequestV2:
+      type: object
+      required: [chave_documento]
+      additionalProperties: false
+      properties:
+        chave_documento: { type: string, maxLength: 120 }
+        tipo_documento:
+          type: string
+          enum: [nfe, nfce, nfse]
+          nullable: true
+        consulta_remota:
+          type: boolean
+          nullable: true
+          default: true
+        forcar_consulta_remota:
+          type: boolean
+          nullable: true
+          default: false
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+          nullable: true
+    SincronizarNfeEntradaRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        ultimo_nsu: { type: string, maxLength: 20, nullable: true }
+        nsu: { type: string, maxLength: 20, nullable: true }
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+          nullable: true
+    ManifestarNfeEntradaRequestV2:
+      type: object
+      required: [tipo_manifestacao]
+      additionalProperties: false
+      properties:
+        tipo_manifestacao: { type: string, maxLength: 60 }
+        justificativa: { type: string, maxLength: 255, nullable: true }
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+          nullable: true
+    BaixarXmlNfeEntradaRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        ambiente_fiscal:
+          type: string
+          enum: [homologacao, producao]
+          nullable: true
+    EscriturarNfeEntradaRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        finalidade_entrada: { type: string, maxLength: 80, nullable: true }
+        finalidades_itens:
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [numero_linha]
+            additionalProperties: true
+            properties:
+              numero_linha: { type: integer, minimum: 1 }
+              finalidade_entrada: { type: string, maxLength: 80, nullable: true }
+    ProdutoRequestV2:
+      type: object
+      required: [descricao]
+      additionalProperties: false
+      properties:
+        tipo: { type: string, maxLength: 20, nullable: true }
+        codigo_interno: { type: string, maxLength: 120, nullable: true }
+        cod_sku: { type: string, maxLength: 100, nullable: true }
+        codigo_operacional: { type: string, maxLength: 60, nullable: true }
+        codigo_operacional_manual: { type: boolean, nullable: true }
+        descricao: { type: string, maxLength: 255 }
+        descricao_curta: { type: string, maxLength: 255, nullable: true }
+        produto_tipo: { type: string, maxLength: 50, nullable: true }
+        situacao: { type: string, maxLength: 50, nullable: true }
+        liberado: { type: string, enum: [sim, nao], nullable: true }
+        marca: { type: string, maxLength: 100, nullable: true }
+        palavra_chave: { type: string, maxLength: 100, nullable: true }
+        permite_fracionamento: { type: boolean, nullable: true }
+        atributos_logisticos:
+          type: object
+          nullable: true
+          additionalProperties: true
+        unidade: { type: string, maxLength: 20, nullable: true }
+        unidade_medida_id: { type: integer, nullable: true }
+        produto_mestre_id: { type: integer, nullable: true }
+        produto_familia_id: { type: integer, nullable: true }
+        pdv_category_id: { type: integer, nullable: true }
+        classificacao_mercadologica_id: { type: integer, nullable: true }
+        gtin: { type: string, maxLength: 120, nullable: true }
+        codigo_servico_municipal: { type: string, maxLength: 120, nullable: true }
+        servico_codigo: { type: string, maxLength: 20, nullable: true }
+        valor_padrao: { type: number, nullable: true }
+        ativo: { type: boolean, nullable: true }
+        tipo_item: { type: string, maxLength: 2, nullable: true }
+        natureza_item: { type: string, maxLength: 40, nullable: true }
+        ncm: { type: string, maxLength: 20, nullable: true }
+        ncm_descricao: { type: string, maxLength: 120, nullable: true }
+        cest: { type: string, maxLength: 20, nullable: true }
+        codigo_origem: { type: string, maxLength: 5, nullable: true }
+        origem_mercadoria: { type: integer, minimum: 0, maximum: 8, nullable: true }
+        codigo_beneficio: { type: string, maxLength: 120, nullable: true }
+        codigo_classificacao_tributaria: { type: string, maxLength: 80, nullable: true }
+        codigo_classificacao_ibs_cbs: { type: string, maxLength: 80, nullable: true }
+        codigo_tributacao_nacional: { type: string, maxLength: 120, nullable: true }
+        codigo_nbs: { type: string, maxLength: 120, nullable: true }
+        cod_classe_tributo: { type: string, maxLength: 20, nullable: true }
+        ipi_classe: { type: string, maxLength: 20, nullable: true }
+        ipi_cod_enquadramento: { type: string, maxLength: 20, nullable: true }
+        ipi_selo_cod: { type: string, maxLength: 20, nullable: true }
+        cod_iat: { type: string, maxLength: 20, nullable: true }
+        cod_ippt: { type: string, maxLength: 20, nullable: true }
+        codigo_cnae: { type: string, maxLength: 20, nullable: true }
+        codigo_atividade: { type: string, maxLength: 120, nullable: true }
+        substituicao_tributaria_aplicavel: { type: boolean, nullable: true }
+        monofasico_aplicavel: { type: boolean, nullable: true }
+        fiscal_tags:
+          type: array
+          nullable: true
+          items: { type: string, maxLength: 60 }
+    TomadorRequestV2:
+      type: object
+      required: [documento, nome]
+      additionalProperties: false
+      properties:
+        tipo:
+          type: string
+          enum: [pf, pj]
+          nullable: true
+        tipo_pessoa:
+          type: string
+          enum: [pf, pj]
+          nullable: true
+        documento: { type: string, maxLength: 20 }
+        nome: { type: string, maxLength: 255 }
+        email: { type: string, format: email, maxLength: 255, nullable: true }
+        logradouro: { type: string, maxLength: 255, nullable: true }
+        numero: { type: string, maxLength: 50, nullable: true }
+        complemento: { type: string, maxLength: 255, nullable: true }
+        bairro: { type: string, maxLength: 255, nullable: true }
+        cep: { type: string, maxLength: 20, nullable: true }
+        municipio: { type: string, maxLength: 255, nullable: true }
+        uf: { type: string, maxLength: 2, nullable: true }
+        codigo_ibge: { type: string, maxLength: 20, nullable: true }
+        indicador_ie:
+          type: string
+          enum: ["1", "2", "9"]
+          nullable: true
+        inscricao_estadual: { type: string, maxLength: 60, nullable: true }
+        inscricao_municipal: { type: string, maxLength: 60, nullable: true }
+        suframa: { type: string, maxLength: 60, nullable: true }
+        codigo_natureza_juridica: { type: string, maxLength: 10, nullable: true }
+        entidade_sem_fins_lucrativos: { type: boolean, nullable: true }
+        entidade_publica: { type: boolean, nullable: true }
+        produtor_rural: { type: boolean, nullable: true }
+        parte_estrangeira: { type: boolean, nullable: true }
+        codigo_pais: { type: string, maxLength: 4, nullable: true }
+        contribuinte_iss: { type: boolean, nullable: true }
+        caepf: { type: string, maxLength: 20, nullable: true }
+        regime_tributario: { type: string, maxLength: 60, nullable: true }
+        fonte_classificacao: { type: string, maxLength: 40, nullable: true }
+        situacao_revisao:
+          type: string
+          enum: [aprovado, pendente_revisao, bloqueado, rejeitado]
+          nullable: true
+        score_confianca:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+        ativo: { type: boolean, nullable: true }
     AtualizarConfiguracaoEmpresaV2:
       type: object
       additionalProperties: false
@@ -1505,34 +2197,34 @@ components:
           description: Use provedor e codigo_municipio em vez de provider_key e codigo_ibge.
     OperationPreviewRequestV2:
       type: object
-      required: [document_type, retrato]
+      required: [tipo_documento, retrato]
       additionalProperties: false
       properties:
         external_id: { type: string, maxLength: 120 }
-        document_type: { type: string, enum: [nfe, nfce, nfse] }
+        tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
         municipio: { type: string, maxLength: 120 }
         retrato:
           $ref: "#/components/schemas/RetratoOperacionalRequestV2"
-        metadata:
+        metadados:
           type: object
           additionalProperties: true
     OperationDocumentRequestV2:
       type: object
-      required: [external_id, document_type, retrato]
+      required: [external_id, tipo_documento, retrato]
       additionalProperties: false
       properties:
         external_id: { type: string, maxLength: 120 }
-        document_type: { type: string, enum: [nfe, nfce, nfse] }
+        tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
         municipio: { type: string, maxLength: 120 }
         modo_emissao:
           type: string
           enum: [fila, sincrono]
-          description: Use sincrono somente com document_type=nfce.
+          description: Use sincrono somente com tipo_documento=nfce.
         sincrono:
           type: boolean
         retrato:
           $ref: "#/components/schemas/RetratoOperacionalRequestV2"
-        metadata:
+        metadados:
           type: object
           additionalProperties: true
     RetratoOperacionalRequestV2:
@@ -1646,6 +2338,12 @@ components:
           $ref: "#/components/schemas/TotaisFiscalV2"
         impostos:
           $ref: "#/components/schemas/ImpostosFiscalV2"
+        valores_nfse:
+          $ref: "#/components/schemas/ValoresNfseFiscalV2"
+        tributacao:
+          $ref: "#/components/schemas/TributacaoNfseFiscalV2"
+        ibs_cbs:
+          $ref: "#/components/schemas/IbsCbsNfseFiscalV2"
         observacoes:
           $ref: "#/components/schemas/ObservacoesFiscalV2"
         extensoes:
@@ -1668,11 +2366,12 @@ components:
       type: object
       additionalProperties: false
       properties:
-        documento: { type: string }
-        cpf: { type: string }
-        cnpj: { type: string }
-        nome: { type: string }
-        razao_social: { type: string }
+        cpf_cnpj:
+          type: string
+          description: CPF ou CNPJ da parte fiscal, aceitando pessoa fisica ou juridica no mesmo campo.
+        razao_social:
+          type: string
+          description: Nome civil ou razao social da parte fiscal.
         nome_fantasia: { type: string }
         tipo_pessoa: { type: string, enum: [fisica, juridica, estrangeiro] }
         inscricao_estadual: { type: string }
@@ -1720,12 +2419,141 @@ components:
         codigo_municipio_prestacao: { type: string }
         municipio_prestacao_codigo: { type: string }
         descricao: { type: string }
-        aliquota_iss: { type: number }
-        aliquota: { type: number }
-        iss_retido: { type: boolean }
+    ValoresNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        valor_recebido: { type: number }
+        desconto_incondicionado: { type: number }
+        desconto_condicionado: { type: number }
+        deducao_reducao:
+          type: object
+          additionalProperties: false
+          description: Informe percentual ou valor, nunca ambos.
+          properties:
+            percentual: { type: number }
+            valor: { type: number }
+    TributacaoNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        municipal:
+          $ref: "#/components/schemas/TributacaoMunicipalNfseFiscalV2"
+        federal:
+          $ref: "#/components/schemas/TributacaoFederalNfseFiscalV2"
+        total:
+          $ref: "#/components/schemas/TotalTributosNfseFiscalV2"
+    TributacaoMunicipalNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
         tributacao_iss: { type: string }
-        valor_irrf: { type: number }
-        valor_ir: { type: number }
+        pais_resultado: { type: string }
+        tipo_imunidade: { type: string }
+        exigibilidade_suspensa:
+          type: object
+          additionalProperties: false
+          properties:
+            tipo_suspensao: { type: string }
+            numero_processo: { type: string }
+        beneficio_municipal:
+          type: object
+          additionalProperties: false
+          description: Informe percentual_reducao_bc ou valor_reducao_bc, nunca ambos.
+          properties:
+            numero_beneficio: { type: string }
+            percentual_reducao_bc: { type: number }
+            valor_reducao_bc: { type: number }
+        tipo_retencao_iss:
+          type: string
+          enum: ["1", "2", "3"]
+          description: "1=nao retido, 2=retido pelo tomador, 3=retido pelo intermediario."
+        aliquota_iss: { type: number }
+        enviar_aliquota_iss: { type: boolean }
+    TributacaoFederalNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        pis_cofins:
+          $ref: "#/components/schemas/PisCofinsNfseFiscalV2"
+        valor_retido_cp: { type: number }
+        valor_retido_irrf: { type: number }
+        valor_retido_csll: { type: number }
+    PisCofinsNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        cst: { type: string }
+        base_calculo: { type: number }
+        aliquota_pis: { type: number }
+        aliquota_cofins: { type: number }
+        valor_pis: { type: number }
+        valor_cofins: { type: number }
+        tipo_retencao:
+          type: string
+          enum: ["1", "2", "3"]
+    TotalTributosNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      description: Informe apenas uma modalidade de total de tributos.
+      properties:
+        indicador_sem_total:
+          type: string
+          enum: ["0"]
+        percentual_simples_nacional: { type: number }
+        percentuais:
+          type: object
+          additionalProperties: false
+          properties:
+            federal: { type: number }
+            estadual: { type: number }
+            municipal: { type: number }
+        valores:
+          type: object
+          additionalProperties: false
+          properties:
+            federal: { type: number }
+            estadual: { type: number }
+            municipal: { type: number }
+    IbsCbsNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        finalidade_nfse: { type: string }
+        indicador_final: { type: string }
+        codigo_indicador_operacao: { type: string }
+        tipo_operacao: { type: string }
+        referencias_nfse:
+          type: array
+          items: { type: string }
+        tipo_ente_governamental: { type: string }
+        indicador_destinatario: { type: string }
+        destinatario:
+          type: object
+          additionalProperties: false
+          properties:
+            cpf_cnpj: { type: string }
+            razao_social: { type: string }
+        tributos:
+          type: object
+          additionalProperties: false
+          properties:
+            cst: { type: string }
+            codigo_classificacao: { type: string }
+            codigo_credito_presumido: { type: string }
+            tributacao_regular:
+              type: object
+              additionalProperties: false
+              properties:
+                cst: { type: string }
+                codigo_classificacao: { type: string }
+            diferimento:
+              type: object
+              additionalProperties: false
+              properties:
+                percentual_uf: { type: number }
+                percentual_municipal: { type: number }
+                percentual_cbs: { type: number }
     PagamentoFiscalV2:
       type: object
       additionalProperties: false

@@ -210,15 +210,20 @@ $payload = [
         'cTribMun' => '0107',
         'cNBS' => '1.0101.00.00',
         'descricao' => 'Servico de exemplo',
-        'tribISSQN' => '1',
-        'tpRetISSQN' => '1',
-        'aliquota' => 0.02,
-        'enviarPAliq' => true,
-        'valor_irrf' => 0,
-        'valor_ir' => 0,
-        'iss_retido' => false,
     ],
     'valor_servicos' => 100,
+    'tributacao' => [
+        'municipal' => [
+            'tribISSQN' => '1',
+            'tpRetISSQN' => '1',
+            'pAliq' => 2,
+            'enviarPAliq' => true,
+        ],
+        'federal' => [
+            'vRetIRRF' => 0,
+            'vRetCSLL' => 0,
+        ],
+    ],
 ];
 
 NfseNacionalCanonicalContract::assertCanonical($payload);

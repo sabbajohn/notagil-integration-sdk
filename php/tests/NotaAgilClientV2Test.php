@@ -102,7 +102,7 @@ final class NotaAgilClientV2Test extends TestCase
             ['external_id' => 'erp-1', 'tipo_documento' => 'nfce'],
             $client->createDirectDocumentV2([
                 'external_id' => 'erp-1',
-                'document_type' => 'nfce',
+                'tipo_documento' => 'nfce',
                 'ambiente_fiscal' => 'homologacao',
                 'payload' => $payload,
             ], 'idem-1'),
@@ -293,7 +293,7 @@ final class NotaAgilClientV2Test extends TestCase
                 'ambiente' => 'homologacao',
             ],
             'emitente' => [
-                'cnpj' => '12345678000199',
+                'cpf_cnpj' => '12345678000199',
                 'razao_social' => 'Empresa Exemplo LTDA',
                 'endereco' => [
                     'codigo_municipio' => '3550308',
@@ -301,8 +301,8 @@ final class NotaAgilClientV2Test extends TestCase
                 ],
             ],
             'tomador' => [
-                'documento' => '12345678909',
-                'nome' => 'Consumidor',
+                'cpf_cnpj' => '12345678909',
+                'razao_social' => 'Consumidor',
             ],
             'itens' => [
                 [
