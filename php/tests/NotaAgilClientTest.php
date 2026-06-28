@@ -303,6 +303,8 @@ class NotaAgilClientTest extends TestCase
             'tpAmb' => '2',
             'prestador' => [
                 'cnpj' => '12345678000199',
+                'enviarIM' => true,
+                'omitirIM' => false,
                 'opSimpNac' => '1',
             ],
             'tomador' => [
@@ -351,10 +353,12 @@ class NotaAgilClientTest extends TestCase
             ],
         ]);
 
-        $this->assertSame(['servico.cNBS', 'servico.codigo_atividade'], $policy['required_fields']);
-        $this->assertSame(['servico.cTribNac', 'servico.codigoCnae'], $policy['visible_fields']);
+        $this->assertSame(['servico.cNBS'], $policy['required_fields']);
+        $this->assertSame(['servico.cTribNac'], $policy['visible_fields']);
         $this->assertSame('NBS customizado', $policy['field_schema']['servico.cNBS']['label']);
         $this->assertSame(['servico.cTribNac'], $policy['field_schema']['servico.cTribNac']['payload_paths']);
+        $this->assertArrayNotHasKey('servico.codigo_atividade', $policy['field_schema']);
+        $this->assertArrayNotHasKey('servico.codigoCnae', $policy['field_schema']);
     }
 
     private function client(array $responses, array &$history): NotaAgilClient

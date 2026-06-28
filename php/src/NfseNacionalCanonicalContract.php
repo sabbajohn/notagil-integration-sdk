@@ -44,6 +44,8 @@ final class NfseNacionalCanonicalContract
         'prestador' => [
             'cnpj' => true,
             'inscricaoMunicipal' => true,
+            'enviarIM' => true,
+            'omitirIM' => true,
             'razaoSocial' => true,
             'opSimpNac' => true,
             'regEspTrib' => true,
@@ -194,6 +196,8 @@ final class NfseNacionalCanonicalContract
             'cLocEmi',
             'prestador.cnpj',
             'prestador.inscricaoMunicipal',
+            'prestador.enviarIM',
+            'prestador.omitirIM',
             'prestador.razaoSocial',
             'prestador.opSimpNac',
             'prestador.regEspTrib',
@@ -322,6 +326,22 @@ final class NfseNacionalCanonicalContract
                 $defaults['options'] ?? [],
             );
         }
+
+        $allowed = array_flip([
+            'servico.cTribMun',
+            'servico.cTribNac',
+            'servico.cNBS',
+            'prestador.opSimpNac',
+        ]);
+        $policy['required_fields'] = array_values(array_filter(
+            $policy['required_fields'],
+            static fn (string $field): bool => isset($allowed[$field])
+        ));
+        $policy['visible_fields'] = array_values(array_filter(
+            $policy['visible_fields'],
+            static fn (string $field): bool => isset($allowed[$field])
+        ));
+        $policy['field_schema'] = array_intersect_key($policy['field_schema'], $allowed);
 
         return $policy;
     }
