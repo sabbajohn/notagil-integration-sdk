@@ -35,7 +35,7 @@ para `document_type = nfse` no ambiente nacional, padronize `payload` no contrat
     "id": "nfse-direct-2026-0001",
     "tpAmb": 2,
     "dhEmi": "2026-05-26T10:00:00-03:00",
-    "verAplic": "sdk-0.3.0",
+    "verAplic": "sdk-0.4.1",
     "serie": "1",
     "nDPS": "1001",
     "dCompet": "2026-05-26",
@@ -69,7 +69,7 @@ para `document_type = nfse` no ambiente nacional, padronize `payload` no contrat
       "cLocPrestacao": "3550308",
       "cTribNac": "0107",
       "cTribMun": "0107",
-      "cNBS": "1.0101.00.00",
+      "cNBS": "010701000",
       "descricao": "Servico de exemplo"
     },
     "valor_servicos": 100,
@@ -97,6 +97,8 @@ para `document_type = nfse` no ambiente nacional, padronize `payload` no contrat
   }
 }
 ```
+
+Para NFSe Nacional, nao envie `prestador.omitirIM`. Informe `prestador.inscricaoMunicipal` quando existir inscricao municipal. O campo `servico.cNBS` deve conter 9 digitos sem pontos.
 
 Campos aceitos no payload canonico:
 

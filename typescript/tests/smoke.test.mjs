@@ -582,6 +582,27 @@ test('assertCanonicalNfseNacionalPayload rejects legacy NFSe Nacional fields', (
       return true;
     },
   );
+
+  assert.throws(
+    () => {
+      assertCanonicalNfseNacionalPayload({
+        prestador: {
+          cnpj: '12345678000199',
+          inscricaoMunicipal: '000000000033061',
+          omitirIM: false,
+        },
+        servico: {
+          cTribMun: '0107',
+        },
+      });
+    },
+    (error) => {
+      assert.ok(error instanceof NfseNacionalContractError);
+      assert.deepEqual(error.invalidFields, ['prestador.omitirIM']);
+      assert.ok(!error.expectedFields.includes('prestador.omitirIM'));
+      return true;
+    },
+  );
 });
 
 test('canonicalizeNfseProviderPolicy keeps only canonical NFSe Nacional policy fields', () => {

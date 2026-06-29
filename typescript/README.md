@@ -5,7 +5,7 @@ TypeScript beta SDK for the NotaAgil public integration APIs documented in `../o
 See [docs/payload-emissao.md](https://github.com/sabbajohn/notagil-integration-sdk/blob/main/docs/payload-emissao.md) for the normalized fiscal emission payload based on `operation_code` and `snapshot`.
 
 ```bash
-npm install @notagil/integration-sdk@^0.4.0
+npm install @notagil/integration-sdk@^0.4.1
 ```
 
 ```ts
@@ -273,7 +273,7 @@ const directNfse: DirectNfseNacionalSubmitRequest = {
     id: 'nfse-direct-2026-0001',
     tpAmb: 2,
     dhEmi: '2026-05-26T10:00:00-03:00',
-    verAplic: 'sdk-0.4.0',
+    verAplic: 'sdk-0.4.1',
     serie: '1',
     nDPS: '1001',
     dCompet: '2026-05-26',
@@ -306,7 +306,7 @@ const directNfse: DirectNfseNacionalSubmitRequest = {
       cLocPrestacao: '3550308',
       cTribNac: '0107',
       cTribMun: '0107',
-      cNBS: '1.0101.00.00',
+      cNBS: '010701000',
       descricao: 'Servico de exemplo',
     },
     valor_servicos: 100,
@@ -327,7 +327,11 @@ const directNfse: DirectNfseNacionalSubmitRequest = {
 
 assertCanonicalNfseNacionalPayload(directNfse.payload);
 await client.createCompanyDirectDocument(companyId, directNfse, 'idem-direct-nfse-2026-0001');
+```
 
+For NFSe Nacional, do not send `prestador.omitirIM`. Send `prestador.inscricaoMunicipal` when the municipal registration exists. `servico.cNBS` must have 9 digits without punctuation.
+
+```ts
 await client.createCompanyDirectDocument(
   companyId,
   {

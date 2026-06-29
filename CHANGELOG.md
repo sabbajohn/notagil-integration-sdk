@@ -4,6 +4,13 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-06-28
+
+### Changed
+- README raiz expandido com fluxo completo de integracao, escolha entre v1/v2, autenticacao, idempotencia, emissao por operacao, emissao direta, NFSe Nacional, IBPT, webhooks, tratamento de erros e checklist de producao.
+- Exemplos de NFSe Nacional documentam `servico.cNBS` com 9 digitos sem pontuacao e reforcam que `prestador.omitirIM` nao deve ser enviado.
+- Contrato canonico PHP de NFSe Nacional passa a rejeitar explicitamente `prestador.omitirIM`, alinhado ao contrato TypeScript e a regra de nao omitir a inscricao municipal.
+
 ## [0.4.0] - 2026-06-23
 
 ### Added

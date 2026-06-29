@@ -45,7 +45,7 @@ final class NfseNacionalCanonicalContract
             'cnpj' => true,
             'inscricaoMunicipal' => true,
             'enviarIM' => true,
-            'omitirIM' => true,
+            'omitirIM' => false,
             'razaoSocial' => true,
             'opSimpNac' => true,
             'regEspTrib' => true,
@@ -197,7 +197,6 @@ final class NfseNacionalCanonicalContract
             'prestador.cnpj',
             'prestador.inscricaoMunicipal',
             'prestador.enviarIM',
-            'prestador.omitirIM',
             'prestador.razaoSocial',
             'prestador.opSimpNac',
             'prestador.regEspTrib',
@@ -377,6 +376,11 @@ final class NfseNacionalCanonicalContract
 
             $childSchema = $schema[$key];
             if ($childSchema === true) {
+                continue;
+            }
+
+            if (!is_array($childSchema)) {
+                $invalid[] = $path;
                 continue;
             }
 

@@ -304,7 +304,6 @@ class NotaAgilClientTest extends TestCase
             'prestador' => [
                 'cnpj' => '12345678000199',
                 'enviarIM' => true,
-                'omitirIM' => false,
                 'opSimpNac' => '1',
             ],
             'tomador' => [
@@ -338,6 +337,30 @@ class NotaAgilClientTest extends TestCase
                 $exception->invalidFields
             );
             $this->assertContains('servico.cTribMun', $exception->expectedFields);
+            $this->assertNotContains('prestador.omitirIM', $exception->expectedFields);
+
+            throw $exception;
+        }
+    }
+
+    public function test_nfse_nacional_canonical_contract_rejects_omitir_im(): void
+    {
+        $this->expectException(NfseNacionalContractException::class);
+
+        try {
+            NfseNacionalCanonicalContract::assertCanonical([
+                'prestador' => [
+                    'cnpj' => '12345678000199',
+                    'inscricaoMunicipal' => '000000000033061',
+                    'omitirIM' => false,
+                ],
+                'servico' => [
+                    'cTribMun' => '0107',
+                ],
+            ]);
+        } catch (NfseNacionalContractException $exception) {
+            $this->assertSame(['prestador.omitirIM'], $exception->invalidFields);
+            $this->assertNotContains('prestador.omitirIM', $exception->expectedFields);
 
             throw $exception;
         }

@@ -7,7 +7,7 @@ Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padr
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:^0.4.0
+composer require notagil/integration-sdk:^0.4.1
 ```
 
 ## Uso Basico
@@ -175,7 +175,7 @@ $payload = [
     'id' => 'nfse-direct-2026-0001',
     'tpAmb' => 2,
     'dhEmi' => '2026-05-26T10:00:00-03:00',
-    'verAplic' => 'sdk-0.4.0',
+    'verAplic' => 'sdk-0.4.1',
     'serie' => '1',
     'nDPS' => '1001',
     'dCompet' => '2026-05-26',
@@ -208,7 +208,7 @@ $payload = [
         'cLocPrestacao' => '3550308',
         'cTribNac' => '0107',
         'cTribMun' => '0107',
-        'cNBS' => '1.0101.00.00',
+        'cNBS' => '010701000',
         'descricao' => 'Servico de exemplo',
     ],
     'valor_servicos' => 100,
@@ -235,6 +235,8 @@ $client->createDirectDocument($companies[0]['id'], [
     'payload' => $payload,
 ], 'idem-nfse-direct-2026-0001');
 ```
+
+Para NFSe Nacional, nao envie `prestador.omitirIM`. Informe `prestador.inscricaoMunicipal` quando existir inscricao municipal. O campo `servico.cNBS` deve conter 9 digitos sem pontos.
 
 ## Superficies Disponiveis
 
