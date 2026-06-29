@@ -1,6 +1,8 @@
 # Estrutura do Payload de Emissao
 
-Este documento descreve o contrato recomendado para preview e emissao de documentos fiscais pela API de integracao NotaAgil.
+Este documento descreve contratos de payload para preview e emissao de documentos fiscais pela API de integracao NotaAgil.
+
+Para novos terceiros, o contrato recomendado e `FiscalCanonicalPayloadV2`, exposto pelas rotas `/api/v2/integrations`. O contrato direto de NFSe Nacional abaixo representa o payload interno aceito pelo `fiscal-core` e deve ser usado apenas em fluxos v1/controlados que exijam esse formato.
 
 A superficie preferencial e baseada no codigo da operacao fiscal:
 
@@ -113,8 +115,10 @@ Campos aceitos no payload canonico:
 - `cLocEmi`
 - `prestador.cnpj`
 - `prestador.inscricaoMunicipal`
+- `prestador.enviarIM`
 - `prestador.razaoSocial`
 - `prestador.opSimpNac`
+- `prestador.regApTribSN`
 - `prestador.regEspTrib`
 - `prestador.codigoMunicipio`
 - `tomador.documento`
@@ -134,6 +138,10 @@ Campos aceitos no payload canonico:
 - `servico.cTribMun`
 - `servico.cNBS`
 - `servico.descricao`
+- `servico.tribISSQN`
+- `servico.tpRetISSQN`
+- `servico.aliquota`
+- `servico.enviarPAliq`
 - `valor_servicos`
 - `tributacao.municipal.tribISSQN`
 - `tributacao.municipal.tpRetISSQN`

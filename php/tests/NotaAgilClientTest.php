@@ -369,10 +369,11 @@ class NotaAgilClientTest extends TestCase
     public function test_nfse_nacional_provider_policy_is_canonicalized(): void
     {
         $policy = NfseNacionalCanonicalContract::canonicalizeProviderPolicy([
-            'required_fields' => ['service.nbs', 'service.activity_code'],
-            'visible_fields' => ['service.national_tax_code', 'service.cnae_code'],
+            'required_fields' => ['servico.cNBS', 'service.activity_code'],
+            'visible_fields' => ['servico.cTribNac', 'service.cnae_code'],
             'field_schema' => [
-                'service.nbs' => ['label' => 'NBS customizado'],
+                'servico.cNBS' => ['label' => 'NBS customizado'],
+                'service.national_tax_code' => ['label' => 'Codigo nacional legado'],
             ],
         ]);
 
@@ -380,6 +381,7 @@ class NotaAgilClientTest extends TestCase
         $this->assertSame(['servico.cTribNac'], $policy['visible_fields']);
         $this->assertSame('NBS customizado', $policy['field_schema']['servico.cNBS']['label']);
         $this->assertSame(['servico.cTribNac'], $policy['field_schema']['servico.cTribNac']['payload_paths']);
+        $this->assertArrayNotHasKey('service.national_tax_code', $policy['field_schema']);
         $this->assertArrayNotHasKey('servico.codigo_atividade', $policy['field_schema']);
         $this->assertArrayNotHasKey('servico.codigoCnae', $policy['field_schema']);
     }

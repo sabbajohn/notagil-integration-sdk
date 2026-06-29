@@ -46,12 +46,12 @@ const nfcePayload: FiscalCanonicalPayloadV2 = {
     ambiente: 'homologacao',
   },
   emitente: {
-    cnpj: '12345678000199',
+    cpf_cnpj: '12345678000199',
     razao_social: 'Empresa Exemplo LTDA',
   },
   tomador: {
-    documento: '12345678909',
-    nome: 'Consumidor',
+    cpf_cnpj: '12345678909',
+    razao_social: 'Consumidor',
   },
   itens: [
     {

@@ -17,7 +17,7 @@ Principais pontos:
 
 - Superficie v2 explicita nos SDKs PHP e TypeScript.
 - Helpers para contratos fiscais v2 e builders de emissao direta.
-- Contrato canonico de NFSe Nacional em PT-BR.
+- Contrato publico recomendado `FiscalCanonicalPayloadV2` para novos terceiros; o contrato direto de NFSe Nacional fica reservado para fluxos internos/controlados.
 - Documentacao de integracao detalhada para fluxos v1/v2.
 - NFSe Nacional: `prestador.omitirIM` nao deve ser enviado; informe `prestador.inscricaoMunicipal` quando houver inscricao municipal.
 - NFSe Nacional: `servico.cNBS` deve ser enviado com 9 digitos, sem pontos.
@@ -356,7 +356,7 @@ $v2->createDirectDocumentV2(
 
 ## NFSe Nacional Direta
 
-Para NFSe Nacional, use sempre o contrato canonico PT-BR no bloco `payload`.
+Para novas integracoes, prefira as rotas v2 com `FiscalCanonicalPayloadV2`. Use o contrato direto de NFSe Nacional apenas quando a plataforma solicitar explicitamente o payload interno do `fiscal-core`.
 
 Regras praticas:
 
@@ -422,7 +422,6 @@ const request: DirectNfseNacionalSubmitRequest = {
       tribISSQN: '1',
       tpRetISSQN: '1',
       enviarPAliq: false,
-      valor_irrf: 0,
     },
     valor_servicos: 100,
     tributacao: {
@@ -475,7 +474,6 @@ $payload = [
         'tribISSQN' => '1',
         'tpRetISSQN' => '1',
         'enviarPAliq' => false,
-        'valor_irrf' => 0,
     ],
     'valor_servicos' => 100,
 ];
@@ -499,11 +497,7 @@ Campos canonicos esperados na policy de NFSe Nacional:
 - `servico.cTribMun`
 - `servico.cTribNac`
 - `servico.cNBS`
-- `servico.codigoCnae`
-- `servico.codigo_atividade`
-- `servico.benefit_code`
 - `prestador.opSimpNac`
-- `prestador.mei`
 
 O SDK possui normalizadores de policy:
 
@@ -515,7 +509,7 @@ $policy = NfseNacionalCanonicalContract::canonicalizeProviderPolicy($providerInf
 const policy = canonicalizeNfseProviderPolicy(providerInfo.form_policy);
 ```
 
-Novas integracoes devem consumir as rotas v2 da plataforma quando disponiveis. Aliases legados como `service.nbs` continuam sendo aceitos apenas para leitura/normalizacao de policy, nao para payload novo.
+Aliases legados como `service.nbs` e `prestador.op_simp_nac` nao sao mais normalizados. Policies e payloads novos devem usar somente os caminhos canonicos documentados.
 
 ## Consulta IBPT
 

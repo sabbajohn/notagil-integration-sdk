@@ -168,7 +168,7 @@ if (($authorized['fiscal_status'] ?? null) === 'authorized') {
 }
 ```
 
-Para emissao direta de NFSe no ambiente nacional, padronize `payload` no contrato canonico PT-BR antes de enviar:
+Para novas integracoes, prefira as rotas v2 com `FiscalCanonicalPayloadV2`. Use o contrato direto de NFSe Nacional apenas quando a plataforma solicitar explicitamente o payload interno do `fiscal-core`:
 
 ```php
 $payload = [

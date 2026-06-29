@@ -8,32 +8,10 @@ export const NFSE_CANONICAL_POLICY_FIELDS = [
   'servico.cTribMun',
   'servico.cTribNac',
   'servico.cNBS',
-  'servico.codigoCnae',
-  'servico.codigo_atividade',
-  'servico.benefit_code',
   'prestador.opSimpNac',
-  'prestador.mei',
 ] as const;
 export const NFSE_NACIONAL_POLICY_FIELDS = NFSE_CANONICAL_POLICY_FIELDS;
 export type NfsePolicyField = (typeof NFSE_CANONICAL_POLICY_FIELDS)[number];
-
-const NFSE_POLICY_FIELD_ALIASES: Record<string, NfsePolicyField> = {
-  'service.municipal_code': 'servico.cTribMun',
-  'service.national_tax_code': 'servico.cTribNac',
-  'service.nbs': 'servico.cNBS',
-  'service.cnae_code': 'servico.codigoCnae',
-  'service.activity_code': 'servico.codigo_atividade',
-  'service.benefit_code': 'servico.benefit_code',
-  'prestador.op_simp_nac': 'prestador.opSimpNac',
-  'servico.cTribMun': 'servico.cTribMun',
-  'servico.cTribNac': 'servico.cTribNac',
-  'servico.cNBS': 'servico.cNBS',
-  'servico.codigoCnae': 'servico.codigoCnae',
-  'servico.codigo_atividade': 'servico.codigo_atividade',
-  'servico.benefit_code': 'servico.benefit_code',
-  'prestador.opSimpNac': 'prestador.opSimpNac',
-  'prestador.mei': 'prestador.mei',
-};
 
 export const NFSE_NACIONAL_EXPECTED_FIELDS = [
   'id',
@@ -47,8 +25,10 @@ export const NFSE_NACIONAL_EXPECTED_FIELDS = [
   'cLocEmi',
   'prestador.cnpj',
   'prestador.inscricaoMunicipal',
+  'prestador.enviarIM',
   'prestador.razaoSocial',
   'prestador.opSimpNac',
+  'prestador.regApTribSN',
   'prestador.regEspTrib',
   'prestador.codigoMunicipio',
   'tomador.documento',
@@ -72,9 +52,6 @@ export const NFSE_NACIONAL_EXPECTED_FIELDS = [
   'servico.tpRetISSQN',
   'servico.aliquota',
   'servico.enviarPAliq',
-  'servico.valor_irrf',
-  'servico.valor_ir',
-  'servico.iss_retido',
   'valor_servicos',
   'valores.vReceb',
   'valores.vDescIncond',
@@ -137,11 +114,12 @@ interface CanonicalSchema {
 export interface NfsePrestador extends Record<string, unknown> {
   cnpj?: string;
   inscricaoMunicipal?: string;
+  enviarIM?: NfseCanonicalScalar;
   razaoSocial?: string;
   opSimpNac?: NfseCanonicalScalar;
+  regApTribSN?: NfseCanonicalScalar;
   regEspTrib?: NfseCanonicalScalar;
   codigoMunicipio?: string;
-  mei?: NfseCanonicalScalar;
 }
 
 export interface NfseEndereco extends Record<string, unknown> {
@@ -173,12 +151,6 @@ export interface NfseServico extends Record<string, unknown> {
   tpRetISSQN?: NfseCanonicalScalar;
   aliquota?: NfseCanonicalScalar;
   enviarPAliq?: NfseCanonicalScalar;
-  valor_irrf?: NfseCanonicalScalar;
-  valor_ir?: NfseCanonicalScalar;
-  iss_retido?: NfseCanonicalScalar;
-  codigoCnae?: string;
-  codigo_atividade?: string;
-  benefit_code?: string;
 }
 
 export interface NfseCanonicalPayload extends Record<string, unknown> {
@@ -231,8 +203,10 @@ const NFSE_NACIONAL_SCHEMA: CanonicalSchema = {
   prestador: {
     cnpj: true,
     inscricaoMunicipal: true,
+    enviarIM: true,
     razaoSocial: true,
     opSimpNac: true,
+    regApTribSN: true,
     regEspTrib: true,
     codigoMunicipio: true,
   },
@@ -262,20 +236,13 @@ const NFSE_NACIONAL_SCHEMA: CanonicalSchema = {
     tpRetISSQN: true,
     aliquota: true,
     enviarPAliq: true,
-    valor_irrf: true,
-    valor_ir: true,
-    iss_retido: true,
   },
   valor_servicos: true,
   valores: {
     vReceb: true,
     vDescIncond: true,
     vDescCond: true,
-    desconto_incondicionado: true,
-    desconto_condicionado: true,
     deducao_reducao: {
-      pDR: true,
-      vDR: true,
       percentual: true,
       valor: true,
     },
@@ -296,13 +263,11 @@ const NFSE_NACIONAL_SCHEMA: CanonicalSchema = {
       },
       tpRetISSQN: true,
       pAliq: true,
-      aliquota: true,
       enviarPAliq: true,
     },
     federal: {
       piscofins: {
         CST: true,
-        cst: true,
         vBCPisCofins: true,
         pAliqPis: true,
         pAliqCofins: true,
@@ -409,10 +374,9 @@ export function canonicalizeNfseProviderPolicy<T extends Record<string, unknown>
     ...visibleFields,
     ...Object.keys(schema).filter((field): field is NfsePolicyField => canonicalPolicyField(field) !== null),
   ]));
-  const allFields = [...NFSE_CANONICAL_POLICY_FIELDS];
   const labels = normalizePolicyFieldMap(policy.labels, activeFields) as Partial<Record<NfsePolicyField, string>>;
   const hints = normalizePolicyFieldMap(policy.hints, activeFields) as Partial<Record<NfsePolicyField, string>>;
-  const fieldSchema = allFields.reduce<Partial<Record<NfsePolicyField, NfseFieldSchema>>>((acc, field) => {
+  const fieldSchema = activeFields.reduce<Partial<Record<NfsePolicyField, NfseFieldSchema>>>((acc, field) => {
     const defaults = canonicalFieldDefaults(field);
     if (!defaults) {
       return acc;
@@ -1904,7 +1868,9 @@ function normalizeConditionalRules(value: unknown): Array<Record<string, unknown
 
 function canonicalPolicyField(field: unknown): NfsePolicyField | null {
   const normalized = typeof field === 'string' ? field.trim() : '';
-  return normalized !== '' ? NFSE_POLICY_FIELD_ALIASES[normalized] ?? null : null;
+  return (NFSE_CANONICAL_POLICY_FIELDS as readonly string[]).includes(normalized)
+    ? normalized as NfsePolicyField
+    : null;
 }
 
 function canonicalFieldDefaults(
@@ -1917,12 +1883,6 @@ function canonicalFieldDefaults(
       return { label: 'Codigo Tributacao Nacional', control: 'text', payloadPaths: ['servico.cTribNac'] };
     case 'servico.cNBS':
       return { label: 'Codigo NBS', control: 'text', payloadPaths: ['servico.cNBS'] };
-    case 'servico.codigoCnae':
-      return { label: 'CNAE do Servico', control: 'text', payloadPaths: ['servico.codigoCnae'] };
-    case 'servico.codigo_atividade':
-      return { label: 'Codigo de Atividade', control: 'text', payloadPaths: ['servico.codigo_atividade'] };
-    case 'servico.benefit_code':
-      return { label: 'Codigo Beneficio Municipal', control: 'text', payloadPaths: ['servico.benefit_code'] };
     case 'prestador.opSimpNac':
       return {
         label: 'Simples Nacional',
@@ -1932,16 +1892,6 @@ function canonicalFieldDefaults(
           { value: '1', label: '1 - Nao optante' },
           { value: '2', label: '2 - MEI' },
           { value: '3', label: '3 - ME/EPP' },
-        ],
-      };
-    case 'prestador.mei':
-      return {
-        label: 'Emitente MEI',
-        control: 'select',
-        payloadPaths: ['prestador.mei'],
-        options: [
-          { value: 'false', label: 'Nao MEI' },
-          { value: 'true', label: 'MEI' },
         ],
       };
     default:
@@ -1957,16 +1907,8 @@ function canonicalFieldHint(field: NfsePolicyField): string {
       return 'Codigo nacional de tributacao do servico.';
     case 'servico.cNBS':
       return 'Nomenclatura Brasileira de Servicos exigida pelo layout nacional.';
-    case 'servico.codigoCnae':
-      return 'CNAE fiscal do servico; alguns municipios validam esta tag no XML.';
-    case 'servico.codigo_atividade':
-      return 'Codigo de atividade municipal quando o provider exigir campo separado.';
-    case 'servico.benefit_code':
-      return 'Codigo oficial do beneficio municipal quando houver beneficio permitido para o servico.';
     case 'prestador.opSimpNac':
       return 'Opcao do Simples Nacional exigida pelo layout nacional.';
-    case 'prestador.mei':
-      return 'Classificacao explicita do emitente para roteamento municipal ou nacional da NFSe.';
   }
 }
 

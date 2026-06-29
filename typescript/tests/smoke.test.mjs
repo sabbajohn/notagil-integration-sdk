@@ -607,18 +607,20 @@ test('assertCanonicalNfseNacionalPayload rejects legacy NFSe Nacional fields', (
 
 test('canonicalizeNfseProviderPolicy keeps only canonical NFSe Nacional policy fields', () => {
   const policy = canonicalizeNfseProviderPolicy({
-    required_fields: ['service.nbs', 'service.activity_code'],
-    visible_fields: ['service.national_tax_code', 'service.cnae_code'],
+    required_fields: ['servico.cNBS', 'service.activity_code'],
+    visible_fields: ['servico.cTribNac', 'service.cnae_code'],
     field_schema: {
-      'service.nbs': { label: 'NBS customizado' },
+      'servico.cNBS': { label: 'NBS customizado' },
+      'service.national_tax_code': { label: 'Codigo nacional legado' },
     },
   });
 
-  assert.deepEqual(policy.required_fields, ['servico.cNBS', 'servico.codigo_atividade']);
-  assert.deepEqual(policy.visible_fields, ['servico.cTribNac', 'servico.codigoCnae']);
+  assert.deepEqual(policy.required_fields, ['servico.cNBS']);
+  assert.deepEqual(policy.visible_fields, ['servico.cTribNac']);
   assert.equal(policy.field_schema['servico.cNBS'].label, 'NBS customizado');
   assert.deepEqual(policy.field_schema['servico.cTribNac'].payload_paths, ['servico.cTribNac']);
-  assert.equal(policy.field_schema['servico.codigoCnae'].control, 'text');
+  assert.equal(policy.field_schema['service.national_tax_code'], undefined);
+  assert.equal(policy.field_schema['servico.codigoCnae'], undefined);
 });
 
 function canonicalFiscalPayloadV2() {
