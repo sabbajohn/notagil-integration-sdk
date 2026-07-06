@@ -775,22 +775,119 @@ export interface DirectDocumentRequestV2Options {
   metadata?: Record<string, unknown>;
 }
 
-export interface OperationDocumentSnapshotV2 extends Record<string, unknown> {
-  fiscal_environment?: FiscalEnvironment;
-  reference_date?: string;
-  document_direction?: 'entrada' | 'saida' | string;
-  document_data?: Record<string, unknown>;
-  counterparty?: Record<string, unknown>;
-  document_references?: Array<Record<string, unknown>>;
-  items: Array<Record<string, unknown>>;
+export interface OperationDocumentRetratoTomadorV2 extends Record<string, unknown> {
+  tipo_pessoa?: string;
+  indicador_ie?: string | number | null;
+  contribuinte_icms?: boolean;
+  contribuinte_iss?: boolean;
+  consumidor_final?: boolean;
+  comprador_identificado?: boolean;
+  ente_publico?: boolean;
+  codigo_municipio?: string | number | null;
+  codigo_ibge?: string | number | null;
+  person_type?: never;
+  ie_indicator?: never;
+  taxpayer_icms?: never;
+  taxpayer_iss?: never;
+  final_consumer?: never;
+  buyer_identified?: never;
+  public_entity?: never;
+  municipality_ibge?: never;
+  state_registration?: never;
+  municipal_registration?: never;
 }
+
+export interface OperationDocumentRetratoItemV2 extends Record<string, unknown> {
+  produto_id?: string | number | null;
+  produto_externo_id?: string | number | null;
+  codigo?: string;
+  descricao?: string;
+  tipo_item?: 'produto' | 'servico' | string;
+  unidade?: string;
+  quantidade?: number;
+  valor_unitario?: number;
+  valor_bruto?: number;
+  valor_desconto?: number;
+  valor_frete?: number;
+  valor_seguro?: number;
+  valor_outras_despesas?: number;
+  product_id?: never;
+  external_product_id?: never;
+  source_product_id?: never;
+  product_profile_id?: never;
+  sku?: never;
+  description?: never;
+  item_type?: never;
+  unit?: never;
+  quantity?: never;
+  unit_price?: never;
+  gross_amount?: never;
+  discount_amount?: never;
+  freight_amount?: never;
+  insurance_amount?: never;
+  other_amount?: never;
+  origin_code?: never;
+  tax_classification_code?: never;
+  taxes?: never;
+  tax_calculations?: never;
+  rate_sources?: never;
+  tax_engine_audit?: never;
+  formula_alignment?: never;
+  tax_formula_payload?: never;
+  tax_formula_trace?: never;
+}
+
+export interface OperationDocumentSnapshotV2 extends Record<string, unknown> {
+  ambiente_fiscal?: FiscalEnvironment;
+  data_referencia?: string;
+  direcao_documento?: 'entrada' | 'saida' | string;
+  dados_documento?: Record<string, unknown>;
+  tomador?: OperationDocumentRetratoTomadorV2;
+  referencias_documento?: Array<Record<string, unknown>>;
+  itens: OperationDocumentRetratoItemV2[];
+  fiscal_environment?: never;
+  reference_date?: never;
+  document_direction?: never;
+  direction?: never;
+  document_data?: never;
+  counterparty?: never;
+  customer?: never;
+  document_references?: never;
+  items?: never;
+  operation_profile_id?: never;
+  emitter_profile_id?: never;
+  taker_profile_id?: never;
+  product_profile_id?: never;
+  context_hash?: never;
+  profile_composition_hash?: never;
+  signature_hash?: never;
+  profiles_json?: never;
+  rules_applied_json?: never;
+  overrides_applied_json?: never;
+  reference_requirements_json?: never;
+  formula_trace_json?: never;
+  operation_context?: never;
+  blocking_issues?: never;
+  review_issues?: never;
+  totals?: never;
+  tax_totals?: never;
+}
+
+export type OperationDocumentRetratoV2 = OperationDocumentSnapshotV2;
 
 export interface OperationDocumentPreviewRequestV2 {
   external_id?: string;
-  document_type: DocumentType;
+  tipo_documento: DocumentType;
   municipio?: string | null;
-  retrato: OperationDocumentSnapshotV2;
-  metadata?: Record<string, unknown>;
+  retrato: OperationDocumentRetratoV2;
+  metadados?: Record<string, unknown>;
+  document_type?: never;
+  documentType?: never;
+  metadata?: never;
+  snapshot?: never;
+  emission_mode?: never;
+  emissionMode?: never;
+  synchronous?: never;
 }
 
 export interface OperationDocumentSubmitRequestV2 extends OperationDocumentPreviewRequestV2 {

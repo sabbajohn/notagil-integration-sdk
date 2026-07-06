@@ -252,6 +252,56 @@ await client.createCompanyDocumentByOperation(
 const document = await client.waitDocument('erp-nfce-9001', { companyId, timeoutMs: 120_000 });
 ```
 
+## Emissao por Operacao v2
+
+Na v2, a emissao por operacao e companyless e usa o contrato publico em portugues. O envelope aceita `tipo_documento`, `retrato` e `metadados`; aliases em ingles como `document_type`, `snapshot`, `metadata`, `retrato.items`, `product_id`, `quantity` e `unit_price` sao rejeitados pelo servico.
+
+```ts
+const retrato = {
+  ambiente_fiscal: 'homologacao',
+  direcao_documento: 'saida',
+  dados_documento: {
+    serie: '1',
+    numero: '9002',
+    natureza_operacao: 'Venda de mercadoria',
+  },
+  tomador: {
+    consumidor_final: true,
+    comprador_identificado: false,
+    uf: 'SC',
+  },
+  itens: [
+    {
+      produto_id: 31,
+      codigo: 'SKU-001',
+      descricao: 'Produto fiscal completo',
+      tipo_item: 'produto',
+      quantidade: 1,
+      valor_unitario: 100,
+      valor_bruto: 100,
+    },
+  ],
+};
+
+await v2.previewDocumentByOperationV2('VENDA_BALCAO', {
+  external_id: 'erp-preview-9002',
+  tipo_documento: 'nfce',
+  retrato,
+  metadados: { origem: 'erp' },
+});
+
+await v2.createDocumentByOperationV2(
+  'VENDA_BALCAO',
+  {
+    external_id: 'erp-nfce-9002',
+    tipo_documento: 'nfce',
+    modo_emissao: 'fila',
+    retrato,
+  },
+  'idem-erp-nfce-9002',
+);
+```
+
 ## Emissao Direta v2
 
 Use esse fluxo quando o consumidor ja monta o contrato fiscal publico completo.

@@ -262,6 +262,75 @@ test('v2 direct document helpers use Portuguese public contract paths', async ()
   assert.match(history[1].init.body, /"ambiente_fiscal"/);
 });
 
+test('v2 operation document helpers send Portuguese retrato payload', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      const body = history.length === 1
+        ? { dados: { status_resolucao: 'resolvido', emissao_permitida: true } }
+        : { dados: { external_id: 'erp-op-1', tipo_documento: 'nfce', status_fiscal: 'pendente' } };
+      return new Response(JSON.stringify(body), {
+        status: history.length === 1 ? 200 : 202,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  const retrato = {
+    ambiente_fiscal: 'homologacao',
+    direcao_documento: 'saida',
+    dados_documento: {
+      serie: '1',
+      numero: '9001',
+    },
+    tomador: {
+      consumidor_final: true,
+      comprador_identificado: false,
+      codigo_ibge: '3550308',
+    },
+    itens: [
+      {
+        produto_id: 31,
+        codigo: 'SKU-001',
+        descricao: 'Produto fiscal completo',
+        tipo_item: 'produto',
+        quantidade: 1,
+        valor_unitario: 100,
+        valor_bruto: 100,
+      },
+    ],
+  };
+
+  const preview = await client.previewDocumentByOperationV2('VENDA_BALCAO', {
+    external_id: 'erp-op-preview-1',
+    tipo_documento: 'nfce',
+    retrato,
+    metadados: { origem: 'sdk' },
+  });
+  const created = await client.createDocumentByOperationV2('VENDA_BALCAO', {
+    external_id: 'erp-op-1',
+    tipo_documento: 'nfce',
+    modo_emissao: 'fila',
+    retrato,
+  }, 'idem-op-1');
+
+  assert.deepEqual(preview, { status_resolucao: 'resolvido', emissao_permitida: true });
+  assert.deepEqual(created, { external_id: 'erp-op-1', tipo_documento: 'nfce', status_fiscal: 'pendente' });
+  assert.equal(history[0].input, `${DEFAULT_BASE_URL_V2}/operacoes/VENDA_BALCAO/previsualizar`);
+  assert.equal(history[1].input, `${DEFAULT_BASE_URL_V2}/operacoes/VENDA_BALCAO/emitir`);
+  assert.equal(history[1].init.headers['Idempotency-Key'], 'idem-op-1');
+  assert.match(history[0].init.body, /"tipo_documento":"nfce"/);
+  assert.match(history[0].init.body, /"retrato"/);
+  assert.match(history[0].init.body, /"itens"/);
+  assert.match(history[0].init.body, /"produto_id":31/);
+  assert.doesNotMatch(history[0].init.body, /"document_type"/);
+  assert.doesNotMatch(history[0].init.body, /"snapshot"/);
+  assert.doesNotMatch(history[0].init.body, /"items"/);
+  assert.doesNotMatch(history[0].init.body, /"product_id"/);
+});
+
 test('v2 product helpers use the evolved product contract and auxiliary catalog paths', async () => {
   const history = [];
   const client = NotagilIntegrationClient.v2({

@@ -59,6 +59,168 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/DirectDocumentRequestV2"
+            examples:
+              nfe:
+                summary: NFe direta em fila
+                value:
+                  external_id: erp-nfe-1001
+                  tipo_documento: nfe
+                  ambiente_fiscal: homologacao
+                  modo_emissao: fila
+                  payload:
+                    identificacao:
+                      serie: "1"
+                      numero: "1001"
+                      natureza_operacao: Venda de mercadoria
+                      data_emissao: "2026-06-20T10:00:00-03:00"
+                      ambiente: homologacao
+                    emitente:
+                      cpf_cnpj: "12345678000199"
+                      razao_social: Empresa Teste LTDA
+                      inscricao_estadual: "252290720"
+                      endereco:
+                        logradouro: Rua Central
+                        numero: "100"
+                        bairro: Centro
+                        codigo_municipio: "4209102"
+                        municipio: Joinville
+                        uf: SC
+                        cep: "89217002"
+                    tomador:
+                      cpf_cnpj: "33440118000147"
+                      razao_social: Padaria Bom Trigo LTDA
+                      tipo_pessoa: juridica
+                      inscricao_estadual: "0623079040081"
+                      endereco:
+                        logradouro: Avenida Brasil
+                        numero: "100"
+                        bairro: Centro
+                        codigo_municipio: "3106200"
+                        municipio: Belo Horizonte
+                        uf: MG
+                        cep: "30140071"
+                    itens:
+                      - codigo: SKU-001
+                        descricao: Produto Teste
+                        quantidade: 1
+                        valor_unitario: 100
+                        valor_total: 100
+                        unidade: UN
+                        ncm: "21069090"
+                        cfop: "5102"
+                    totais:
+                      valor_produtos: 100
+                      valor_documento: 100
+              nfce:
+                summary: NFCe direta sincrona
+                value:
+                  external_id: erp-nfce-2001
+                  tipo_documento: nfce
+                  ambiente_fiscal: homologacao
+                  modo_emissao: sincrono
+                  payload:
+                    identificacao:
+                      serie: "1"
+                      numero: "2001"
+                      natureza_operacao: Venda ao consumidor
+                      data_emissao: "2026-06-20T10:00:00-03:00"
+                      ambiente: homologacao
+                    emitente:
+                      cpf_cnpj: "12345678000199"
+                      razao_social: Empresa Teste LTDA
+                      inscricao_estadual: "252290720"
+                      endereco:
+                        logradouro: Rua Central
+                        numero: "100"
+                        bairro: Centro
+                        codigo_municipio: "4209102"
+                        municipio: Joinville
+                        uf: SC
+                        cep: "89217002"
+                    tomador:
+                      cpf_cnpj: "12345678909"
+                      razao_social: Consumidor Final
+                      tipo_pessoa: fisica
+                    itens:
+                      - codigo: SKU-001
+                        descricao: Produto Teste
+                        quantidade: 1
+                        valor_unitario: 50
+                        valor_total: 50
+                        unidade: UN
+                        ncm: "21069090"
+                        cfop: "5102"
+                    pagamento:
+                      meios:
+                        - meio: pix
+                          valor: 50
+                    totais:
+                      valor_produtos: 50
+                      valor_documento: 50
+              nfse:
+                summary: NFSe direta em fila
+                value:
+                  external_id: erp-nfse-3001
+                  tipo_documento: nfse
+                  municipio: "1302603"
+                  ambiente_fiscal: homologacao
+                  modo_emissao: fila
+                  payload:
+                    identificacao:
+                      serie: "1"
+                      numero: "3001"
+                      natureza_operacao: Prestacao de servico
+                      data_emissao: "2026-06-20T10:00:00-03:00"
+                      data_competencia: "2026-06-20"
+                      ambiente: homologacao
+                      municipio_ocorrencia_codigo: "1302603"
+                    emitente:
+                      cpf_cnpj: "12345678000199"
+                      razao_social: Empresa Teste LTDA
+                      inscricao_municipal: "12345"
+                      endereco:
+                        logradouro: Rua Central
+                        numero: "100"
+                        bairro: Centro
+                        codigo_municipio: "1302603"
+                        municipio: Manaus
+                        uf: AM
+                        cep: "69000000"
+                    tomador:
+                      cpf_cnpj: "33440118000147"
+                      razao_social: Tomador Servicos LTDA
+                      tipo_pessoa: juridica
+                      email: fiscal@tomador.test
+                      endereco:
+                        logradouro: Avenida Brasil
+                        numero: "100"
+                        bairro: Centro
+                        codigo_municipio: "1302603"
+                        municipio: Manaus
+                        uf: AM
+                        cep: "69000000"
+                    itens:
+                      - codigo: SERV-001
+                        descricao: Servico de suporte tecnico
+                        quantidade: 1
+                        valor_unitario: 200
+                        valor_total: 200
+                        unidade: UN
+                    servico:
+                      codigo_servico_nacional: "140101"
+                      codigo_servico_municipal: "0107"
+                      codigo_nbs: "120018900"
+                      codigo_municipio_prestacao: "1302603"
+                      descricao: Servico de suporte tecnico
+                    tributacao:
+                      municipal:
+                        tributacao_iss: "1"
+                        tipo_retencao_iss: "1"
+                        aliquota_iss: 5
+                        enviar_aliquota_iss: true
+                    totais:
+                      valor_servicos: 200
+                      valor_documento: 200
       responses:
         "200": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
         "202": { $ref: "#/components/responses/DirectDocumentAcceptedResponse" }
@@ -1656,6 +1818,20 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorEnvelope"
+          examples:
+            alias_rejeitado:
+              summary: Campo legado ou alias rejeitado
+              value:
+                mensagem: Payload invalido para a superficie v2.
+                codigo: validation_error
+                erros:
+                  document_type:
+                    - Campo nao permitido na superficie v2. Use somente campos publicos documentados.
+            sincrono_nao_permitido:
+              summary: Emissao sincrona fora de NFCe
+              value:
+                mensagem: Emissao sincrona esta disponivel apenas para NFCe.
+                codigo: validation_error
   schemas:
     DirectDocumentRequestV2:
       type: object
@@ -2229,32 +2405,53 @@ components:
           additionalProperties: true
     RetratoOperacionalRequestV2:
       type: object
-      required: [items]
+      required: [itens]
       additionalProperties: true
+      description: Retrato operacional publico da emissao por operacao. Campos internos em ingles como items, counterparty, document_data, quantity, unit_price e product_id sao rejeitados na v2.
       properties:
-        fiscal_environment:
+        ambiente_fiscal:
           type: string
           enum: [homologacao, producao]
-          description: Campo interno do retrato operacional legado. A emissao direta v2 usa ambiente_fiscal no envelope.
-        reference_date: { type: string, format: date-time }
-        document_direction: { type: string, enum: [entrada, saida] }
-        document_data:
+        data_referencia: { type: string, format: date-time }
+        direcao_documento: { type: string, enum: [entrada, saida] }
+        dados_documento:
           type: object
           additionalProperties: true
-        counterparty:
+        tomador:
           type: object
           additionalProperties: true
-        document_references:
+        referencias_documento:
           type: array
           items:
             type: object
             additionalProperties: true
-        items:
+        itens:
           type: array
           minItems: 1
           items:
-            type: object
-            additionalProperties: true
+            $ref: "#/components/schemas/ItemRetratoOperacionalV2"
+    ItemRetratoOperacionalV2:
+      type: object
+      additionalProperties: true
+      description: Item operacional publico em portugues. A API converte estes campos para o snapshot interno antes do motor fiscal.
+      properties:
+        produto_id: { type: integer }
+        produto_externo_id: { type: string }
+        codigo: { type: string }
+        descricao: { type: string }
+        tipo_item:
+          type: string
+          enum: [produto, servico]
+        ncm: { type: string }
+        origem_codigo: { type: string }
+        unidade: { type: string, example: UN }
+        quantidade: { type: number, example: 1 }
+        valor_unitario: { type: number, example: 120.5 }
+        valor_bruto: { type: number, example: 120.5 }
+        valor_desconto: { type: number, default: 0 }
+        valor_frete: { type: number, default: 0 }
+        valor_seguro: { type: number, default: 0 }
+        valor_outras_despesas: { type: number, default: 0 }
     AgendamentoRequestV2:
       type: object
       required: [tipo, proxima_execucao]
@@ -2342,13 +2539,33 @@ components:
           $ref: "#/components/schemas/ValoresNfseFiscalV2"
         tributacao:
           $ref: "#/components/schemas/TributacaoNfseFiscalV2"
-        ibs_cbs:
-          $ref: "#/components/schemas/IbsCbsNfseFiscalV2"
         observacoes:
           $ref: "#/components/schemas/ObservacoesFiscalV2"
         extensoes:
           type: object
           additionalProperties: true
+    MatrizFiscalDocumentoV2:
+      type: object
+      additionalProperties: false
+      properties:
+        tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
+        provedor: { type: string }
+        modo_emissao:
+          type: array
+          items: { type: string, enum: [fila, sincrono] }
+        sincrono_permitido: { type: boolean }
+        operacoes:
+          type: array
+          items: { type: string }
+        artefatos:
+          type: array
+          items: { type: string }
+        recursos:
+          type: array
+          items: { type: string }
+        pontos_criticos:
+          type: array
+          items: { type: string }
     IdentificacaoFiscalV2:
       type: object
       additionalProperties: false
@@ -2443,6 +2660,10 @@ components:
           $ref: "#/components/schemas/TributacaoFederalNfseFiscalV2"
         total:
           $ref: "#/components/schemas/TotalTributosNfseFiscalV2"
+        adicionais:
+          $ref: "#/components/schemas/AdicionaisIbsCbsNfseFiscalV2"
+        ibs_cbs:
+          $ref: "#/components/schemas/IbsCbsNfseFiscalV2"
     TributacaoMunicipalNfseFiscalV2:
       type: object
       additionalProperties: false
@@ -2515,8 +2736,9 @@ components:
             federal: { type: number }
             estadual: { type: number }
             municipal: { type: number }
-    IbsCbsNfseFiscalV2:
+    AdicionaisIbsCbsNfseFiscalV2:
       type: object
+      description: Campos adicionais de IBS/CBS usados no cabecalho do grupo ibscbs da DPS.
       additionalProperties: false
       properties:
         finalidade_nfse: { type: string }
@@ -2534,26 +2756,156 @@ components:
           properties:
             cpf_cnpj: { type: string }
             razao_social: { type: string }
-        tributos:
+    IbsCbsNfseFiscalV2:
+      type: object
+      description: Layout publico completo de IBS/CBS aceito e persistido. Em NFSe Nacional, a DPS XML atual serializa apenas cst, classe, regular.cst, regular.classe e dif.percentual de ibs_uf, ibs_mun e cbs, por compatibilidade com o XSD local; os grupos NT 009 permanecem parciais ate a troca do XSD. Em NFe/NFCe, o bloco e exigido condicionalmente por CRT, ambiente, data de vigencia RTC ou extensoes.rtc.obrigar_ibs_cbs.
+      additionalProperties: false
+      properties:
+        cst: { type: string }
+        classe: { type: string }
+        redutor_gov: { type: number }
+        base_calculo: { type: number }
+        ibs_uf:
+          $ref: "#/components/schemas/IbsCbsComponenteNfseFiscalV2"
+        ibs_mun:
+          $ref: "#/components/schemas/IbsCbsComponenteNfseFiscalV2"
+        cbs:
+          $ref: "#/components/schemas/IbsCbsComponenteNfseFiscalV2"
+        regular:
           type: object
           additionalProperties: false
           properties:
             cst: { type: string }
-            codigo_classificacao: { type: string }
-            codigo_credito_presumido: { type: string }
-            tributacao_regular:
+            classe: { type: string }
+            ibs_uf:
+              $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
+            ibs_mun:
+              $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
+            cbs:
+              $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
+        presumido:
+          type: object
+          additionalProperties: false
+          properties:
+            ibs:
+              $ref: "#/components/schemas/IbsCbsPresumidoNfseFiscalV2"
+            cbs:
+              $ref: "#/components/schemas/IbsCbsPresumidoNfseFiscalV2"
+        compra_gov:
+          type: object
+          additionalProperties: false
+          properties:
+            ibs_uf:
+              $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
+            ibs_mun:
+              $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
+            cbs:
+              $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
+        mono:
+          type: object
+          additionalProperties: false
+          properties:
+            padrao:
+              $ref: "#/components/schemas/IbsCbsMonoNfseFiscalV2"
+            reten:
+              $ref: "#/components/schemas/IbsCbsMonoNfseFiscalV2"
+            retido:
+              $ref: "#/components/schemas/IbsCbsMonoNfseFiscalV2"
+            dif:
               type: object
               additionalProperties: false
               properties:
-                cst: { type: string }
-                codigo_classificacao: { type: string }
-            diferimento:
-              type: object
-              additionalProperties: false
-              properties:
-                percentual_uf: { type: number }
-                percentual_municipal: { type: number }
-                percentual_cbs: { type: number }
+                ibs:
+                  $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+                cbs:
+                  $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+            total:
+              $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+        transferencia_credito:
+          type: object
+          additionalProperties: false
+          properties:
+            ibs:
+              $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+            cbs:
+              $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+        credito_presumido_zfm:
+          type: object
+          additionalProperties: false
+          properties:
+            competencia: { type: string }
+            tipo: { type: string }
+            valor: { type: number }
+        ajuste_competencia:
+          type: object
+          additionalProperties: false
+          properties:
+            competencia: { type: string }
+            ibs:
+              $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+            cbs:
+              $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+        estorno_credito:
+          type: object
+          additionalProperties: false
+          properties:
+            ibs:
+              $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+            cbs:
+              $ref: "#/components/schemas/IbsCbsValorFiscalV2"
+        dfe_referenciado:
+          type: object
+          additionalProperties: false
+          properties:
+            chave_acesso: { type: string }
+            item_referenciado: { type: integer }
+    IbsCbsValorFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        valor: { type: number }
+    IbsCbsComponenteNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        aliquota: { type: number }
+        reducao:
+          type: object
+          additionalProperties: false
+          properties:
+            percentual: { type: number }
+            aliquota_efetiva: { type: number }
+        dif:
+          type: object
+          additionalProperties: false
+          properties:
+            percentual: { type: number }
+            valor: { type: number }
+        devolucao: { type: number }
+        valor: { type: number }
+    IbsCbsAliquotaValorNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        aliquota: { type: number }
+        valor: { type: number }
+    IbsCbsPresumidoNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        codigo: { type: string }
+        aliquota: { type: number }
+        valor: { type: number }
+        suspenso: { type: number }
+    IbsCbsMonoNfseFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        base_calculo_qtd: { type: number }
+        ibs:
+          $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
+        cbs:
+          $ref: "#/components/schemas/IbsCbsAliquotaValorNfseFiscalV2"
     PagamentoFiscalV2:
       type: object
       additionalProperties: false
@@ -2595,6 +2947,10 @@ components:
         cofins: { $ref: "#/components/schemas/TributoFiscalV2" }
         ibs: { $ref: "#/components/schemas/TributoFiscalV2" }
         cbs: { $ref: "#/components/schemas/TributoFiscalV2" }
+        is:
+          $ref: "#/components/schemas/ImpostoSeletivoFiscalV2"
+        ibs_cbs:
+          $ref: "#/components/schemas/IbsCbsNfseFiscalV2"
     TributoFiscalV2:
       type: object
       additionalProperties: false
@@ -2603,6 +2959,18 @@ components:
         csosn: { type: string }
         aliquota: { type: number }
         base_calculo: { type: number }
+        valor: { type: number }
+    ImpostoSeletivoFiscalV2:
+      type: object
+      additionalProperties: false
+      properties:
+        cst: { type: string }
+        classe: { type: string }
+        base_calculo: { type: number }
+        aliquota: { type: number }
+        aliquota_especifica: { type: number }
+        unidade_tributavel: { type: string }
+        quantidade_tributavel: { type: number }
         valor: { type: number }
     ObservacoesFiscalV2:
       type: object
@@ -3389,6 +3757,8 @@ components:
               items:
                 type: object
                 additionalProperties: { type: string }
+            matriz_fiscal:
+              $ref: "#/components/schemas/MatrizFiscalDocumentoV2"
             valores_padrao:
               type: object
               additionalProperties: true

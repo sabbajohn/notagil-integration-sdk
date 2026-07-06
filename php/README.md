@@ -68,6 +68,50 @@ $v2->createDirectDocumentV2(
 
 $documentoV2 = NotaAgilClient::normalizeDocumentResponse($v2->waitDocumentV2('erp-v2-2026-0001'));
 
+$retratoOperacaoV2 = [
+    'ambiente_fiscal' => 'homologacao',
+    'direcao_documento' => 'saida',
+    'dados_documento' => [
+        'serie' => '1',
+        'numero' => '9002',
+        'natureza_operacao' => 'Venda de mercadoria',
+    ],
+    'tomador' => [
+        'consumidor_final' => true,
+        'comprador_identificado' => false,
+        'uf' => 'SP',
+    ],
+    'itens' => [
+        [
+            'produto_id' => 31,
+            'codigo' => 'SKU-BALCAO-001',
+            'descricao' => 'Refeicao por quilo',
+            'tipo_item' => 'produto',
+            'quantidade' => 1,
+            'valor_unitario' => 42.9,
+            'valor_bruto' => 42.9,
+        ],
+    ],
+];
+
+$v2->previewDocumentByOperationV2('VENDA_BALCAO', [
+    'external_id' => 'pdv-preview-v2-2026-0001',
+    'tipo_documento' => 'nfce',
+    'retrato' => $retratoOperacaoV2,
+    'metadados' => ['origem' => 'pdv'],
+]);
+
+$v2->createDocumentByOperationV2(
+    operationCode: 'VENDA_BALCAO',
+    payload: [
+        'external_id' => 'pdv-operation-v2-2026-0001',
+        'tipo_documento' => 'nfce',
+        'modo_emissao' => 'fila',
+        'retrato' => $retratoOperacaoV2,
+    ],
+    idempotencyKey: 'idem-pdv-operation-v2-2026-0001',
+);
+
 $produto = $v2->createProductV2([
     'cod_sku' => 'SKU-1',
     'codigo_operacional' => 'ERP-1',

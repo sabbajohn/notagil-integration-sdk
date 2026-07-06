@@ -121,6 +121,72 @@ final class NotaAgilClientV2Test extends TestCase
         $this->assertSame('/api/v2/integrations/documentos/erp-1/cancelar', $history[4]['request']->getUri()->getPath());
     }
 
+    public function test_v2_operation_methods_use_portuguese_retrato_contract(): void
+    {
+        $history = [];
+        $client = NotaAgilClient::v2(
+            token: 'test-token',
+            http: $this->http([
+                new Response(200, [], json_encode(['dados' => ['status_resolucao' => 'resolvido', 'emissao_permitida' => true]], JSON_THROW_ON_ERROR)),
+                new Response(202, [], json_encode(['dados' => ['external_id' => 'erp-op-1', 'tipo_documento' => 'nfce', 'status_fiscal' => 'pendente']], JSON_THROW_ON_ERROR)),
+            ], $history),
+        );
+
+        $retrato = [
+            'ambiente_fiscal' => 'homologacao',
+            'direcao_documento' => 'saida',
+            'dados_documento' => [
+                'serie' => '1',
+                'numero' => '9001',
+            ],
+            'tomador' => [
+                'consumidor_final' => true,
+                'comprador_identificado' => false,
+                'codigo_ibge' => '3550308',
+            ],
+            'itens' => [
+                [
+                    'produto_id' => 31,
+                    'codigo' => 'SKU-001',
+                    'descricao' => 'Produto fiscal completo',
+                    'tipo_item' => 'produto',
+                    'quantidade' => 1,
+                    'valor_unitario' => 100,
+                    'valor_bruto' => 100,
+                ],
+            ],
+        ];
+
+        $preview = $client->previewDocumentByOperationV2('VENDA_BALCAO', [
+            'external_id' => 'erp-op-preview-1',
+            'tipo_documento' => 'nfce',
+            'retrato' => $retrato,
+            'metadados' => ['origem' => 'sdk'],
+        ]);
+        $created = $client->createDocumentByOperationV2('VENDA_BALCAO', [
+            'external_id' => 'erp-op-1',
+            'tipo_documento' => 'nfce',
+            'modo_emissao' => 'fila',
+            'retrato' => $retrato,
+        ], 'idem-op-1');
+
+        $this->assertSame(['status_resolucao' => 'resolvido', 'emissao_permitida' => true], $preview);
+        $this->assertSame(['external_id' => 'erp-op-1', 'tipo_documento' => 'nfce', 'status_fiscal' => 'pendente'], $created);
+        $this->assertSame('/api/v2/integrations/operacoes/VENDA_BALCAO/previsualizar', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('/api/v2/integrations/operacoes/VENDA_BALCAO/emitir', $history[1]['request']->getUri()->getPath());
+        $this->assertSame('idem-op-1', $history[1]['request']->getHeaderLine('Idempotency-Key'));
+
+        $body = (string) $history[0]['request']->getBody();
+        $this->assertStringContainsString('"tipo_documento":"nfce"', $body);
+        $this->assertStringContainsString('"retrato"', $body);
+        $this->assertStringContainsString('"itens"', $body);
+        $this->assertStringContainsString('"produto_id":31', $body);
+        $this->assertStringNotContainsString('"document_type"', $body);
+        $this->assertStringNotContainsString('"snapshot"', $body);
+        $this->assertStringNotContainsString('"items"', $body);
+        $this->assertStringNotContainsString('"product_id"', $body);
+    }
+
     public function test_v2_product_methods_use_evolved_contract_and_auxiliary_catalog_paths(): void
     {
         $history = [];

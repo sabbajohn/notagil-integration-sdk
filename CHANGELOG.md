@@ -4,6 +4,12 @@ Todas as mudancas relevantes deste projeto serao documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as versoes seguem [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Emissao por operacao v2 alinhada ao contrato publico em portugues: `tipo_documento`, `metadados`, `retrato.itens`, `produto_id`, `quantidade`, `valor_unitario` e `valor_bruto`.
+- OpenAPI v2 e tipos TypeScript gerados sincronizados com a superficie atual do servico, rejeitando aliases publicos em ingles como `items`, `counterparty`, `document_data`, `product_id`, `quantity` e `unit_price`.
+
 ## [0.4.1] - 2026-06-28
 
 ### Changed

@@ -1209,7 +1209,7 @@ export interface components {
             /** @description XML fiscal codificado em base64. Use xml ou xml_em_base64. */
             xml_em_base64?: string;
             /** @default false */
-            ja_assinado: boolean;
+            ja_assinado?: boolean;
             id_lote?: string;
             /** @enum {integer} */
             indicador_sincrono?: 0 | 1;
@@ -1261,7 +1261,7 @@ export interface components {
             ncm: string;
             valor: number;
             /** @default 0 */
-            extarif: number;
+            extarif?: number;
             descricao?: string | null;
             unidade?: string | null;
             gtin?: string | null;
@@ -1281,7 +1281,7 @@ export interface components {
                 ncm?: string;
                 valor?: number;
                 /** @default 0 */
-                extarif: number;
+                extarif?: number;
                 descricao?: string;
                 unidade?: string;
                 gtin?: string;
@@ -1407,9 +1407,9 @@ export interface components {
             /** @enum {string|null} */
             tipo_documento?: "nfe" | "nfce" | "nfse" | null;
             /** @default true */
-            consulta_remota: boolean | null;
+            consulta_remota?: boolean | null;
             /** @default false */
-            forcar_consulta_remota: boolean | null;
+            forcar_consulta_remota?: boolean | null;
             /** @enum {string|null} */
             ambiente_fiscal?: "homologacao" | "producao" | null;
         };
@@ -1606,28 +1606,53 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** @description Retrato operacional publico da emissao por operacao. Campos internos em ingles como items, counterparty, document_data, quantity, unit_price e product_id sao rejeitados na v2. */
         RetratoOperacionalRequestV2: {
-            /**
-             * @description Campo interno do retrato operacional legado. A emissao direta v2 usa ambiente_fiscal no envelope.
-             * @enum {string}
-             */
-            fiscal_environment?: "homologacao" | "producao";
-            /** Format: date-time */
-            reference_date?: string;
             /** @enum {string} */
-            document_direction?: "entrada" | "saida";
-            document_data?: {
+            ambiente_fiscal?: "homologacao" | "producao";
+            /** Format: date-time */
+            data_referencia?: string;
+            /** @enum {string} */
+            direcao_documento?: "entrada" | "saida";
+            dados_documento?: {
                 [key: string]: unknown;
             };
-            counterparty?: {
+            tomador?: {
                 [key: string]: unknown;
             };
-            document_references?: {
+            referencias_documento?: {
                 [key: string]: unknown;
             }[];
-            items: {
-                [key: string]: unknown;
-            }[];
+            itens: components["schemas"]["ItemRetratoOperacionalV2"][];
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description Item operacional publico em portugues. A API converte estes campos para o snapshot interno antes do motor fiscal. */
+        ItemRetratoOperacionalV2: {
+            produto_id?: number;
+            produto_externo_id?: string;
+            codigo?: string;
+            descricao?: string;
+            /** @enum {string} */
+            tipo_item?: "produto" | "servico";
+            ncm?: string;
+            origem_codigo?: string;
+            /** @example UN */
+            unidade?: string;
+            /** @example 1 */
+            quantidade?: number;
+            /** @example 120.5 */
+            valor_unitario?: number;
+            /** @example 120.5 */
+            valor_bruto?: number;
+            /** @default 0 */
+            valor_desconto?: number;
+            /** @default 0 */
+            valor_frete?: number;
+            /** @default 0 */
+            valor_seguro?: number;
+            /** @default 0 */
+            valor_outras_despesas?: number;
         } & {
             [key: string]: unknown;
         };
@@ -1666,11 +1691,21 @@ export interface components {
             impostos?: components["schemas"]["ImpostosFiscalV2"];
             valores_nfse?: components["schemas"]["ValoresNfseFiscalV2"];
             tributacao?: components["schemas"]["TributacaoNfseFiscalV2"];
-            ibs_cbs?: components["schemas"]["IbsCbsNfseFiscalV2"];
             observacoes?: components["schemas"]["ObservacoesFiscalV2"];
             extensoes?: {
                 [key: string]: unknown;
             };
+        };
+        MatrizFiscalDocumentoV2: {
+            /** @enum {string} */
+            tipo_documento?: "nfe" | "nfce" | "nfse";
+            provedor?: string;
+            modo_emissao?: ("fila" | "sincrono")[];
+            sincrono_permitido?: boolean;
+            operacoes?: string[];
+            artefatos?: string[];
+            recursos?: string[];
+            pontos_criticos?: string[];
         };
         IdentificacaoFiscalV2: {
             serie?: string;
@@ -1746,6 +1781,8 @@ export interface components {
             municipal?: components["schemas"]["TributacaoMunicipalNfseFiscalV2"];
             federal?: components["schemas"]["TributacaoFederalNfseFiscalV2"];
             total?: components["schemas"]["TotalTributosNfseFiscalV2"];
+            adicionais?: components["schemas"]["AdicionaisIbsCbsNfseFiscalV2"];
+            ibs_cbs?: components["schemas"]["IbsCbsNfseFiscalV2"];
         };
         TributacaoMunicipalNfseFiscalV2: {
             tributacao_iss?: string;
@@ -1801,7 +1838,8 @@ export interface components {
                 municipal?: number;
             };
         };
-        IbsCbsNfseFiscalV2: {
+        /** @description Campos adicionais de IBS/CBS usados no cabecalho do grupo ibscbs da DPS. */
+        AdicionaisIbsCbsNfseFiscalV2: {
             finalidade_nfse?: string;
             indicador_final?: string;
             codigo_indicador_operacao?: string;
@@ -1813,20 +1851,95 @@ export interface components {
                 cpf_cnpj?: string;
                 razao_social?: string;
             };
-            tributos?: {
+        };
+        /** @description Layout publico completo de IBS/CBS aceito e persistido. Em NFSe Nacional, a DPS XML atual serializa apenas cst, classe, regular.cst, regular.classe e dif.percentual de ibs_uf, ibs_mun e cbs, por compatibilidade com o XSD local; os grupos NT 009 permanecem parciais ate a troca do XSD. Em NFe/NFCe, o bloco e exigido condicionalmente por CRT, ambiente, data de vigencia RTC ou extensoes.rtc.obrigar_ibs_cbs. */
+        IbsCbsNfseFiscalV2: {
+            cst?: string;
+            classe?: string;
+            redutor_gov?: number;
+            base_calculo?: number;
+            ibs_uf?: components["schemas"]["IbsCbsComponenteNfseFiscalV2"];
+            ibs_mun?: components["schemas"]["IbsCbsComponenteNfseFiscalV2"];
+            cbs?: components["schemas"]["IbsCbsComponenteNfseFiscalV2"];
+            regular?: {
                 cst?: string;
-                codigo_classificacao?: string;
-                codigo_credito_presumido?: string;
-                tributacao_regular?: {
-                    cst?: string;
-                    codigo_classificacao?: string;
-                };
-                diferimento?: {
-                    percentual_uf?: number;
-                    percentual_municipal?: number;
-                    percentual_cbs?: number;
-                };
+                classe?: string;
+                ibs_uf?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
+                ibs_mun?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
+                cbs?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
             };
+            presumido?: {
+                ibs?: components["schemas"]["IbsCbsPresumidoNfseFiscalV2"];
+                cbs?: components["schemas"]["IbsCbsPresumidoNfseFiscalV2"];
+            };
+            compra_gov?: {
+                ibs_uf?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
+                ibs_mun?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
+                cbs?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
+            };
+            mono?: {
+                padrao?: components["schemas"]["IbsCbsMonoNfseFiscalV2"];
+                reten?: components["schemas"]["IbsCbsMonoNfseFiscalV2"];
+                retido?: components["schemas"]["IbsCbsMonoNfseFiscalV2"];
+                dif?: {
+                    ibs?: components["schemas"]["IbsCbsValorFiscalV2"];
+                    cbs?: components["schemas"]["IbsCbsValorFiscalV2"];
+                };
+                total?: components["schemas"]["IbsCbsValorFiscalV2"];
+            };
+            transferencia_credito?: {
+                ibs?: components["schemas"]["IbsCbsValorFiscalV2"];
+                cbs?: components["schemas"]["IbsCbsValorFiscalV2"];
+            };
+            credito_presumido_zfm?: {
+                competencia?: string;
+                tipo?: string;
+                valor?: number;
+            };
+            ajuste_competencia?: {
+                competencia?: string;
+                ibs?: components["schemas"]["IbsCbsValorFiscalV2"];
+                cbs?: components["schemas"]["IbsCbsValorFiscalV2"];
+            };
+            estorno_credito?: {
+                ibs?: components["schemas"]["IbsCbsValorFiscalV2"];
+                cbs?: components["schemas"]["IbsCbsValorFiscalV2"];
+            };
+            dfe_referenciado?: {
+                chave_acesso?: string;
+                item_referenciado?: number;
+            };
+        };
+        IbsCbsValorFiscalV2: {
+            valor?: number;
+        };
+        IbsCbsComponenteNfseFiscalV2: {
+            aliquota?: number;
+            reducao?: {
+                percentual?: number;
+                aliquota_efetiva?: number;
+            };
+            dif?: {
+                percentual?: number;
+                valor?: number;
+            };
+            devolucao?: number;
+            valor?: number;
+        };
+        IbsCbsAliquotaValorNfseFiscalV2: {
+            aliquota?: number;
+            valor?: number;
+        };
+        IbsCbsPresumidoNfseFiscalV2: {
+            codigo?: string;
+            aliquota?: number;
+            valor?: number;
+            suspenso?: number;
+        };
+        IbsCbsMonoNfseFiscalV2: {
+            base_calculo_qtd?: number;
+            ibs?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
+            cbs?: components["schemas"]["IbsCbsAliquotaValorNfseFiscalV2"];
         };
         PagamentoFiscalV2: {
             meios?: {
@@ -1854,12 +1967,24 @@ export interface components {
             cofins?: components["schemas"]["TributoFiscalV2"];
             ibs?: components["schemas"]["TributoFiscalV2"];
             cbs?: components["schemas"]["TributoFiscalV2"];
+            is?: components["schemas"]["ImpostoSeletivoFiscalV2"];
+            ibs_cbs?: components["schemas"]["IbsCbsNfseFiscalV2"];
         };
         TributoFiscalV2: {
             cst?: string;
             csosn?: string;
             aliquota?: number;
             base_calculo?: number;
+            valor?: number;
+        };
+        ImpostoSeletivoFiscalV2: {
+            cst?: string;
+            classe?: string;
+            base_calculo?: number;
+            aliquota?: number;
+            aliquota_especifica?: number;
+            unidade_tributavel?: string;
+            quantidade_tributavel?: number;
             valor?: number;
         };
         ObservacoesFiscalV2: {
@@ -1871,7 +1996,7 @@ export interface components {
             /** @enum {string} */
             ambiente_fiscal?: "homologacao" | "producao";
             /** @default false */
-            forcar_consulta_remota: boolean;
+            forcar_consulta_remota?: boolean;
         };
         CancelarDocumentoRequestV2: {
             justificativa: string;
@@ -2451,6 +2576,7 @@ export interface components {
                 regras_condicionais?: {
                     [key: string]: string;
                 }[];
+                matriz_fiscal?: components["schemas"]["MatrizFiscalDocumentoV2"];
                 valores_padrao?: {
                     [key: string]: unknown;
                 };
