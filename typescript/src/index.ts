@@ -811,6 +811,14 @@ export interface OperationDocumentRetratoItemV2 extends Record<string, unknown> 
   valor_frete?: number;
   valor_seguro?: number;
   valor_outras_despesas?: number;
+  codigo_servico?: string;
+  codigo_servico_municipal?: string;
+  codigo_tributacao_nacional?: string;
+  codigo_nbs?: string;
+  codigo_cnae?: string;
+  codigo_atividade?: string;
+  codigo_beneficio?: string;
+  codigo_indicador_operacao?: string;
   product_id?: never;
   external_product_id?: never;
   source_product_id?: never;

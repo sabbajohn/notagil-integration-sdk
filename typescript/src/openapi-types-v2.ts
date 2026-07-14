@@ -1692,6 +1692,22 @@ export interface components {
             valor_seguro?: number;
             /** @default 0 */
             valor_outras_despesas?: number;
+            /** @description Codigo do item da lista de servicos aplicavel. */
+            codigo_servico?: string;
+            /** @description Codigo do servico no cadastro municipal. */
+            codigo_servico_municipal?: string;
+            /** @description Codigo de tributacao nacional da NFS-e. */
+            codigo_tributacao_nacional?: string;
+            /** @description Codigo NBS do servico. */
+            codigo_nbs?: string;
+            /** @description CNAE relacionado a prestacao. */
+            codigo_cnae?: string;
+            /** @description Codigo municipal da atividade. */
+            codigo_atividade?: string;
+            /** @description Codigo de beneficio fiscal quando aplicavel. */
+            codigo_beneficio?: string;
+            /** @description Indicador da operacao IBS/CBS exigido pelo leiaute vigente. */
+            codigo_indicador_operacao?: string;
         } & {
             [key: string]: unknown;
         };

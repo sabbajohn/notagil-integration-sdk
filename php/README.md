@@ -112,6 +112,11 @@ $v2->createDocumentByOperationV2(
     idempotencyKey: 'idem-pdv-operation-v2-2026-0001',
 );
 
+// Para NFS-e, cada item de servico pode informar codigo_servico,
+// codigo_servico_municipal, codigo_tributacao_nacional, codigo_nbs,
+// codigo_cnae, codigo_atividade, codigo_beneficio e
+// codigo_indicador_operacao no mesmo retrato publico em portugues.
+
 $produto = $v2->createProductV2([
     'cod_sku' => 'SKU-1',
     'codigo_operacional' => 'ERP-1',

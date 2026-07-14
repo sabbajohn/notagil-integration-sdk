@@ -2516,6 +2516,14 @@ components:
         valor_frete: { type: number, default: 0 }
         valor_seguro: { type: number, default: 0 }
         valor_outras_despesas: { type: number, default: 0 }
+        codigo_servico: { type: string, description: Codigo do item da lista de servicos aplicavel. }
+        codigo_servico_municipal: { type: string, description: Codigo do servico no cadastro municipal. }
+        codigo_tributacao_nacional: { type: string, description: Codigo de tributacao nacional da NFS-e. }
+        codigo_nbs: { type: string, description: Codigo NBS do servico. }
+        codigo_cnae: { type: string, description: CNAE relacionado a prestacao. }
+        codigo_atividade: { type: string, description: Codigo municipal da atividade. }
+        codigo_beneficio: { type: string, description: Codigo de beneficio fiscal quando aplicavel. }
+        codigo_indicador_operacao: { type: string, description: Indicador da operacao IBS/CBS exigido pelo leiaute vigente. }
     AgendamentoRequestV2:
       type: object
       required: [tipo, proxima_execucao]

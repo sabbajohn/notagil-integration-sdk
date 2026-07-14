@@ -302,6 +302,8 @@ await v2.createDocumentByOperationV2(
 );
 ```
 
+Em itens de NFS-e por operação, use `tipo_item: 'servico'` e os campos públicos `codigo_servico`, `codigo_servico_municipal`, `codigo_tributacao_nacional`, `codigo_nbs`, `codigo_cnae`, `codigo_atividade`, `codigo_beneficio` e `codigo_indicador_operacao`.
+
 ## Emissao Direta v2
 
 Use esse fluxo quando o consumidor ja monta o contrato fiscal publico completo.
