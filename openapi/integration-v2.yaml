@@ -344,6 +344,33 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "404": { $ref: "#/components/responses/ErrorResponse" }
+  /certificado-origem:
+    get:
+      tags: [Certificados]
+      operationId: obterCertificadoOrigemV2
+      x-required-scopes: ["certificates:read"]
+      responses:
+        "200": { $ref: "#/components/responses/CertificadoOrigemResponse" }
+    put:
+      tags: [Certificados]
+      operationId: definirCertificadoOrigemV2
+      description: Vincula uma empresa autorizada da mesma conta e raiz de CNPJ como origem do certificado.
+      x-required-scopes: ["certificates:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CertificadoOrigemRequestV2" }
+      responses:
+        "200": { $ref: "#/components/responses/CertificadoOrigemResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Certificados]
+      operationId: removerCertificadoOrigemV2
+      description: Remove o vínculo explícito e retorna a empresa ao modo de certificado próprio.
+      x-required-scopes: ["certificates:write"]
+      responses:
+        "200": { $ref: "#/components/responses/CertificadoOrigemResponse" }
   /prontidao:
     get:
       tags: [Implantacao]
@@ -1790,6 +1817,16 @@ components:
               metadados:
                 type: object
                 additionalProperties: true
+    CertificadoOrigemResponse:
+      description: Configuração efetiva da origem do certificado da empresa consumidora.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [dados]
+            properties:
+              dados:
+                $ref: "#/components/schemas/CertificadoOrigemStatusV2"
     GenericCollectionResponse:
       description: Colecao no envelope publico v2.
       content:
@@ -2130,6 +2167,33 @@ components:
           type: string
           description: Conteudo do certificado A1 em base64.
         senha: { type: string, maxLength: 255 }
+        usar_como_proprio:
+          type: boolean
+          nullable: true
+          description: Confirma a troca atômica de compartilhado para certificado próprio após validar o PFX.
+    CertificadoOrigemRequestV2:
+      type: object
+      required: [empresa_origem_id]
+      additionalProperties: false
+      properties:
+        empresa_origem_id: { type: integer }
+    CertificadoOrigemStatusV2:
+      type: object
+      required: [funcionalidade_habilitada, modo_configurado, modo_uso, empresa_origem, certificado_nacional_disponivel, certificado_municipal_proprio_disponivel, certificado_efetivo_id]
+      properties:
+        funcionalidade_habilitada: { type: boolean }
+        modo_configurado: { type: string, enum: [own, shared] }
+        modo_uso: { type: string, enum: [own, shared] }
+        empresa_origem:
+          type: [object, "null"]
+          properties:
+            id: { type: string }
+            cnpj: { type: string }
+            nome_fantasia: { type: [string, "null"] }
+            razao_social: { type: [string, "null"] }
+        certificado_nacional_disponivel: { type: boolean }
+        certificado_municipal_proprio_disponivel: { type: boolean }
+        certificado_efetivo_id: { type: [string, "null"] }
     AtualizarCertificadoRequestV2:
       type: object
       required: [situacao]

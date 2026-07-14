@@ -161,6 +161,57 @@ paths:
           schema: { type: string }
       responses:
         "200": { $ref: "#/components/responses/CertificateValidationResponse" }
+  /company/{company_id}/certificate-source:
+    get:
+      tags: [Configuration]
+      operationId: getCompanyCertificateSource
+      x-required-scopes: ["certificates:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/CertificateSourceResponse" }
+    put:
+      tags: [Configuration]
+      operationId: setCompanyCertificateSource
+      description: Links the company to a direct certificate-owning company authorized for the integration and from the same account and CNPJ root.
+      x-required-scopes: ["certificates:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CertificateSourceRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/CertificateSourceResponse" }
+    delete:
+      tags: [Configuration]
+      operationId: clearCompanyCertificateSource
+      description: Clears the explicit certificate source link and returns the company to its own-certificate mode.
+      x-required-scopes: ["certificates:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses:
+        "200": { $ref: "#/components/responses/CertificateSourceResponse" }
+  /empresas/{company_id}/certificado-origem:
+    get:
+      tags: [Configuration]
+      operationId: obterCertificadoOrigemEmpresa
+      x-required-scopes: ["certificates:read"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses: { "200": { $ref: "#/components/responses/CertificateSourceResponse" } }
+    put:
+      tags: [Configuration]
+      operationId: definirCertificadoOrigemEmpresa
+      description: Vincula uma empresa autorizada da mesma conta e raiz de CNPJ como origem do certificado.
+      x-required-scopes: ["certificates:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      requestBody: { $ref: "#/components/requestBodies/JsonObject" }
+      responses: { "200": { $ref: "#/components/responses/CertificateSourceResponse" } }
+    delete:
+      tags: [Configuration]
+      operationId: removerCertificadoOrigemEmpresa
+      description: Remove o vínculo explícito e retorna a empresa ao modo de certificado próprio.
+      x-required-scopes: ["certificates:write"]
+      parameters: [{ $ref: "#/components/parameters/CompanyId" }]
+      responses: { "200": { $ref: "#/components/responses/CertificateSourceResponse" } }
   /company/{company_id}/readiness:
     get:
       tags: [Configuration]
@@ -1382,6 +1433,16 @@ components:
               metadata:
                 type: object
                 additionalProperties: true
+    CertificateSourceResponse:
+      description: Effective certificate source configuration for the consuming company.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                $ref: "#/components/schemas/CertificateSourceStatus"
     CertificateCollectionResponse:
       description: Certificate collection response.
       content:
@@ -2007,8 +2068,35 @@ components:
         certificate_size: { type: [integer, "null"] }
         valid: { type: [boolean, "null"] }
         has_private_content: { type: boolean }
+        usage_mode: { type: string, enum: [own, shared] }
+        consumer_empresa_id: { type: string }
+        source_empresa_id: { type: string }
+        manageable: { type: boolean }
         created_at: { type: [string, "null"] }
         updated_at: { type: [string, "null"] }
+    CertificateSourceRequest:
+      type: object
+      required: [source_company_id]
+      additionalProperties: false
+      properties:
+        source_company_id: { type: integer }
+    CertificateSourceStatus:
+      type: object
+      required: [feature_enabled, configured_mode, usage_mode, source_empresa, national_certificate_available, municipal_own_certificate_available, effective_certificate_id]
+      properties:
+        feature_enabled: { type: boolean }
+        configured_mode: { type: string, enum: [own, shared] }
+        usage_mode: { type: string, enum: [own, shared] }
+        source_empresa:
+          type: [object, "null"]
+          properties:
+            id: { type: string }
+            cnpj: { type: string }
+            nome_fantasia: { type: [string, "null"] }
+            razao_social: { type: [string, "null"] }
+        national_certificate_available: { type: boolean }
+        municipal_own_certificate_available: { type: boolean }
+        effective_certificate_id: { type: [string, "null"] }
     CertificateValidationData:
       type: object
       properties:

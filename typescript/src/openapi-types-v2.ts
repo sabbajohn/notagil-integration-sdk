@@ -193,6 +193,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/certificado-origem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obterCertificadoOrigemV2"];
+        /** @description Vincula uma empresa autorizada da mesma conta e raiz de CNPJ como origem do certificado. */
+        put: operations["definirCertificadoOrigemV2"];
+        post?: never;
+        /** @description Remove o vínculo explícito e retorna a empresa ao modo de certificado próprio. */
+        delete: operations["removerCertificadoOrigemV2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/prontidao": {
         parameters: {
             query?: never;
@@ -1397,6 +1415,27 @@ export interface components {
             /** @description Conteudo do certificado A1 em base64. */
             arquivo_base64: string;
             senha: string;
+            /** @description Confirma a troca atômica de compartilhado para certificado próprio após validar o PFX. */
+            usar_como_proprio?: boolean | null;
+        };
+        CertificadoOrigemRequestV2: {
+            empresa_origem_id: number;
+        };
+        CertificadoOrigemStatusV2: {
+            funcionalidade_habilitada: boolean;
+            /** @enum {string} */
+            modo_configurado: "own" | "shared";
+            /** @enum {string} */
+            modo_uso: "own" | "shared";
+            empresa_origem: {
+                id?: string;
+                cnpj?: string;
+                nome_fantasia?: string | null;
+                razao_social?: string | null;
+            } | null;
+            certificado_nacional_disponivel: boolean;
+            certificado_municipal_proprio_disponivel: boolean;
+            certificado_efetivo_id: string | null;
         };
         AtualizarCertificadoRequestV2: {
             /** @enum {string} */
@@ -2858,6 +2897,17 @@ export interface components {
                 };
             };
         };
+        /** @description Configuração efetiva da origem do certificado da empresa consumidora. */
+        CertificadoOrigemResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    dados: components["schemas"]["CertificadoOrigemStatusV2"];
+                };
+            };
+        };
         /** @description Colecao no envelope publico v2. */
         GenericCollectionResponse: {
             headers: {
@@ -3128,6 +3178,47 @@ export interface operations {
         responses: {
             200: components["responses"]["GenericResourceResponse"];
             404: components["responses"]["ErrorResponse"];
+        };
+    };
+    obterCertificadoOrigemV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CertificadoOrigemResponse"];
+        };
+    };
+    definirCertificadoOrigemV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificadoOrigemRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CertificadoOrigemResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    removerCertificadoOrigemV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CertificadoOrigemResponse"];
         };
     };
     obterProntidaoV2: {

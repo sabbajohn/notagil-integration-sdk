@@ -138,6 +138,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/company/{company_id}/certificate-source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCompanyCertificateSource"];
+        /** @description Links the company to a direct certificate-owning company authorized for the integration and from the same account and CNPJ root. */
+        put: operations["setCompanyCertificateSource"];
+        post?: never;
+        /** @description Clears the explicit certificate source link and returns the company to its own-certificate mode. */
+        delete: operations["clearCompanyCertificateSource"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/empresas/{company_id}/certificado-origem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obterCertificadoOrigemEmpresa"];
+        /** @description Vincula uma empresa autorizada da mesma conta e raiz de CNPJ como origem do certificado. */
+        put: operations["definirCertificadoOrigemEmpresa"];
+        post?: never;
+        /** @description Remove o vínculo explícito e retorna a empresa ao modo de certificado próprio. */
+        delete: operations["removerCertificadoOrigemEmpresa"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/company/{company_id}/readiness": {
         parameters: {
             query?: never;
@@ -1458,8 +1494,32 @@ export interface components {
             certificate_size?: number | null;
             valid?: boolean | null;
             has_private_content?: boolean;
+            /** @enum {string} */
+            usage_mode?: "own" | "shared";
+            consumer_empresa_id?: string;
+            source_empresa_id?: string;
+            manageable?: boolean;
             created_at?: string | null;
             updated_at?: string | null;
+        };
+        CertificateSourceRequest: {
+            source_company_id: number;
+        };
+        CertificateSourceStatus: {
+            feature_enabled: boolean;
+            /** @enum {string} */
+            configured_mode: "own" | "shared";
+            /** @enum {string} */
+            usage_mode: "own" | "shared";
+            source_empresa: {
+                id?: string;
+                cnpj?: string;
+                nome_fantasia?: string | null;
+                razao_social?: string | null;
+            } | null;
+            national_certificate_available: boolean;
+            municipal_own_certificate_available: boolean;
+            effective_certificate_id: string | null;
         };
         CertificateValidationData: {
             valid?: boolean;
@@ -2008,6 +2068,17 @@ export interface components {
                 };
             };
         };
+        /** @description Effective certificate source configuration for the consuming company. */
+        CertificateSourceResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: components["schemas"]["CertificateSourceStatus"];
+                };
+            };
+        };
         /** @description Certificate collection response. */
         CertificateCollectionResponse: {
             headers: {
@@ -2502,6 +2573,94 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["CertificateValidationResponse"];
+        };
+    };
+    getCompanyCertificateSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CertificateSourceResponse"];
+        };
+    };
+    setCompanyCertificateSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateSourceRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CertificateSourceResponse"];
+        };
+    };
+    clearCompanyCertificateSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CertificateSourceResponse"];
+        };
+    };
+    obterCertificadoOrigemEmpresa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CertificateSourceResponse"];
+        };
+    };
+    definirCertificadoOrigemEmpresa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: components["requestBodies"]["JsonObject"];
+        responses: {
+            200: components["responses"]["CertificateSourceResponse"];
+        };
+    };
+    removerCertificadoOrigemEmpresa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: components["parameters"]["CompanyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["CertificateSourceResponse"];
         };
     };
     getCompanyReadiness: {

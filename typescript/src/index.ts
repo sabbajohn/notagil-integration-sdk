@@ -2588,6 +2588,20 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>(this.companyPath(`/certificates/${encodeURIComponent(String(certificateId))}/validate`, companyId), { method: 'POST' });
   }
 
+  getCertificateSource(companyId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.companyPath('/certificate-source', companyId), { method: 'GET' });
+  }
+
+  setCertificateSource(sourceCompanyId: string | number, companyId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.companyPath('/certificate-source', companyId), {
+      method: 'PUT', body: { source_company_id: sourceCompanyId },
+    });
+  }
+
+  clearCertificateSource(companyId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.companyPath('/certificate-source', companyId), { method: 'DELETE' });
+  }
+
   getReadiness(companyId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(this.companyPath('/readiness', companyId), { method: 'GET' });
   }
@@ -2877,6 +2891,20 @@ export class NotagilIntegrationClient {
 
   validateCertificateV2(certificateId: string | number): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(`/certificados/${encodeURIComponent(String(certificateId))}/validar`, { method: 'POST' });
+  }
+
+  getCertificateSourceV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/certificado-origem', { method: 'GET' });
+  }
+
+  setCertificateSourceV2(sourceCompanyId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/certificado-origem', {
+      method: 'PUT', body: { empresa_origem_id: sourceCompanyId },
+    });
+  }
+
+  clearCertificateSourceV2(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/certificado-origem', { method: 'DELETE' });
   }
 
   getReadinessV2(): Promise<Record<string, unknown>> {

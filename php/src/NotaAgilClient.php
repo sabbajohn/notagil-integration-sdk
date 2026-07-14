@@ -420,6 +420,23 @@ class NotaAgilClient
         return $this->request('POST', $this->companyPath('/certificates/'.$certificateId.'/validate', $companyId));
     }
 
+    public function getCertificateSource(string|int $companyId): array
+    {
+        return $this->request('GET', $this->companyPath('/certificate-source', $companyId));
+    }
+
+    public function setCertificateSource(string|int $sourceCompanyId, string|int $companyId): array
+    {
+        return $this->request('PUT', $this->companyPath('/certificate-source', $companyId), [
+            'json' => ['source_company_id' => $sourceCompanyId],
+        ]);
+    }
+
+    public function clearCertificateSource(string|int $companyId): array
+    {
+        return $this->request('DELETE', $this->companyPath('/certificate-source', $companyId));
+    }
+
     public function readiness(string|int $companyId): array
     {
         return $this->request('GET', $this->companyPath('/readiness', $companyId));
@@ -718,6 +735,21 @@ class NotaAgilClient
     public function validateCertificateV2(string|int $certificateId): array
     {
         return $this->request('POST', '/certificados/'.rawurlencode((string) $certificateId).'/validar');
+    }
+
+    public function getCertificateSourceV2(): array
+    {
+        return $this->request('GET', '/certificado-origem');
+    }
+
+    public function setCertificateSourceV2(string|int $sourceCompanyId): array
+    {
+        return $this->request('PUT', '/certificado-origem', ['json' => ['empresa_origem_id' => $sourceCompanyId]]);
+    }
+
+    public function clearCertificateSourceV2(): array
+    {
+        return $this->request('DELETE', '/certificado-origem');
     }
 
     public function readinessV2(): array
