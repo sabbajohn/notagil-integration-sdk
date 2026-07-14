@@ -1062,6 +1062,8 @@ export interface DocumentAccepted {
   serie?: string | null;
   number?: number | string | null;
   numero?: number | string | null;
+  emission_date?: string | null;
+  data_emissao?: string | null;
   access_key?: string | null;
   chave_acesso?: string | null;
   document_key?: string | null;
@@ -1105,6 +1107,8 @@ export interface DocumentStatus {
   serie?: string | null;
   number?: number | string | null;
   numero?: number | string | null;
+  emission_date?: string | null;
+  data_emissao?: string | null;
   operational_status: string | null;
   status_operacional?: string | null;
   fiscal_status: string | null;
@@ -1138,6 +1142,9 @@ export interface DocumentListFilters {
   fiscal_status?: string;
   created_from?: string;
   created_to?: string;
+  emission_from?: string;
+  emission_to?: string;
+  page?: number;
   per_page?: number;
 }
 

@@ -632,6 +632,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Lists documents ordered by emission date (newest first), with filters and page-based pagination. */
         get: operations["listCompanyDocuments"];
         put?: never;
         post?: never;
@@ -1792,6 +1793,10 @@ export interface components {
             serie?: string | null;
             number?: number | string | null;
             numero?: number | string | null;
+            /** Format: date-time */
+            emission_date?: string | null;
+            /** Format: date-time */
+            data_emissao?: string | null;
             operational_status?: string | null;
             status_operacional?: string | null;
             fiscal_status?: string | null;
@@ -3214,6 +3219,13 @@ export interface operations {
         parameters: {
             query?: {
                 document_type?: components["parameters"]["DocumentTypeQuery"];
+                external_id?: string;
+                operational_status?: string;
+                fiscal_status?: string;
+                emission_from?: string;
+                emission_to?: string;
+                page?: number;
+                per_page?: number;
             };
             header?: never;
             path: {
