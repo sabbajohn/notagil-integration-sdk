@@ -51,6 +51,25 @@ test('createCompanyDocumentByOperation sends bearer token, idempotency key and s
   assert.match(history[0].init.body, /"snapshot"/);
 });
 
+test('substituteDocumentV2 sends the standardized body and idempotency key', async () => {
+  const history = [];
+  const client = new NotagilIntegrationClient({
+    baseUrl: DEFAULT_BASE_URL_V2,
+    token: 'test-token',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      return new Response(JSON.stringify({ data: { situacao_substituicao: 'pendente', replay_idempotente: false } }), { status: 202, headers: { 'content-type': 'application/json' } });
+    },
+  });
+  const payload = { identificacao: {}, emitente: {}, tomador: {}, servico: {}, totais: {}, tributacao: {} };
+  const result = await client.substituteDocumentV2('original-1', {
+    external_id_substituta: 'substituta-1', motivo_substituicao: 'outros', justificativa: 'Correção completa dos dados fiscais.', payload,
+  }, 'idem-sub-1');
+  assert.equal(result.situacao_substituicao, 'pendente');
+  assert.equal(history[0].init.headers['Idempotency-Key'], 'idem-sub-1');
+  assert.match(history[0].input, /\/documentos\/original-1\/substituir$/);
+});
+
 test('manifestCompanyInboundNfe alias uses the company-scoped inbound path', async () => {
   const history = [];
   const client = new NotagilIntegrationClient({

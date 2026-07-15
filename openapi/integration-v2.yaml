@@ -1578,6 +1578,93 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/DocumentOperationResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/substituir:
+    post:
+      tags: [Documents]
+      operationId: substituirDocumentoV2
+      description: Cria de forma assincrona uma nova NFS-e vinculada à original. Idempotency-Key é obrigatório.
+      x-required-scopes: ["documents:substitute"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 255 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubstituirDocumentoRequestV2"
+            examples:
+              nfse:
+                summary: Substituição de NFS-e
+                value:
+                  external_id_substituta: erp-nfse-3002
+                  motivo_substituicao: outros
+                  justificativa: Correcao completa dos dados fiscais da NFS-e.
+                  payload:
+                    identificacao:
+                      serie: "1"
+                      numero: "3002"
+                      natureza_operacao: Prestacao de servico
+                      data_emissao: "2026-06-20T10:00:00-03:00"
+                      data_competencia: "2026-06-20"
+                      ambiente: homologacao
+                      municipio_ocorrencia_codigo: "1302603"
+                    emitente:
+                      cpf_cnpj: "12345678000199"
+                      razao_social: Empresa Teste LTDA
+                      inscricao_municipal: "12345"
+                      endereco:
+                        logradouro: Rua Central
+                        numero: "100"
+                        bairro: Centro
+                        codigo_municipio: "1302603"
+                        municipio: Manaus
+                        uf: AM
+                        cep: "69000000"
+                    tomador:
+                      cpf_cnpj: "33440118000147"
+                      razao_social: Tomador Servicos LTDA
+                      tipo_pessoa: juridica
+                      email: fiscal@tomador.test
+                      endereco:
+                        logradouro: Avenida Brasil
+                        numero: "100"
+                        bairro: Centro
+                        codigo_municipio: "1302603"
+                        municipio: Manaus
+                        uf: AM
+                        cep: "69000000"
+                    servico:
+                      codigo_servico_nacional: "140101"
+                      codigo_servico_municipal: "0107"
+                      codigo_nbs: "120018900"
+                      codigo_municipio_prestacao: "1302603"
+                      descricao: Servico de suporte tecnico
+                    tributacao:
+                      municipal:
+                        tributacao_iss: "1"
+                        tipo_retencao_iss: "1"
+                        aliquota_iss: 5
+                        enviar_aliquota_iss: true
+                      adicionais:
+                        finalidade_nfse: "0"
+                        uso_consumo_pessoal: false
+                        codigo_indicador_operacao: "050101"
+                        indicador_destinatario: "0"
+                      ibs_cbs:
+                        cst: "000"
+                        classe: "000001"
+                    totais:
+                      valor_servicos: 200
+                      valor_documento: 200
+      responses:
+        "200": { $ref: "#/components/responses/NfseSubstitutionResponse" }
+        "202": { $ref: "#/components/responses/NfseSubstitutionResponse" }
+        "409": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /documentos/{external_id}/corrigir:
     post:
       tags: [Documents]
@@ -1767,6 +1854,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/DocumentOperationEnvelope"
+    NfseSubstitutionResponse:
+      description: Substituição criada ou replay idempotente.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NfseSubstitutionEnvelope"
     PerfilOperacaoListResponse:
       description: Lista de perfis de operacao.
       content:
@@ -2569,6 +2662,7 @@ components:
               - fiscal_document.rejected
               - fiscal_document.cancelled
               - fiscal_document.corrected
+              - fiscal_document.substituted
               - fiscal_document.failed
               - inbound_nfe.discovered
               - inbound_nfe.updated
@@ -3066,9 +3160,26 @@ components:
       required: [justificativa]
       additionalProperties: false
       properties:
+        motivo_cancelamento:
+          type: string
+          default: outros
+          enum: [erro_emissao, servico_nao_prestado, outros]
         justificativa:
           type: string
+          minLength: 15
           maxLength: 255
+    SubstituirDocumentoRequestV2:
+      type: object
+      additionalProperties: false
+      required: [external_id_substituta, motivo_substituicao, justificativa, payload]
+      properties:
+        external_id_substituta: { type: string, maxLength: 120 }
+        motivo_substituicao:
+          type: string
+          enum: [desenquadramento_simples_nacional, enquadramento_simples_nacional, inclusao_retroativa_imunidade_isencao, exclusao_retroativa_imunidade_isencao, rejeicao_pelo_tomador_intermediario, outros]
+        justificativa: { type: string, minLength: 15, maxLength: 255 }
+        payload:
+          $ref: "#/components/schemas/FiscalCanonicalPayloadV2"
     CorrigirDocumentoRequestV2:
       type: object
       required: [correcao]
@@ -3392,6 +3503,9 @@ components:
             provedor: { type: string }
             municipio: { type: string }
             ambiente_fiscal: { type: string, enum: [homologacao, producao] }
+            operacoes_suportadas:
+              type: array
+              items: { type: string, enum: [emitir, consultar, consultar_por_rps, consultar_lote, cancelar, substituir, baixar_xml, baixar_danfse] }
             metadados_provedor:
               type: object
               additionalProperties: true
@@ -3604,6 +3718,14 @@ components:
         chave_documento: { type: string }
         protocolo: { type: string }
         ambiente_fiscal: { type: string }
+        acoes_disponiveis:
+          $ref: "#/components/schemas/AcoesDisponiveisDocumentoV2"
+        politica_eventos_nfse:
+          $ref: "#/components/schemas/PoliticaEventosNfseV2"
+          nullable: true
+        substituicao:
+          $ref: "#/components/schemas/SubstituicaoDocumentoV2"
+          nullable: true
         artefatos:
           $ref: "#/components/schemas/ArtefatosDocumentoV2"
         criado_em: { type: string, format: date-time }
@@ -3711,6 +3833,41 @@ components:
       properties:
         dados:
           $ref: "#/components/schemas/DocumentSummaryV2"
+        metadados:
+          type: object
+          additionalProperties: true
+    AcoesDisponiveisDocumentoV2:
+      type: object
+      properties:
+        pode_cancelar: { type: boolean }
+        pode_substituir: { type: boolean }
+      additionalProperties: true
+    PoliticaEventosNfseV2:
+      type: object
+      properties:
+        codigo: { type: string }
+        mensagem: { type: string }
+        alternativa: { type: string, enum: [substituir], nullable: true }
+    SubstituicaoDocumentoV2:
+      type: object
+      properties:
+        situacao: { type: string, enum: [pendente, concluida, falhou] }
+        external_id_original: { type: string, nullable: true }
+        external_id_substituta: { type: string, nullable: true }
+        documento_original_id: { type: string, nullable: true }
+        documento_substituto_id: { type: string, nullable: true }
+    NfseSubstitutionEnvelope:
+      type: object
+      required: [dados]
+      properties:
+        dados:
+          type: object
+          required: [documento_original, documento_substituto, situacao_substituicao, replay_idempotente]
+          properties:
+            documento_original: { $ref: "#/components/schemas/DocumentSummaryV2" }
+            documento_substituto: { $ref: "#/components/schemas/DocumentSummaryV2" }
+            situacao_substituicao: { type: string, enum: [pendente, concluida, falhou] }
+            replay_idempotente: { type: boolean }
         metadados:
           type: object
           additionalProperties: true

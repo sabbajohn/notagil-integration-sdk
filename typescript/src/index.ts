@@ -923,6 +923,27 @@ export interface DocumentStatusV2 extends Record<string, unknown> {
   erros?: unknown;
 }
 
+export type NfseCancellationReasonV2 = 'erro_emissao' | 'servico_nao_prestado' | 'outros';
+export type NfseSubstitutionReasonV2 =
+  | 'desenquadramento_simples_nacional'
+  | 'enquadramento_simples_nacional'
+  | 'inclusao_retroativa_imunidade_isencao'
+  | 'exclusao_retroativa_imunidade_isencao'
+  | 'rejeicao_pelo_tomador_intermediario'
+  | 'outros';
+export interface SubstituteDocumentV2Request {
+  external_id_substituta: string;
+  motivo_substituicao: NfseSubstitutionReasonV2;
+  justificativa: string;
+  payload: FiscalCanonicalPayloadV2;
+}
+export interface SubstituteDocumentV2Response extends Record<string, unknown> {
+  documento_original: DocumentStatusV2;
+  documento_substituto: DocumentStatusV2;
+  situacao_substituicao: 'pendente' | 'concluida' | 'falhou';
+  replay_idempotente: boolean;
+}
+
 export interface DocumentListFiltersV2 {
   external_id?: string;
   tipo_documento?: DocumentType;
@@ -2342,10 +2363,18 @@ export class NotagilIntegrationClient {
     });
   }
 
-  cancelDocumentV2(externalId: string, justificativa: string): Promise<DocumentStatusV2> {
+  cancelDocumentV2(externalId: string, justificativa: string, motivoCancelamento: NfseCancellationReasonV2 = 'outros'): Promise<DocumentStatusV2> {
     return this.request<DocumentStatusV2>(`/documentos/${encodeURIComponent(externalId)}/cancelar`, {
       method: 'POST',
-      body: { justificativa },
+      body: { motivo_cancelamento: motivoCancelamento, justificativa },
+    });
+  }
+
+  substituteDocumentV2(externalId: string, payload: SubstituteDocumentV2Request, idempotencyKey: string): Promise<SubstituteDocumentV2Response> {
+    return this.request<SubstituteDocumentV2Response>(`/documentos/${encodeURIComponent(externalId)}/substituir`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+      body: payload,
     });
   }
 

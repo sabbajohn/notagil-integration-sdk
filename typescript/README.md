@@ -438,6 +438,21 @@ await client.createTaxRuleSet(10, {
 });
 ```
 
+### Cancelamento e substituição de NFS-e
+
+```ts
+await client.cancelDocumentV2('nfse-original-001', 'Serviço não prestado ao tomador.', 'servico_nao_prestado');
+
+await client.substituteDocumentV2('nfse-original-001', {
+  external_id_substituta: 'nfse-substituta-001',
+  motivo_substituicao: 'outros',
+  justificativa: 'Correção integral dos dados fiscais da NFS-e.',
+  payload: novaNfse,
+}, 'substituicao-nfse-original-001');
+```
+
+O token precisa do escopo `documents:substitute`. A substituição retorna `202`; repetir a mesma requisição e chave idempotente retorna o resultado existente.
+
 Generate OpenAPI operation types when `openapi-typescript` is installed:
 
 ```bash

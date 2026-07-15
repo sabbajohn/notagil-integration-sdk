@@ -224,10 +224,18 @@ class NotaAgilClient
         return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/consultar', ['json' => $payload]);
     }
 
-    public function cancelDocumentV2(string $externalId, string $justificativa): array
+    public function cancelDocumentV2(string $externalId, string $justificativa, string $motivoCancelamento = 'outros'): array
     {
         return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/cancelar', [
-            'json' => ['justificativa' => $justificativa],
+            'json' => ['motivo_cancelamento' => $motivoCancelamento, 'justificativa' => $justificativa],
+        ]);
+    }
+
+    public function substituteDocumentV2(string $externalId, array $payload, string $idempotencyKey): array
+    {
+        return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/substituir', [
+            'json' => $payload,
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
         ]);
     }
 

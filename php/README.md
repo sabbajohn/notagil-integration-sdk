@@ -287,6 +287,25 @@ $client->createDirectDocument($companies[0]['id'], [
 
 Para NFSe Nacional, nao envie `prestador.omitirIM`. Informe `prestador.inscricaoMunicipal` quando existir inscricao municipal. O campo `servico.cNBS` deve conter 9 digitos sem pontos.
 
+## Cancelamento e substituicao de NFSe
+
+```php
+$client->cancelDocumentV2(
+    'nfse-original-001',
+    'Servico nao prestado ao tomador.',
+    'servico_nao_prestado',
+);
+
+$client->substituteDocumentV2('nfse-original-001', [
+    'external_id_substituta' => 'nfse-substituta-001',
+    'motivo_substituicao' => 'outros',
+    'justificativa' => 'Correcao integral dos dados fiscais da NFSe.',
+    'payload' => $novaNfse,
+], 'substituicao-nfse-original-001');
+```
+
+O token precisa do escopo `documents:substitute`. A chave de idempotencia e obrigatoria na substituicao.
+
 ## Superficies Disponiveis
 
 - Empresas e configuracao fiscal.

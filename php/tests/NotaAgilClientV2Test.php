@@ -92,6 +92,7 @@ final class NotaAgilClientV2Test extends TestCase
                 new Response(200, [], json_encode(['dados' => [['external_id' => 'erp-1']], 'metadados' => ['por_pagina' => 5]], JSON_THROW_ON_ERROR)),
                 new Response(200, [], json_encode(['dados' => ['external_id' => 'erp-1', 'status_fiscal' => 'autorizado']], JSON_THROW_ON_ERROR)),
                 new Response(200, [], json_encode(['dados' => ['status_fiscal' => 'cancelado']], JSON_THROW_ON_ERROR)),
+                new Response(202, [], json_encode(['dados' => ['situacao_substituicao' => 'pendente']], JSON_THROW_ON_ERROR)),
             ], $history),
         );
 
@@ -110,6 +111,12 @@ final class NotaAgilClientV2Test extends TestCase
         $this->assertSame(['dados' => [['external_id' => 'erp-1']], 'metadados' => ['por_pagina' => 5]], $client->documentsV2(['tipo_documento' => 'nfce', 'por_pagina' => 5]));
         $this->assertSame(['external_id' => 'erp-1', 'status_fiscal' => 'autorizado'], $client->documentV2('erp-1'));
         $this->assertSame(['status_fiscal' => 'cancelado'], $client->cancelDocumentV2('erp-1', 'Cancelamento homologacao teste.'));
+        $this->assertSame(['situacao_substituicao' => 'pendente'], $client->substituteDocumentV2('erp-1', [
+            'external_id_substituta' => 'erp-2',
+            'motivo_substituicao' => 'outros',
+            'justificativa' => 'Correção completa dos dados da NFS-e.',
+            'payload' => $payload,
+        ], 'idem-sub-1'));
 
         $this->assertSame('/api/v2/integrations/contratos/nfce', $history[0]['request']->getUri()->getPath());
         $this->assertSame('/api/v2/integrations/direto/documentos', $history[1]['request']->getUri()->getPath());
@@ -119,6 +126,8 @@ final class NotaAgilClientV2Test extends TestCase
         $this->assertSame('tipo_documento=nfce&por_pagina=5', $history[2]['request']->getUri()->getQuery());
         $this->assertSame('/api/v2/integrations/documentos/erp-1', $history[3]['request']->getUri()->getPath());
         $this->assertSame('/api/v2/integrations/documentos/erp-1/cancelar', $history[4]['request']->getUri()->getPath());
+        $this->assertSame('/api/v2/integrations/documentos/erp-1/substituir', $history[5]['request']->getUri()->getPath());
+        $this->assertSame('idem-sub-1', $history[5]['request']->getHeaderLine('Idempotency-Key'));
     }
 
     public function test_v2_operation_methods_use_portuguese_retrato_contract(): void

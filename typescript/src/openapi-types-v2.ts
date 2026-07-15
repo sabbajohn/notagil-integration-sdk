@@ -1176,6 +1176,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documentos/{external_id}/substituir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Cria de forma assincrona uma nova NFS-e vinculada à original. Idempotency-Key é obrigatório. */
+        post: operations["substituirDocumentoV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/documentos/{external_id}/corrigir": {
         parameters: {
             query?: never;
@@ -1731,7 +1748,7 @@ export interface components {
             situacao?: "ativo" | "pausado";
             /** @enum {string} */
             ambiente?: "todos" | "homologacao" | "producao";
-            eventos: ("fiscal_document.created" | "fiscal_document.authorized" | "fiscal_document.rejected" | "fiscal_document.cancelled" | "fiscal_document.corrected" | "fiscal_document.failed" | "inbound_nfe.discovered" | "inbound_nfe.updated" | "inbound_nfe.xml_available" | "inbound_nfe.cancelled" | "inbound_nfe.corrected" | "inbound_nfe.manifested" | "inbound_nfe.event")[];
+            eventos: ("fiscal_document.created" | "fiscal_document.authorized" | "fiscal_document.rejected" | "fiscal_document.cancelled" | "fiscal_document.corrected" | "fiscal_document.substituted" | "fiscal_document.failed" | "inbound_nfe.discovered" | "inbound_nfe.updated" | "inbound_nfe.xml_available" | "inbound_nfe.cancelled" | "inbound_nfe.corrected" | "inbound_nfe.manifested" | "inbound_nfe.event")[];
         };
         FiscalCanonicalPayloadV2: {
             identificacao: components["schemas"]["IdentificacaoFiscalV2"];
@@ -2054,7 +2071,19 @@ export interface components {
             forcar_consulta_remota?: boolean;
         };
         CancelarDocumentoRequestV2: {
+            /**
+             * @default outros
+             * @enum {string}
+             */
+            motivo_cancelamento?: "erro_emissao" | "servico_nao_prestado" | "outros";
             justificativa: string;
+        };
+        SubstituirDocumentoRequestV2: {
+            external_id_substituta: string;
+            /** @enum {string} */
+            motivo_substituicao: "desenquadramento_simples_nacional" | "enquadramento_simples_nacional" | "inclusao_retroativa_imunidade_isencao" | "exclusao_retroativa_imunidade_isencao" | "rejeicao_pelo_tomador_intermediario" | "outros";
+            justificativa: string;
+            payload: components["schemas"]["FiscalCanonicalPayloadV2"];
         };
         CorrigirDocumentoRequestV2: {
             correcao: string;
@@ -2271,6 +2300,7 @@ export interface components {
                 municipio?: string;
                 /** @enum {string} */
                 ambiente_fiscal?: "homologacao" | "producao";
+                operacoes_suportadas?: ("emitir" | "consultar" | "consultar_por_rps" | "consultar_lote" | "cancelar" | "substituir" | "baixar_xml" | "baixar_danfse")[];
                 metadados_provedor?: {
                     [key: string]: unknown;
                 };
@@ -2463,6 +2493,9 @@ export interface components {
             chave_documento?: string;
             protocolo?: string;
             ambiente_fiscal?: string;
+            acoes_disponiveis?: components["schemas"]["AcoesDisponiveisDocumentoV2"];
+            politica_eventos_nfse?: components["schemas"]["PoliticaEventosNfseV2"];
+            substituicao?: components["schemas"]["SubstituicaoDocumentoV2"];
             artefatos?: components["schemas"]["ArtefatosDocumentoV2"];
             /** Format: date-time */
             criado_em?: string;
@@ -2552,6 +2585,38 @@ export interface components {
         };
         DocumentOperationEnvelope: {
             dados?: components["schemas"]["DocumentSummaryV2"];
+            metadados?: {
+                [key: string]: unknown;
+            };
+        };
+        AcoesDisponiveisDocumentoV2: {
+            pode_cancelar?: boolean;
+            pode_substituir?: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        PoliticaEventosNfseV2: {
+            codigo?: string;
+            mensagem?: string;
+            /** @enum {string|null} */
+            alternativa?: "substituir" | null;
+        };
+        SubstituicaoDocumentoV2: {
+            /** @enum {string} */
+            situacao?: "pendente" | "concluida" | "falhou";
+            external_id_original?: string | null;
+            external_id_substituta?: string | null;
+            documento_original_id?: string | null;
+            documento_substituto_id?: string | null;
+        };
+        NfseSubstitutionEnvelope: {
+            dados: {
+                documento_original: components["schemas"]["DocumentSummaryV2"];
+                documento_substituto: components["schemas"]["DocumentSummaryV2"];
+                /** @enum {string} */
+                situacao_substituicao: "pendente" | "concluida" | "falhou";
+                replay_idempotente: boolean;
+            };
             metadados?: {
                 [key: string]: unknown;
             };
@@ -2841,6 +2906,15 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["DocumentOperationEnvelope"];
+            };
+        };
+        /** @description Substituição criada ou replay idempotente. */
+        NfseSubstitutionResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["NfseSubstitutionEnvelope"];
             };
         };
         /** @description Lista de perfis de operacao. */
@@ -4563,6 +4637,30 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["DocumentOperationResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    substituirDocumentoV2: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description Identificador externo informado no envelope de criacao. */
+                external_id: components["parameters"]["ExternalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubstituirDocumentoRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["NfseSubstitutionResponse"];
+            202: components["responses"]["NfseSubstitutionResponse"];
+            409: components["responses"]["ErrorResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };
