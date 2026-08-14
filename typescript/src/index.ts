@@ -755,6 +755,57 @@ export interface FiscalContractInfo {
   [key: string]: unknown;
 }
 
+export type NfseNationalParameterResourceV2 =
+  | 'convenio'
+  | 'aliquota'
+  | 'historico-aliquotas'
+  | 'beneficio'
+  | 'regimes-especiais'
+  | 'retencoes';
+
+export interface NfseNationalParameterFiltersV2 {
+  codigo_municipio?: string;
+  codigo_servico?: string;
+  competencia?: string;
+  numero_beneficio?: string;
+  ambiente_fiscal?: FiscalEnvironment;
+  forcar_atualizacao?: boolean;
+}
+
+export interface NfseNationalIssuerCncFiltersV2 {
+  codigo_municipio?: string;
+  inscricao_municipal?: string;
+  ambiente_fiscal?: FiscalEnvironment;
+  forcar_atualizacao?: boolean;
+}
+
+export interface NfseNationalMunicipalityDiagnosticFiltersV2 extends NfseNationalParameterFiltersV2 {
+  inscricao_municipal?: string;
+}
+
+export interface NfseDistributionFiltersV2 {
+  ambiente_fiscal?: FiscalEnvironment;
+  chave?: string;
+  papel?: 'emitente' | 'tomador' | 'intermediario';
+  status?: string;
+  por_pagina?: number;
+}
+
+export interface NfseDistributionDocumentV2 extends Record<string, unknown> {
+  id: number;
+  empresa_id: number;
+  fiscal_environment: FiscalEnvironment;
+  access_key: string;
+  status: 'active' | 'cancelled';
+  event_state?: Record<string, unknown>;
+  events?: Array<Record<string, unknown>>;
+}
+
+export interface NfseDistributionListV2 {
+  data: NfseDistributionDocumentV2[];
+  meta: Record<string, unknown>;
+}
+
 export interface DirectDocumentSubmitRequestV2 {
   external_id: string;
   tipo_documento: DocumentType;
@@ -904,6 +955,24 @@ export interface OperationDocumentSubmitRequestV2 extends OperationDocumentPrevi
   sincrono?: boolean;
 }
 
+export interface CorrectionResendRequestV2 {
+  tipo_documento: 'nfe' | 'nfce';
+  municipio?: string | null;
+  retrato: OperationDocumentRetratoV2;
+  metadados?: Record<string, unknown>;
+}
+
+export interface FiscalDocumentEmissionAttemptV2 extends Record<string, unknown> {
+  id?: string | number;
+  numero?: number;
+  status?: string;
+  codigo_erro?: string | null;
+  erro?: string | null;
+  enfileirada_em?: string | null;
+  iniciada_em?: string | null;
+  finalizada_em?: string | null;
+}
+
 export interface DocumentStatusV2 extends Record<string, unknown> {
   id?: string | number;
   external_id?: string | null;
@@ -921,6 +990,14 @@ export interface DocumentStatusV2 extends Record<string, unknown> {
   mensagem?: string | null;
   motivo_rejeicao?: string | null;
   erros?: unknown;
+  tentativas_emissao?: FiscalDocumentEmissionAttemptV2[];
+  tentativa?: FiscalDocumentEmissionAttemptV2 | null;
+  replay_idempotente?: boolean;
+}
+
+export interface CorrectionResendResponseV2 extends DocumentStatusV2 {
+  tentativa?: FiscalDocumentEmissionAttemptV2 | null;
+  replay_idempotente?: boolean;
 }
 
 export type NfseCancellationReasonV2 = 'erro_emissao' | 'servico_nao_prestado' | 'outros';
@@ -942,6 +1019,52 @@ export interface SubstituteDocumentV2Response extends Record<string, unknown> {
   documento_substituto: DocumentStatusV2;
   situacao_substituicao: 'pendente' | 'concluida' | 'falhou';
   replay_idempotente: boolean;
+}
+
+export interface IbptServiceRequestV2 extends Record<string, unknown> {
+  uf: string;
+  codigo_servico: string;
+  tipo_codigo?: 'nbs' | 'lc116';
+  valor: number;
+  descricao?: string | null;
+  unidade?: string | null;
+  tipo_servico?: 'nacional' | 'importado' | null;
+  importado?: boolean | null;
+}
+
+export interface FiscalOperationPayloadV2 extends Record<string, unknown> {
+  codigo?: string;
+  nome?: string;
+  situacao?: 'ativo' | 'inativo';
+  inicio_vigencia?: string;
+  fim_vigencia?: string | null;
+  escopos_documento?: Array<'nfe' | 'nfce' | 'nfse' | 'cte' | 'mdfe'>;
+  direcao?: 'entrada' | 'saida';
+  metadados?: Record<string, unknown>;
+}
+
+export interface TaxFormulaLineV2 extends Record<string, unknown> {
+  grupo_tributo?: string | null;
+  sequencia: number;
+  condicao?: string | null;
+  campo_destino: string;
+  expressao: string;
+  ativo?: boolean;
+  metadados?: Record<string, unknown>;
+}
+
+export interface TaxFormulaPayloadV2 extends Record<string, unknown> {
+  codigo?: string;
+  nome?: string;
+  contexto?: 'item' | 'nota';
+  tipo_motor?: 'sequential';
+  ativo?: boolean;
+  linhas?: TaxFormulaLineV2[];
+}
+
+export interface TaxFormulaPreviewRequestV2 {
+  dados?: Record<string, unknown>;
+  linhas: TaxFormulaLineV2[];
 }
 
 export interface DocumentListFiltersV2 {
@@ -2236,6 +2359,42 @@ export class NotagilIntegrationClient {
     });
   }
 
+  getNfseNationalParameterizationV2(
+    resource: NfseNationalParameterResourceV2,
+    params: NfseNationalParameterFiltersV2 = {},
+  ): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(
+      this.withQuery(`/nfse/nacional/parametrizacao/${encodeURIComponent(resource)}`, params),
+      { method: 'GET' },
+    );
+  }
+
+  getNfseNationalIssuerCncV2(params: NfseNationalIssuerCncFiltersV2 = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.withQuery('/nfse/nacional/cnc/emitente', params), { method: 'GET' });
+  }
+
+  diagnoseNfseNationalMunicipalityV2(
+    params: NfseNationalMunicipalityDiagnosticFiltersV2 = {},
+  ): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(this.withQuery('/nfse/nacional/diagnostico-municipal', params), { method: 'GET' });
+  }
+
+  syncNfseDistributionV2(payload: { ambiente_fiscal?: FiscalEnvironment } = {}): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/nfse/distribuicao/sincronizar', { method: 'POST', body: payload });
+  }
+
+  listNfseDistributionV2(params: NfseDistributionFiltersV2 = {}): Promise<NfseDistributionListV2> {
+    return this.request<NfseDistributionListV2>(this.withQuery('/nfse/distribuicao', params), { method: 'GET', unwrapData: false });
+  }
+
+  getNfseDistributionXmlV2(documentId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/nfse/distribuicao/${encodeURIComponent(String(documentId))}/xml`, { method: 'GET' });
+  }
+
+  refreshNfseDistributionEventsV2(documentId: string | number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/nfse/distribuicao/${encodeURIComponent(String(documentId))}/atualizar-eventos`, { method: 'POST' });
+  }
+
   createDirectDocumentV2(payload: DirectDocumentSubmitRequestV2, idempotencyKey: string): Promise<DocumentStatusV2> {
     return this.request<DocumentStatusV2>('/direto/documentos', {
       method: 'POST',
@@ -2385,6 +2544,18 @@ export class NotagilIntegrationClient {
         correcao,
         ...(sequencia === undefined ? {} : { sequencia }),
       },
+    });
+  }
+
+  correctAndResendDocumentV2(
+    externalId: string,
+    payload: CorrectionResendRequestV2,
+    idempotencyKey: string,
+  ): Promise<CorrectionResendResponseV2> {
+    return this.request<CorrectionResendResponseV2>(`/documentos/${encodeURIComponent(externalId)}/corrigir-reenviar`, {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
+      body: payload,
     });
   }
 
@@ -2995,6 +3166,10 @@ export class NotagilIntegrationClient {
     return this.request<IbptItemResult>('/fiscal/utilitarios/ibpt', { method: 'POST', body: payload });
   }
 
+  consultIbptServiceV2(payload: IbptServiceRequestV2): Promise<IbptItemResult> {
+    return this.request<IbptItemResult>('/fiscal/utilitarios/ibpt/servico', { method: 'POST', body: payload });
+  }
+
   consultIbptCouponV2(payload: IbptCouponRequest): Promise<IbptCouponResult> {
     return this.request<IbptCouponResult>('/fiscal/utilitarios/ibpt/cupom', { method: 'POST', body: payload });
   }
@@ -3115,6 +3290,22 @@ export class NotagilIntegrationClient {
     return this.request<DeleteResult>(`/tomadores/${encodeURIComponent(String(takerId))}`, { method: 'DELETE' });
   }
 
+  listFiscalOperationsV2(params: { visibilidade?: 'catalogo' | 'resolvido' | 'bruto' } = {}): Promise<FiscalOperationPayloadV2[]> {
+    return this.request<FiscalOperationPayloadV2[]>(this.withQuery('/fiscal/operacoes', params), { method: 'GET' });
+  }
+
+  createFiscalOperationV2(payload: FiscalOperationPayloadV2): Promise<FiscalOperationPayloadV2> {
+    return this.request<FiscalOperationPayloadV2>('/fiscal/operacoes', { method: 'POST', body: payload });
+  }
+
+  updateFiscalOperationV2(operationId: string | number, payload: FiscalOperationPayloadV2): Promise<FiscalOperationPayloadV2> {
+    return this.request<FiscalOperationPayloadV2>(`/fiscal/operacoes/${encodeURIComponent(String(operationId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteFiscalOperationV2(operationId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/fiscal/operacoes/${encodeURIComponent(String(operationId))}`, { method: 'DELETE' });
+  }
+
   listOperationProfilesV2(params: Record<string, string | number | boolean | null | undefined> = {}): Promise<Record<string, unknown>[]> {
     return this.request<Record<string, unknown>[]>(this.withQuery('/fiscal/perfis-operacao', params), { method: 'GET' });
   }
@@ -3161,6 +3352,30 @@ export class NotagilIntegrationClient {
 
   deleteTaxRuleSetV2(taxRuleSetId: string | number): Promise<DeleteResult> {
     return this.request<DeleteResult>(`/fiscal/conjuntos-regras-tributarias/${encodeURIComponent(String(taxRuleSetId))}`, { method: 'DELETE' });
+  }
+
+  listTaxFormulasV2(): Promise<TaxFormulaPayloadV2[]> {
+    return this.request<TaxFormulaPayloadV2[]>('/fiscal/formulas-tributarias', { method: 'GET' });
+  }
+
+  createTaxFormulaV2(payload: TaxFormulaPayloadV2): Promise<TaxFormulaPayloadV2> {
+    return this.request<TaxFormulaPayloadV2>('/fiscal/formulas-tributarias', { method: 'POST', body: payload });
+  }
+
+  previewTaxFormulaV2(payload: TaxFormulaPreviewRequestV2): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/fiscal/formulas-tributarias/previsualizar', { method: 'POST', body: payload });
+  }
+
+  listTaxFormulaVersionsV2(formulaId: string | number): Promise<TaxFormulaPayloadV2[]> {
+    return this.request<TaxFormulaPayloadV2[]>(`/fiscal/formulas-tributarias/${encodeURIComponent(String(formulaId))}/versoes`, { method: 'GET' });
+  }
+
+  updateTaxFormulaV2(formulaId: string | number, payload: TaxFormulaPayloadV2): Promise<TaxFormulaPayloadV2> {
+    return this.request<TaxFormulaPayloadV2>(`/fiscal/formulas-tributarias/${encodeURIComponent(String(formulaId))}`, { method: 'PUT', body: payload });
+  }
+
+  deleteTaxFormulaV2(formulaId: string | number): Promise<DeleteResult> {
+    return this.request<DeleteResult>(`/fiscal/formulas-tributarias/${encodeURIComponent(String(formulaId))}`, { method: 'DELETE' });
   }
 
   listSchedulesV2(): Promise<Record<string, unknown>[]> {

@@ -119,6 +119,41 @@ class NotaAgilClient
         return $this->request('GET', '/contratos/'.rawurlencode($documentType));
     }
 
+    public function nfseNationalParameterizationV2(string $resource, array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/nfse/nacional/parametrizacao/'.rawurlencode($resource), $filters));
+    }
+
+    public function nfseNationalIssuerCncV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/nfse/nacional/cnc/emitente', $filters));
+    }
+
+    public function diagnoseNfseNationalMunicipalityV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/nfse/nacional/diagnostico-municipal', $filters));
+    }
+
+    public function syncNfseDistributionV2(array $payload = []): array
+    {
+        return $this->request('POST', '/nfse/distribuicao/sincronizar', ['json' => $payload]);
+    }
+
+    public function nfseDistributionV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/nfse/distribuicao', $filters), unwrapData: false);
+    }
+
+    public function nfseDistributionXmlV2(string|int $documentId): array
+    {
+        return $this->request('GET', '/nfse/distribuicao/'.rawurlencode((string) $documentId).'/xml');
+    }
+
+    public function refreshNfseDistributionEventsV2(string|int $documentId): array
+    {
+        return $this->request('POST', '/nfse/distribuicao/'.rawurlencode((string) $documentId).'/atualizar-eventos');
+    }
+
     public function createDirectDocumentV2(array $payload, string $idempotencyKey): array
     {
         return $this->request('POST', '/direto/documentos', [
@@ -245,6 +280,14 @@ class NotaAgilClient
             'correcao' => $correcao,
             'sequencia' => $sequencia,
         ], static fn ($value): bool => $value !== null)]);
+    }
+
+    public function correctAndResendDocumentV2(string $externalId, array $payload, string $idempotencyKey): array
+    {
+        return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/corrigir-reenviar', [
+            'json' => $payload,
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
+        ]);
     }
 
     public function document(string $externalId, string|int $companyId): array
@@ -815,6 +858,11 @@ class NotaAgilClient
         return $this->request('POST', '/fiscal/utilitarios/ibpt', ['json' => $payload]);
     }
 
+    public function consultIbptServiceV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/utilitarios/ibpt/servico', ['json' => $payload]);
+    }
+
     public function consultIbptCouponV2(array $payload): array
     {
         return $this->request('POST', '/fiscal/utilitarios/ibpt/cupom', ['json' => $payload]);
@@ -965,6 +1013,26 @@ class NotaAgilClient
         return $this->request('DELETE', '/tomadores/'.rawurlencode((string) $takerId));
     }
 
+    public function fiscalOperationsV2(array $filters = []): array
+    {
+        return $this->request('GET', $this->withQuery('/fiscal/operacoes', $filters));
+    }
+
+    public function createFiscalOperationV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/operacoes', ['json' => $payload]);
+    }
+
+    public function updateFiscalOperationV2(string|int $operationId, array $payload): array
+    {
+        return $this->request('PUT', '/fiscal/operacoes/'.rawurlencode((string) $operationId), ['json' => $payload]);
+    }
+
+    public function deleteFiscalOperationV2(string|int $operationId): array
+    {
+        return $this->request('DELETE', '/fiscal/operacoes/'.rawurlencode((string) $operationId));
+    }
+
     public function operationProfilesV2(array $filters = []): array
     {
         return $this->request('GET', $this->withQuery('/fiscal/perfis-operacao', $filters));
@@ -1023,6 +1091,36 @@ class NotaAgilClient
     public function deleteTaxRuleSetV2(string|int $taxRuleSetId): array
     {
         return $this->request('DELETE', '/fiscal/conjuntos-regras-tributarias/'.rawurlencode((string) $taxRuleSetId));
+    }
+
+    public function taxFormulasV2(): array
+    {
+        return $this->request('GET', '/fiscal/formulas-tributarias');
+    }
+
+    public function createTaxFormulaV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/formulas-tributarias', ['json' => $payload]);
+    }
+
+    public function previewTaxFormulaV2(array $payload): array
+    {
+        return $this->request('POST', '/fiscal/formulas-tributarias/previsualizar', ['json' => $payload]);
+    }
+
+    public function taxFormulaVersionsV2(string|int $formulaId): array
+    {
+        return $this->request('GET', '/fiscal/formulas-tributarias/'.rawurlencode((string) $formulaId).'/versoes');
+    }
+
+    public function updateTaxFormulaV2(string|int $formulaId, array $payload): array
+    {
+        return $this->request('PUT', '/fiscal/formulas-tributarias/'.rawurlencode((string) $formulaId), ['json' => $payload]);
+    }
+
+    public function deleteTaxFormulaV2(string|int $formulaId): array
+    {
+        return $this->request('DELETE', '/fiscal/formulas-tributarias/'.rawurlencode((string) $formulaId));
     }
 
     public function schedulesV2(): array

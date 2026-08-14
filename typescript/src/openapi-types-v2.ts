@@ -55,6 +55,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/nfse/nacional/parametrizacao/{recurso}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Consulta a parametrizacao oficial do municipio de incidencia. HTTP 404 oficial e normalizado como nao_parametrizado; indisponibilidade e distinta de ausencia. */
+        get: operations["consultarParametrizacaoNfseNacionalV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nfse/nacional/cnc/emitente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Valida no CNC a combinacao CNPJ, municipio e IM do emitente e retorna somente sugestoes auditadas; nenhum dado local e atualizado automaticamente. */
+        get: operations["consultarCncEmitenteNfseNacionalV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nfse/nacional/diagnostico-municipal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Consolida parametrizacao municipal no ADN e cadastro do emitente no CNC. Consultas dependentes de campos opcionais retornam nao_consultado sem interromper as demais. */
+        get: operations["diagnosticarMunicipioNfseNacionalV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nfse/distribuicao/sincronizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Consome a distribuicao de Contribuintes por NSU usando o CNPJ do certificado da empresa. */
+        post: operations["sincronizarDistribuicaoNfseNacionalV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nfse/distribuicao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listarDistribuicaoNfseNacionalV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nfse/distribuicao/{documento}/xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["baixarXmlDistribuicaoNfseNacionalV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nfse/distribuicao/{documento}/atualizar-eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["atualizarEventosDistribuicaoNfseNacionalV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/direto/documentos": {
         parameters: {
             query?: never;
@@ -151,7 +267,7 @@ export interface paths {
         /** @description Lista certificados da empresa vinculada ao token. */
         get: operations["listarCertificadosV2"];
         put?: never;
-        /** @description Cria certificado usando nome, nome_arquivo, arquivo_base64 e senha. name, file_name, file_base64 e camelCase sao rejeitados. */
+        /** @description Cria certificado usando nome, nome_arquivo, arquivo_base64 e senha. Quando o certificado for de CPF para uma empresa CNPJ, a primeira tentativa retorna erro em confirmar_documento_divergente; reenvie o mesmo payload com o campo true somente depois da confirmação explícita do usuário. Um CNPJ divergente continua inválido. name, file_name, file_base64 e camelCase sao rejeitados. */
         post: operations["criarCertificadoV2"];
         delete?: never;
         options?: never;
@@ -376,6 +492,23 @@ export interface paths {
         put?: never;
         /** @description Consulta aliquotas IBPT por UF/NCM/EX e calcula tributos aproximados de um item usando somente campos publicos em portugues e snake_case. */
         post: operations["consultarIbptItemV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fiscal/utilitarios/ibpt/servico": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Consulta aliquotas IBPT por UF e codigo de servico da LC 116/NBM e calcula os tributos aproximados do servico. */
+        post: operations["consultarIbptServicoV2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -799,6 +932,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fiscal/operacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lista operacoes fiscais resolvidas para a empresa vinculada ao token. */
+        get: operations["listarOperacoesFiscaisV2"];
+        put?: never;
+        /** @description Cria uma operacao fiscal usando os campos publicos em portugues e snake_case. */
+        post: operations["criarOperacaoFiscalV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fiscal/operacoes/{operacao}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Atualiza a operacao fiscal da empresa vinculada ao token. */
+        put: operations["atualizarOperacaoFiscalV2"];
+        post?: never;
+        /** @description Remove a operacao da empresa ou cria sobrescrita inativa para um padrao global. */
+        delete: operations["excluirOperacaoFiscalV2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/fiscal/perfis-operacao": {
         parameters: {
             query?: never;
@@ -806,10 +975,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Lista perfis de operacao fiscal resolvidos para a empresa vinculada ao token. visibility, code, document_scopes e camelCase sao rejeitados. */
+        /**
+         * @deprecated
+         * @description Alias depreciado. Use `/fiscal/operacoes`; a remocao ocorrera somente na proxima versao principal.
+         */
         get: operations["listarPerfisOperacaoV2"];
         put?: never;
-        /** @description Cria perfil de operacao fiscal usando somente campos publicos em portugues e snake_case. */
+        /**
+         * @deprecated
+         * @description Alias depreciado. Use `/fiscal/operacoes`; a remocao ocorrera somente na proxima versao principal.
+         */
         post: operations["criarPerfilOperacaoV2"];
         delete?: never;
         options?: never;
@@ -825,10 +1000,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** @description Atualiza perfil de operacao fiscal da empresa vinculada ao token. */
+        /**
+         * @deprecated
+         * @description Alias depreciado. Use `/fiscal/operacoes/{operacao}`; a remocao ocorrera somente na proxima versao principal.
+         */
         put: operations["atualizarPerfilOperacaoV2"];
         post?: never;
-        /** @description Remove perfil da empresa ou cria sobrescrita inativa quando o perfil e padrao global. */
+        /**
+         * @deprecated
+         * @description Alias depreciado. Use `/fiscal/operacoes/{operacao}`; a remocao ocorrera somente na proxima versao principal.
+         */
         delete: operations["excluirPerfilOperacaoV2"];
         options?: never;
         head?: never;
@@ -902,6 +1083,73 @@ export interface paths {
         post?: never;
         /** @description Remove conjunto da empresa ou cria sobrescrita inativa quando o conjunto e padrao global. */
         delete: operations["excluirConjuntoRegraTributariaV2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fiscal/formulas-tributarias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lista formulas globais e overrides da empresa. Campos legados em ingles e camelCase sao rejeitados. */
+        get: operations["listarFormulasTributariasV2"];
+        put?: never;
+        post: operations["criarFormulaTributariaV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fiscal/formulas-tributarias/previsualizar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["previsualizarFormulaTributariaV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fiscal/formulas-tributarias/{formula}/versoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listarVersoesFormulaTributariaV2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fiscal/formulas-tributarias/{formula}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Editar um padrao global cria override empresarial e uma nova versao consultavel. */
+        put: operations["atualizarFormulaTributariaV2"];
+        post?: never;
+        /** @description Desativa o override empresarial ou cria override inativo para bloquear heranca global. */
+        delete: operations["excluirFormulaTributariaV2"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1185,7 +1433,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Cria de forma assincrona uma nova NFS-e vinculada à original. Idempotency-Key é obrigatório. */
+        /** @description Cria assincronamente uma nova NFS-e vinculada à original. Idempotency-Key é obrigatório. */
         post: operations["substituirDocumentoV2"];
         delete?: never;
         options?: never;
@@ -1210,10 +1458,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documentos/{external_id}/corrigir-reenviar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Corrige o payload completo de uma NF-e ou NFC-e falha/rejeitada e cria uma nova tentativa auditável sobre a mesma emissão. Requer Idempotency-Key, bloqueia concorrência e concilia estados ambíguos antes de retransmitir. NFS-e não é suportada neste endpoint. */
+        post: operations["corrigirReenviarDocumentoV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        FiscalTag: "SUJEITO_ST" | "MONOFASICO" | "COMBUSTIVEL" | "MEDICAMENTO" | "BEBIDA_FRIA" | "CESTA_BASICA" | "IMPORTADO" | "ISENTO" | "NAO_TRIBUTADO" | "REDUCAO_BASE" | "PRODUCAO_PROPRIA" | "ADQUIRIDO_TERCEIROS" | "USO_CONSUMO" | "ATIVO_IMOBILIZADO" | "SERVICO_ISS" | "USO_INTERNO";
         DirectDocumentRequestV2: {
             external_id: string;
             /** @enum {string} */
@@ -1257,6 +1524,21 @@ export interface components {
             metadados?: {
                 [key: string]: unknown;
             };
+        } | unknown | unknown;
+        MetadadosOperacaoV2: {
+            /** @description Formas de pagamento preservadas na NFC-e. Na ausência da lista, a emissão mantém o fallback compatível em dinheiro. */
+            pagamentos?: components["schemas"]["PagamentoOperacaoV2"][];
+        } & {
+            [key: string]: unknown;
+        };
+        PagamentoOperacaoV2: {
+            /** @description Código tPag oficial. Quando informado, tem precedência sobre nome_meio_pagamento. */
+            codigo_meio_pagamento?: string;
+            /** @description Nome conhecido do meio de pagamento, normalizado sem diferenciar caixa ou acentos. */
+            nome_meio_pagamento?: string;
+            /** @description Obrigatória para código 99 (Outros), salvo quando o nome já o descreve. */
+            descricao?: string | null;
+            valor: number;
         } | unknown | unknown;
         ImportacaoImplantacaoRequestV2: {
             /** @enum {string} */
@@ -1306,6 +1588,27 @@ export interface components {
             tipo_mercadoria?: "nacional" | "importada" | null;
             importado?: boolean | null;
         };
+        IbptServicoRequestV2: {
+            uf: string;
+            /** @description Código NBS ou item da LC 116 aceito pelo IBPT. Pontuação é ignorada e o valor normalizado deve conter de 4 a 20 dígitos. */
+            codigo_servico: string;
+            /**
+             * @description Identifica a classificação para separar corretamente o cache compartilhado.
+             * @default nbs
+             * @enum {string}
+             */
+            tipo_codigo?: "nbs" | "lc116";
+            valor: number;
+            descricao?: string | null;
+            unidade?: string | null;
+            /**
+             * @description Define se a alíquota federal nacional ou importada será utilizada no cálculo. O padrão é nacional.
+             * @enum {string|null}
+             */
+            tipo_servico?: "nacional" | "importado" | null;
+            /** @description Alternativa booleana a tipo_servico; não pode ser conflitante com ele. */
+            importado?: boolean | null;
+        };
         IbptCupomRequestV2: {
             /** @description UF padrao aplicada aos itens que nao informarem UF. */
             uf?: string | null;
@@ -1353,7 +1656,7 @@ export interface components {
             ordem?: number | null;
             tipo_item_default?: string | null;
             natureza_item_default?: string | null;
-            fiscal_tags_default?: unknown[] | null;
+            fiscal_tags_default?: components["schemas"]["FiscalTag"][] | null;
             sku?: string | null;
             descricao_curta?: string | null;
             marca?: string | null;
@@ -1432,8 +1735,9 @@ export interface components {
             /** @description Conteudo do certificado A1 em base64. */
             arquivo_base64: string;
             senha: string;
-            /** @description Confirma a troca atômica de compartilhado para certificado próprio após validar o PFX. */
             usar_como_proprio?: boolean | null;
+            /** @description Confirma que o titular do certificado CPF está autorizado a representar a empresa CNPJ selecionada. Não autoriza certificado de outro CNPJ. */
+            confirmar_documento_divergente?: boolean | null;
         };
         CertificadoOrigemRequestV2: {
             empresa_origem_id: number;
@@ -1534,7 +1838,10 @@ export interface components {
             codigo_classificacao_tributaria?: string | null;
             codigo_classificacao_ibs_cbs?: string | null;
             codigo_tributacao_nacional?: string | null;
+            default_lc116_code?: string | null;
             codigo_nbs?: string | null;
+            /** @description Indicador da operação cIndOp. Opcional para serviços NFS-e. */
+            codigo_indicador_operacao?: string | null;
             cod_classe_tributo?: string | null;
             ipi_classe?: string | null;
             ipi_cod_enquadramento?: string | null;
@@ -1545,7 +1852,7 @@ export interface components {
             codigo_atividade?: string | null;
             substituicao_tributaria_aplicavel?: boolean | null;
             monofasico_aplicavel?: boolean | null;
-            fiscal_tags?: string[] | null;
+            fiscal_tags?: components["schemas"]["FiscalTag"][];
         };
         TomadorRequestV2: {
             /** @enum {string|null} */
@@ -1585,6 +1892,7 @@ export interface components {
             ativo?: boolean | null;
         };
         AtualizarConfiguracaoEmpresaV2: {
+            /** @description Campo legado que aceita CPF com 11 dígitos ou CNPJ com 14 posições. */
             cnpj?: string;
             razao_social?: string;
             nome_fantasia?: string;
@@ -1642,9 +1950,7 @@ export interface components {
             tipo_documento: "nfe" | "nfce" | "nfse";
             municipio?: string;
             retrato: components["schemas"]["RetratoOperacionalRequestV2"];
-            metadados?: {
-                [key: string]: unknown;
-            };
+            metadados?: components["schemas"]["MetadadosOperacaoV2"];
         };
         OperationDocumentRequestV2: {
             external_id: string;
@@ -1658,9 +1964,14 @@ export interface components {
             modo_emissao?: "fila" | "sincrono";
             sincrono?: boolean;
             retrato: components["schemas"]["RetratoOperacionalRequestV2"];
-            metadados?: {
-                [key: string]: unknown;
-            };
+            metadados?: components["schemas"]["MetadadosOperacaoV2"];
+        };
+        CorrectionResendRequestV2: {
+            /** @enum {string} */
+            tipo_documento: "nfe" | "nfce";
+            municipio?: string;
+            retrato: components["schemas"]["RetratoOperacionalRequestV2"];
+            metadados?: components["schemas"]["MetadadosOperacaoV2"];
         };
         /** @description Retrato operacional publico da emissao por operacao. Campos internos em ingles como items, counterparty, document_data, quantity, unit_price e product_id sao rejeitados na v2. */
         RetratoOperacionalRequestV2: {
@@ -1673,13 +1984,35 @@ export interface components {
             dados_documento?: {
                 [key: string]: unknown;
             };
-            tomador?: {
-                [key: string]: unknown;
-            };
+            tomador?: components["schemas"]["TomadorRetratoOperacionalV2"];
             referencias_documento?: {
                 [key: string]: unknown;
             }[];
             itens: components["schemas"]["ItemRetratoOperacionalV2"][];
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description Para NFS-e sem tomador identificado, omita este grupo ou envie somente situacao=nao_informado. A emissão permanece sujeita à política fiscal do provedor, município, competência e serviço. */
+        TomadorRetratoOperacionalV2: {
+            /** @enum {string} */
+            situacao?: "identificado_brasil" | "identificado_exterior" | "nao_informado";
+            nome?: string;
+            documento?: string;
+            tipo_pessoa?: string;
+            inscricao_estadual?: string;
+            inscricao_municipal?: string;
+            /** Format: email */
+            email?: string;
+            telefone?: string;
+            logradouro?: string;
+            numero?: string;
+            complemento?: string;
+            bairro?: string;
+            municipio?: string;
+            uf?: string;
+            cep?: string;
+            codigo_ibge?: string;
+            codigo_municipio?: string;
         } & {
             [key: string]: unknown;
         };
@@ -1709,6 +2042,13 @@ export interface components {
             valor_seguro?: number;
             /** @default 0 */
             valor_outras_despesas?: number;
+            /** @description Quando informado, substitui as tags efetivas do catálogo neste item. */
+            tags_fiscais?: components["schemas"]["FiscalTag"][];
+            /**
+             * @deprecated
+             * @description Alias anterior de tags_fiscais, mantido para compatibilidade.
+             */
+            fiscal_tags?: components["schemas"]["FiscalTag"][];
             /** @description Codigo do item da lista de servicos aplicavel. */
             codigo_servico?: string;
             /** @description Codigo do servico no cadastro municipal. */
@@ -1748,26 +2088,80 @@ export interface components {
             situacao?: "ativo" | "pausado";
             /** @enum {string} */
             ambiente?: "todos" | "homologacao" | "producao";
-            eventos: ("fiscal_document.created" | "fiscal_document.authorized" | "fiscal_document.rejected" | "fiscal_document.cancelled" | "fiscal_document.corrected" | "fiscal_document.substituted" | "fiscal_document.failed" | "inbound_nfe.discovered" | "inbound_nfe.updated" | "inbound_nfe.xml_available" | "inbound_nfe.cancelled" | "inbound_nfe.corrected" | "inbound_nfe.manifested" | "inbound_nfe.event")[];
+            eventos: ("fiscal_document.created" | "fiscal_document.authorized" | "fiscal_document.rejected" | "fiscal_document.cancelled" | "fiscal_document.corrected" | "fiscal_document.substituted" | "fiscal_document.failed" | "inbound_nfe.discovered" | "inbound_nfe.updated" | "inbound_nfe.xml_available" | "inbound_nfe.cancelled" | "inbound_nfe.corrected" | "inbound_nfe.manifested" | "inbound_nfe.event" | "nfse_distribution.document" | "nfse_distribution.event" | "nfse_distribution.sync_failed" | "nfse_distribution.quarantined" | "fiscal_inbound.document" | "fiscal_inbound.event" | "fiscal_inbound.sync_failed" | "fiscal_inbound.quarantined")[];
+        };
+        NfseDistributionEventV2: {
+            id?: string;
+            /** @enum {string} */
+            fiscal_environment?: "homologacao" | "producao";
+            /** @enum {string} */
+            event_code: "e101101" | "e105102" | "e101103" | "e105104" | "e105105" | "e202201" | "e203202" | "e204203" | "e205204" | "e202205" | "e203206" | "e204207" | "e205208" | "e305101" | "e305102" | "e305103";
+            event_code_numeric: string;
+            event_label: string;
+            event_type?: string;
+            /** @enum {string} */
+            category: "cancellation" | "cancellation_review" | "confirmation" | "rejection" | "rejection_annulment" | "official_action" | "official_block";
+            /** @enum {string} */
+            severity: "info" | "warning" | "critical";
+            /** @enum {string} */
+            status_effect: "none" | "cancelled" | "cancellation_pending" | "cancellation_denied" | "event_blocked" | "event_unblocked";
+            actor_role?: string | null;
+            author_document?: string | null;
+            reason_code?: string | null;
+            reason?: string | null;
+            remote_event_id?: string | null;
+            reference_event_id?: string | null;
+            reference_access_key?: string | null;
+            administrative_process?: string | null;
+            /** @enum {string|null} */
+            source?: "distribution_nsu" | "events_endpoint" | null;
+            protocol?: string | null;
+            sequence?: number | null;
+            /** Format: date-time */
+            occurred_at?: string | null;
+        };
+        NfseDistributionEventStateV2: {
+            /** @enum {string} */
+            cancellation?: "active" | "pending_analysis" | "denied" | "cancelled";
+            manifestations?: {
+                [key: string]: string;
+            };
+            blocked_event_codes?: string[];
+            last_event_code?: string | null;
+            /** Format: date-time */
+            last_event_at?: string | null;
+        };
+        NfseDistributionDocumentV2: {
+            id: number;
+            empresa_id: number;
+            /** @enum {string} */
+            fiscal_environment: "homologacao" | "producao";
+            access_key: string;
+            /** @enum {string} */
+            status: "active" | "cancelled";
+            event_state?: components["schemas"]["NfseDistributionEventStateV2"];
+            events?: components["schemas"]["NfseDistributionEventV2"][];
+        } & {
+            [key: string]: unknown;
         };
         FiscalCanonicalPayloadV2: {
             identificacao: components["schemas"]["IdentificacaoFiscalV2"];
             emitente: components["schemas"]["ParteFiscalV2"];
-            tomador: components["schemas"]["ParteFiscalV2"];
-            itens: components["schemas"]["ItemFiscalV2"][];
+            tomador: components["schemas"]["TomadorFiscalV2"];
+            /** @description Obrigatorio para NFe/NFCe e proibido para NFSe V2. */
+            itens?: components["schemas"]["ItemFiscalV2"][];
             servico?: components["schemas"]["ServicoFiscalV2"];
             pagamento?: components["schemas"]["PagamentoFiscalV2"];
             transporte?: components["schemas"]["TransporteFiscalV2"];
             referencias?: components["schemas"]["ReferenciaFiscalV2"][];
             totais?: components["schemas"]["TotaisFiscalV2"];
             impostos?: components["schemas"]["ImpostosFiscalV2"];
-            valores_nfse?: components["schemas"]["ValoresNfseFiscalV2"];
             tributacao?: components["schemas"]["TributacaoNfseFiscalV2"];
             observacoes?: components["schemas"]["ObservacoesFiscalV2"];
             extensoes?: {
                 [key: string]: unknown;
             };
-        };
+        } & (unknown | unknown);
         MatrizFiscalDocumentoV2: {
             /** @enum {string} */
             tipo_documento?: "nfe" | "nfce" | "nfse";
@@ -1809,6 +2203,25 @@ export interface components {
             telefone?: string;
             endereco?: components["schemas"]["EnderecoFiscalV2"];
         };
+        /** @description Para NFS-e sem tomador identificado, envie somente situacao=nao_informado. Por compatibilidade, um objeto vazio ou contendo apenas tipo_pessoa válido também é normalizado para nao_informado. Nos demais casos, informe os dados de identificação aplicáveis. */
+        TomadorFiscalV2: {
+            /** @enum {string} */
+            situacao?: "identificado_brasil" | "identificado_exterior" | "nao_informado";
+            /** @description CPF ou CNPJ da parte fiscal, aceitando pessoa fisica ou juridica no mesmo campo. */
+            cpf_cnpj?: string;
+            /** @description Nome civil ou razao social da parte fiscal. */
+            razao_social?: string;
+            nome_fantasia?: string;
+            /** @enum {string} */
+            tipo_pessoa?: "fisica" | "juridica" | "estrangeiro";
+            inscricao_estadual?: string;
+            inscricao_municipal?: string;
+            crt?: string;
+            /** Format: email */
+            email?: string;
+            telefone?: string;
+            endereco?: components["schemas"]["EnderecoFiscalV2"];
+        };
         EnderecoFiscalV2: {
             logradouro?: string;
             numero?: string;
@@ -1832,29 +2245,19 @@ export interface components {
             impostos?: components["schemas"]["ImpostosFiscalV2"];
         };
         ServicoFiscalV2: {
-            codigo_servico_nacional?: string;
+            codigo_servico_nacional: string;
             codigo_servico_municipal?: string;
-            codigo_nbs?: string;
-            codigo_municipio_prestacao?: string;
-            municipio_prestacao_codigo?: string;
-            descricao?: string;
-        };
-        ValoresNfseFiscalV2: {
-            valor_recebido?: number;
-            desconto_incondicionado?: number;
-            desconto_condicionado?: number;
-            /** @description Informe percentual ou valor, nunca ambos. */
-            deducao_reducao?: {
-                percentual?: number;
-                valor?: number;
-            };
+            codigo_nbs: string;
+            codigo_municipio_prestacao: string;
+            codigo_atividade_simples_nacional?: string;
+            descricao: string;
         };
         TributacaoNfseFiscalV2: {
-            municipal?: components["schemas"]["TributacaoMunicipalNfseFiscalV2"];
+            municipal: components["schemas"]["TributacaoMunicipalNfseFiscalV2"];
             federal?: components["schemas"]["TributacaoFederalNfseFiscalV2"];
             total?: components["schemas"]["TotalTributosNfseFiscalV2"];
             adicionais?: components["schemas"]["AdicionaisIbsCbsNfseFiscalV2"];
-            ibs_cbs?: components["schemas"]["IbsCbsNfseFiscalV2"];
+            ibs_cbs?: components["schemas"]["DeclaracaoIbsCbsNfseFiscalV2"];
         };
         TributacaoMunicipalNfseFiscalV2: {
             tributacao_iss?: string;
@@ -1874,7 +2277,7 @@ export interface components {
              * @description 1=nao retido, 2=retido pelo tomador, 3=retido pelo intermediario.
              * @enum {string}
              */
-            tipo_retencao_iss?: "1" | "2" | "3";
+            tipo_retencao_iss: "1" | "2" | "3";
             aliquota_iss?: number;
             enviar_aliquota_iss?: boolean;
         };
@@ -1910,21 +2313,73 @@ export interface components {
                 municipal?: number;
             };
         };
-        /** @description Campos adicionais de IBS/CBS usados no cabecalho do grupo ibscbs da DPS. */
+        /** @description Campos declarados no cabecalho IBS/CBS da DPS. Ausencias recebem a politica padrao da emissao direta. */
         AdicionaisIbsCbsNfseFiscalV2: {
-            finalidade_nfse?: string;
-            indicador_final?: string;
-            codigo_indicador_operacao?: string;
+            /**
+             * @default 0
+             * @enum {string}
+             */
+            finalidade_nfse?: "0" | "1" | "2";
+            /** @enum {string} */
+            tipo_nfse_debito?: "01" | "02" | "03" | "04" | "05" | "06";
+            /** @enum {string} */
+            tipo_nfse_credito?: "01" | "05";
+            ind_final?: string;
+            /** @default false */
+            uso_consumo_pessoal?: boolean;
+            /**
+             * @description Código vigente do ANEXO_C-INDOP_IBSCBS do leiaute Nacional 1.01.
+             * @default 050101
+             * @enum {string}
+             */
+            codigo_indicador_operacao?: "010101" | "010102" | "010103" | "010104" | "010105" | "010201" | "020101" | "020201" | "020301" | "030101" | "030102" | "030103" | "030104" | "040101" | "050101" | "050102" | "050103" | "050104" | "050201" | "060101" | "070101" | "070102" | "080101" | "090101" | "090102" | "100101" | "100102" | "100201" | "100301" | "100302" | "100401" | "100501" | "100502" | "100601" | "110101" | "110201" | "120101" | "130101" | "130201";
             tipo_operacao?: string;
             referencias_nfse?: string[];
             tipo_ente_governamental?: string;
+            /** @default 0 */
             indicador_destinatario?: string;
             destinatario?: {
                 cpf_cnpj?: string;
                 razao_social?: string;
             };
         };
-        /** @description Layout publico completo de IBS/CBS aceito e persistido. Em NFSe Nacional, a DPS XML atual serializa apenas cst, classe, regular.cst, regular.classe e dif.percentual de ibs_uf, ibs_mun e cbs, por compatibilidade com o XSD local; os grupos NT 009 permanecem parciais ate a troca do XSD. Em NFe/NFCe, o bloco e exigido condicionalmente por CRT, ambiente, data de vigencia RTC ou extensoes.rtc.obrigar_ibs_cbs. */
+        /** @description Declaracao enviada na DPS; bases, aliquotas e valores calculados pertencem somente a resposta/consulta. */
+        DeclaracaoIbsCbsNfseFiscalV2: {
+            /** @default 000 */
+            cst?: string;
+            /** @default 000001 */
+            classe?: string;
+            codigo_credito_presumido?: string;
+            regular?: {
+                cst: string;
+                classe: string;
+            };
+            diferimento?: {
+                percentual_ibs_uf: number;
+                percentual_ibs_municipal: number;
+                percentual_cbs: number;
+            };
+            regime_apuracao_simples_nacional?: string;
+            ajuste?: {
+                valor_ibs: number;
+                valor_cbs: number;
+            };
+            imovel?: {
+                [key: string]: unknown;
+            };
+            /** @description Reservado ao 1.04; bloqueado ate incorporacao do XSD oficial. */
+            bens_moveis?: {
+                [key: string]: unknown;
+            }[];
+            pagamentos_vinculados?: {
+                numero: string;
+                id_transacao: string;
+                tipo_meio_pagamento: string;
+                cnpj_recebedor: string;
+                cnpj_base_psp: string;
+            }[];
+        };
+        /** @description Layout de IBS/CBS de NFe/NFCe, exigido condicionalmente por CRT, ambiente, data de vigencia RTC ou extensoes.rtc.obrigar_ibs_cbs. NFS-e usa DeclaracaoIbsCbsNfseFiscalV2. */
         IbsCbsNfseFiscalV2: {
             cst?: string;
             classe?: string;
@@ -2031,6 +2486,17 @@ export interface components {
             valor_servicos?: number;
             valor_descontos?: number;
             valor_documento?: number;
+            valor_recebido?: number;
+            desconto_incondicionado?: number;
+            desconto_condicionado?: number;
+            deducao_reducao?: {
+                percentual?: number;
+                valor?: number;
+            };
+            /** @description Grupo vAjusteBC exclusivo do perfil Nacional 1.04. */
+            ajuste_base_calculo?: {
+                [key: string]: unknown;
+            };
         };
         ImpostosFiscalV2: {
             icms?: components["schemas"]["TributoFiscalV2"];
@@ -2083,8 +2549,14 @@ export interface components {
             /** @enum {string} */
             motivo_substituicao: "desenquadramento_simples_nacional" | "enquadramento_simples_nacional" | "inclusao_retroativa_imunidade_isencao" | "exclusao_retroativa_imunidade_isencao" | "rejeicao_pelo_tomador_intermediario" | "outros";
             justificativa: string;
-            payload: components["schemas"]["FiscalCanonicalPayloadV2"];
-        };
+            payload?: components["schemas"]["FiscalCanonicalPayloadV2"];
+            codigo_operacao?: string;
+            municipio?: string;
+            retrato?: components["schemas"]["RetratoOperacionalRequestV2"];
+            metadados?: {
+                [key: string]: unknown;
+            };
+        } & (unknown | unknown);
         CorrigirDocumentoRequestV2: {
             correcao: string;
             sequencia?: number;
@@ -2103,7 +2575,7 @@ export interface components {
             id_csc?: string;
             token_csc?: string;
         };
-        PerfilOperacaoFiscalRequestV2: {
+        OperacaoFiscalRequestV2: {
             codigo?: string;
             nome?: string;
             /** @enum {string} */
@@ -2144,7 +2616,7 @@ export interface components {
             };
             permite_sobrescrever_cfop_item?: boolean;
         };
-        PerfilOperacaoFiscalV2: components["schemas"]["PerfilOperacaoFiscalRequestV2"] & {
+        PerfilOperacaoFiscalV2: components["schemas"]["OperacaoFiscalRequestV2"] & {
             id?: string;
             /** @enum {string} */
             escopo?: "padrao_global" | "sobrescrita_empresa";
@@ -2215,7 +2687,7 @@ export interface components {
             };
             operacao?: {
                 ativo?: boolean;
-                perfis_operacao_ids?: number[];
+                operacoes_ids?: number[];
                 /** @enum {string|null} */
                 direcao?: "entrada" | "saida" | null;
                 escopo_territorial?: string | null;
@@ -2235,6 +2707,8 @@ export interface components {
                 codigo_beneficio?: string | null;
                 codigos_classificacao_mercado?: string[];
                 codigos_classificacao_tributaria?: string[];
+                /** @description Todas as tags informadas devem estar presentes no item para a regra corresponder. */
+                fiscal_tags?: components["schemas"]["FiscalTag"][];
             };
         };
         ParteAtivacaoRegraTributariaV2: {
@@ -2265,6 +2739,61 @@ export interface components {
             /** @enum {string} */
             escopo?: "padrao_global" | "sobrescrita_empresa";
             editavel?: boolean;
+        };
+        FormulaTributariaRequestV2: {
+            codigo?: string;
+            nome?: string;
+            /** @enum {string} */
+            contexto?: "item" | "nota";
+            /** @enum {string} */
+            tipo_motor?: "sequential";
+            tributo?: string | null;
+            familia_tributaria?: string | null;
+            perfil_calculo?: string | null;
+            escopos_documento?: ("nfe" | "nfce" | "nfse" | "cte")[];
+            escopos_item?: string[];
+            ativo?: boolean;
+            codigo_versao?: string;
+            /** Format: date */
+            inicio_vigencia?: string;
+            /** Format: date */
+            fim_vigencia?: string | null;
+            variaveis?: {
+                [key: string]: unknown;
+            };
+            requisitos?: {
+                [key: string]: unknown;
+            };
+            arredondamento?: {
+                [key: string]: unknown;
+            };
+            politica_avisos?: {
+                [key: string]: unknown;
+            };
+            metadados?: {
+                [key: string]: unknown;
+            };
+            metadados_versao?: {
+                [key: string]: unknown;
+            };
+            linhas?: components["schemas"]["LinhaFormulaTributariaV2"][];
+        };
+        LinhaFormulaTributariaV2: {
+            grupo_tributo?: string | null;
+            sequencia: number;
+            condicao?: string | null;
+            campo_destino: string;
+            expressao: string;
+            ativo?: boolean;
+            metadados?: {
+                [key: string]: unknown;
+            };
+        };
+        FormulaTributariaPreviewRequestV2: {
+            dados?: {
+                [key: string]: unknown;
+            };
+            linhas: components["schemas"]["LinhaFormulaTributariaV2"][];
         };
         ContratoPublicoFiscalV2: {
             contrato?: string;
@@ -2353,7 +2882,13 @@ export interface components {
             id?: string;
             nome?: string;
             situacao?: string;
+            /** @description Campo legado que contém o CPF ou CNPJ da empresa. */
             cnpj?: string;
+            documento?: string;
+            /** @enum {string} */
+            tipo_documento?: "cpf" | "cnpj";
+            /** @enum {string} */
+            tipo_pessoa?: "pf" | "pj";
             razao_social?: string;
             nome_fantasia?: string;
             email?: string;
@@ -2413,15 +2948,30 @@ export interface components {
             avisos?: {
                 [key: string]: unknown;
             }[];
+            contexto?: {
+                [key: string]: unknown;
+            } | null;
+            explicacoes_itens?: {
+                [key: string]: unknown;
+            }[];
+            explicacao_documento?: {
+                [key: string]: unknown;
+            } | null;
+            totais?: {
+                [key: string]: unknown;
+            };
+            rastro_decisao?: {
+                [key: string]: unknown;
+            }[];
+            auditoria?: {
+                [key: string]: unknown;
+            } | null;
             retrato_previsualizacao?: {
                 [key: string]: unknown;
             } | null;
             resolucao_tributaria?: {
                 [key: string]: unknown;
             } | null;
-            perfis_resolvidos?: {
-                [key: string]: unknown;
-            };
         } & {
             [key: string]: unknown;
         };
@@ -2740,12 +3290,26 @@ export interface components {
             erros?: {
                 [key: string]: unknown;
             };
+            /** @description Pode incluir diagnostico_validacao_xml quando a pre-validacao XSD local de NFSe Nacional falhar, com schema, linha, coluna, campo_provavel e payload_path. */
             detalhes?: {
                 [key: string]: unknown;
             };
         };
     };
     responses: {
+        /** @description Resultado normalizado com status encontrado, nao_parametrizado ou indisponivel e metadados de origem/cache. */
+        NfseNationalMetadataResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    data: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
         /** @description Documento aceito ou replay idempotente. */
         DirectDocumentAcceptedResponse: {
             headers: {
@@ -2918,7 +3482,7 @@ export interface components {
             };
         };
         /** @description Lista de perfis de operacao. */
-        PerfilOperacaoListResponse: {
+        OperacaoFiscalListResponse: {
             headers: {
                 [name: string]: unknown;
             };
@@ -2927,7 +3491,7 @@ export interface components {
             };
         };
         /** @description Perfil de operacao fiscal. */
-        PerfilOperacaoResponse: {
+        OperacaoFiscalResponse: {
             headers: {
                 [name: string]: unknown;
             };
@@ -3041,8 +3605,10 @@ export interface components {
         /** @description Chave idempotente obrigatoria para emissao direta. */
         IdempotencyKey: string;
         PerfilOperacaoId: number;
+        OperacaoFiscalId: number;
         ReferenciaAliquotaId: number;
         ConjuntoRegraId: number;
+        FormulaTributariaId: string;
         /** @description Codigo publico do perfil de operacao fiscal. */
         CodigoOperacao: string;
         AgendamentoId: string;
@@ -3107,6 +3673,204 @@ export interface operations {
         responses: {
             200: components["responses"]["ContractInfoResponse"];
             422: components["responses"]["ErrorResponse"];
+        };
+    };
+    consultarParametrizacaoNfseNacionalV2: {
+        parameters: {
+            query?: {
+                codigo_municipio?: string;
+                codigo_servico?: string;
+                competencia?: string;
+                numero_beneficio?: string;
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+                forcar_atualizacao?: boolean;
+            };
+            header?: never;
+            path: {
+                recurso: "convenio" | "aliquota" | "historico-aliquotas" | "beneficio" | "regimes-especiais" | "retencoes";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["NfseNationalMetadataResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    consultarCncEmitenteNfseNacionalV2: {
+        parameters: {
+            query?: {
+                codigo_municipio?: string;
+                /** @description IM candidata obrigatoria na chave do CNC; quando omitida, usa a configuracao atual da empresa. */
+                inscricao_municipal?: string;
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+                forcar_atualizacao?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["NfseNationalMetadataResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    diagnosticarMunicipioNfseNacionalV2: {
+        parameters: {
+            query?: {
+                /** @description Codigo IBGE do municipio; quando omitido, usa a configuracao da empresa. */
+                codigo_municipio?: string;
+                /** @description Habilita consultas de aliquota, historico e regimes especiais. */
+                codigo_servico?: string;
+                competencia?: string;
+                /** @description Habilita a consulta de beneficio fiscal. */
+                numero_beneficio?: string;
+                /** @description IM de referencia para selecionar a correspondencia no CNC. */
+                inscricao_municipal?: string;
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+                forcar_atualizacao?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Diagnostico com convenio, aliquota, historico, beneficio, regimes especiais, retencoes e CNC do emitente. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    sincronizarDistribuicaoNfseNacionalV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    ambiente_fiscal?: "homologacao" | "producao";
+                };
+            };
+        };
+        responses: {
+            /** @description Lote persistido e cursor atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    listarDistribuicaoNfseNacionalV2: {
+        parameters: {
+            query?: {
+                ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+                chave?: string;
+                papel?: "emitente" | "tomador" | "intermediario";
+                status?: string;
+                por_pagina?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Projecoes de NFS-e recebidas pela distribuicao. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NfseDistributionDocumentV2"][];
+                        meta: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    baixarXmlDistribuicaoNfseNacionalV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documento: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description XML privado descompactado, limitado a 5 MB. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            404: components["responses"]["ErrorResponse"];
+        };
+    };
+    atualizarEventosDistribuicaoNfseNacionalV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documento: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Eventos normalizados, estado fiscal recalculado e contadores de deduplicacao. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            normalization?: {
+                                inserted_or_updated?: number;
+                                ignored_as_duplicate?: number;
+                                document_state?: components["schemas"]["NfseDistributionEventStateV2"];
+                                events?: components["schemas"]["NfseDistributionEventV2"][];
+                            };
+                        } & {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            404: components["responses"]["ErrorResponse"];
         };
     };
     criarDocumentoDiretoV2: {
@@ -3473,6 +4237,33 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["IbptItemRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["GenericResourceResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    consultarIbptServicoV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "uf": "SC",
+                 *       "codigo_servico": "0107",
+                 *       "valor": 500,
+                 *       "descricao": "Suporte tecnico em informatica",
+                 *       "unidade": "UN",
+                 *       "tipo_servico": "nacional"
+                 *     }
+                 */
+                "application/json": components["schemas"]["IbptServicoRequestV2"];
             };
         };
         responses: {
@@ -4073,6 +4864,73 @@ export interface operations {
             422: components["responses"]["ErrorResponse"];
         };
     };
+    listarOperacoesFiscaisV2: {
+        parameters: {
+            query?: {
+                visibilidade?: "catalogo" | "resolvido" | "bruto";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OperacaoFiscalListResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    criarOperacaoFiscalV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperacaoFiscalRequestV2"];
+            };
+        };
+        responses: {
+            201: components["responses"]["OperacaoFiscalResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    atualizarOperacaoFiscalV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operacao: components["parameters"]["OperacaoFiscalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperacaoFiscalRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["OperacaoFiscalResponse"];
+            404: components["responses"]["ErrorResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    excluirOperacaoFiscalV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operacao: components["parameters"]["OperacaoFiscalId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeleteResponse"];
+            404: components["responses"]["ErrorResponse"];
+        };
+    };
     listarPerfisOperacaoV2: {
         parameters: {
             query?: {
@@ -4084,7 +4942,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["PerfilOperacaoListResponse"];
+            200: components["responses"]["OperacaoFiscalListResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };
@@ -4097,11 +4955,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PerfilOperacaoFiscalRequestV2"];
+                "application/json": components["schemas"]["OperacaoFiscalRequestV2"];
             };
         };
         responses: {
-            201: components["responses"]["PerfilOperacaoResponse"];
+            201: components["responses"]["OperacaoFiscalResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };
@@ -4116,11 +4974,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PerfilOperacaoFiscalRequestV2"];
+                "application/json": components["schemas"]["OperacaoFiscalRequestV2"];
             };
         };
         responses: {
-            200: components["responses"]["PerfilOperacaoResponse"];
+            200: components["responses"]["OperacaoFiscalResponse"];
             404: components["responses"]["ErrorResponse"];
             422: components["responses"]["ErrorResponse"];
         };
@@ -4267,6 +5125,102 @@ export interface operations {
             header?: never;
             path: {
                 conjunto_regra: components["parameters"]["ConjuntoRegraId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["DeleteResponse"];
+            404: components["responses"]["ErrorResponse"];
+        };
+    };
+    listarFormulasTributariasV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["GenericCollectionResponse"];
+        };
+    };
+    criarFormulaTributariaV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormulaTributariaRequestV2"];
+            };
+        };
+        responses: {
+            201: components["responses"]["GenericResourceResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    previsualizarFormulaTributariaV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormulaTributariaPreviewRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["GenericResourceResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    listarVersoesFormulaTributariaV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formula: components["parameters"]["FormulaTributariaId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["GenericCollectionResponse"];
+            404: components["responses"]["ErrorResponse"];
+        };
+    };
+    atualizarFormulaTributariaV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formula: components["parameters"]["FormulaTributariaId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormulaTributariaRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["GenericResourceResponse"];
+            404: components["responses"]["ErrorResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    excluirFormulaTributariaV2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formula: components["parameters"]["FormulaTributariaId"];
             };
             cookie?: never;
         };
@@ -4681,6 +5635,30 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["DocumentOperationResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
+    corrigirReenviarDocumentoV2: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description Identificador externo informado no envelope de criacao. */
+                external_id: components["parameters"]["ExternalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectionResendRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["OperationDocumentAcceptedResponse"];
+            202: components["responses"]["OperationDocumentAcceptedResponse"];
+            409: components["responses"]["ErrorResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };

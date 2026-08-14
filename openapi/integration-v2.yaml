@@ -45,6 +45,191 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/ContractInfoResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfse/nacional/parametrizacao/{recurso}:
+    get:
+      tags: [NFSe Nacional]
+      operationId: consultarParametrizacaoNfseNacionalV2
+      description: Consulta a parametrizacao oficial do municipio de incidencia. HTTP 404 oficial e normalizado como nao_parametrizado; indisponibilidade e distinta de ausencia.
+      x-required-scopes: ["fiscal_catalog:read"]
+      parameters:
+        - name: recurso
+          in: path
+          required: true
+          schema: { type: string, enum: [convenio, aliquota, historico-aliquotas, beneficio, regimes-especiais, retencoes] }
+        - name: codigo_municipio
+          in: query
+          schema: { type: string, pattern: "^[0-9]{7}$" }
+        - name: codigo_servico
+          in: query
+          schema: { type: string, maxLength: 20 }
+        - name: competencia
+          in: query
+          schema: { type: string, format: date }
+        - name: numero_beneficio
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - $ref: "#/components/parameters/AmbienteFiscal"
+        - name: forcar_atualizacao
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200": { $ref: "#/components/responses/NfseNationalMetadataResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfse/nacional/cnc/emitente:
+    get:
+      tags: [NFSe Nacional]
+      operationId: consultarCncEmitenteNfseNacionalV2
+      description: Valida no CNC a combinacao CNPJ, municipio e IM do emitente e retorna somente sugestoes auditadas; nenhum dado local e atualizado automaticamente.
+      x-required-scopes: ["configuration:read"]
+      parameters:
+        - name: codigo_municipio
+          in: query
+          schema: { type: string, pattern: "^[0-9]{7}$" }
+        - name: inscricao_municipal
+          in: query
+          description: IM candidata obrigatoria na chave do CNC; quando omitida, usa a configuracao atual da empresa.
+          schema: { type: string, maxLength: 30 }
+        - $ref: "#/components/parameters/AmbienteFiscal"
+        - name: forcar_atualizacao
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200": { $ref: "#/components/responses/NfseNationalMetadataResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfse/nacional/diagnostico-municipal:
+    get:
+      tags: [NFSe Nacional]
+      operationId: diagnosticarMunicipioNfseNacionalV2
+      description: Consolida parametrizacao municipal no ADN e cadastro do emitente no CNC. Consultas dependentes de campos opcionais retornam nao_consultado sem interromper as demais.
+      x-required-scopes: ["configuration:read"]
+      parameters:
+        - name: codigo_municipio
+          in: query
+          description: Codigo IBGE do municipio; quando omitido, usa a configuracao da empresa.
+          schema: { type: string, pattern: "^[0-9]{7}$" }
+        - name: codigo_servico
+          in: query
+          description: Habilita consultas de aliquota, historico e regimes especiais.
+          schema: { type: string, maxLength: 20 }
+        - name: competencia
+          in: query
+          schema: { type: string, format: date }
+        - name: numero_beneficio
+          in: query
+          description: Habilita a consulta de beneficio fiscal.
+          schema: { type: string, maxLength: 80 }
+        - name: inscricao_municipal
+          in: query
+          description: IM de referencia para selecionar a correspondencia no CNC.
+          schema: { type: string, maxLength: 30 }
+        - $ref: "#/components/parameters/AmbienteFiscal"
+        - name: forcar_atualizacao
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Diagnostico com convenio, aliquota, historico, beneficio, regimes especiais, retencoes e CNC do emitente.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [ambiente_fiscal, codigo_municipio, competencia, consultas, resumo]
+                    additionalProperties: true
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfse/distribuicao/sincronizar:
+    post:
+      tags: [NFSe Nacional]
+      operationId: sincronizarDistribuicaoNfseNacionalV2
+      description: Consome a distribuicao de Contribuintes por NSU usando o CNPJ do certificado da empresa.
+      x-required-scopes: ["inbound:write"]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                ambiente_fiscal: { type: string, enum: [homologacao, producao] }
+      responses:
+        "200":
+          description: Lote persistido e cursor atualizado.
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /nfse/distribuicao:
+    get:
+      tags: [NFSe Nacional]
+      operationId: listarDistribuicaoNfseNacionalV2
+      x-required-scopes: ["inbound:read"]
+      parameters:
+        - $ref: "#/components/parameters/AmbienteFiscal"
+        - { name: chave, in: query, schema: { type: string, maxLength: 80 } }
+        - { name: papel, in: query, schema: { type: string, enum: [emitente, tomador, intermediario] } }
+        - { name: status, in: query, schema: { type: string, maxLength: 40 } }
+        - { name: por_pagina, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        "200":
+          description: Projecoes de NFS-e recebidas pela distribuicao.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/NfseDistributionDocumentV2" }
+                  meta: { type: object, additionalProperties: true }
+  /nfse/distribuicao/{documento}/xml:
+    get:
+      tags: [NFSe Nacional]
+      operationId: baixarXmlDistribuicaoNfseNacionalV2
+      x-required-scopes: ["inbound:read"]
+      parameters:
+        - { name: documento, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: XML privado descompactado, limitado a 5 MB.
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /nfse/distribuicao/{documento}/atualizar-eventos:
+    post:
+      tags: [NFSe Nacional]
+      operationId: atualizarEventosDistribuicaoNfseNacionalV2
+      x-required-scopes: ["inbound:write"]
+      parameters:
+        - { name: documento, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Eventos normalizados, estado fiscal recalculado e contadores de deduplicacao.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: true
+                    properties:
+                      normalization:
+                        type: object
+                        properties:
+                          inserted_or_updated: { type: integer }
+                          ignored_as_duplicate: { type: integer }
+                          document_state: { $ref: "#/components/schemas/NfseDistributionEventStateV2" }
+                          events:
+                            type: array
+                            items: { $ref: "#/components/schemas/NfseDistributionEventV2" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
   /direto/documentos:
     post:
       tags: [Documents]
@@ -199,13 +384,6 @@ paths:
                         municipio: Manaus
                         uf: AM
                         cep: "69000000"
-                    itens:
-                      - codigo: SERV-001
-                        descricao: Servico de suporte tecnico
-                        quantidade: 1
-                        valor_unitario: 200
-                        valor_total: 200
-                        unidade: UN
                     servico:
                       codigo_servico_nacional: "140101"
                       codigo_servico_municipal: "0107"
@@ -218,6 +396,14 @@ paths:
                         tipo_retencao_iss: "1"
                         aliquota_iss: 5
                         enviar_aliquota_iss: true
+                      adicionais:
+                        finalidade_nfse: "0"
+                        uso_consumo_pessoal: false
+                        codigo_indicador_operacao: "050101"
+                        indicador_destinatario: "0"
+                      ibs_cbs:
+                        cst: "000"
+                        classe: "000001"
                     totais:
                       valor_servicos: 200
                       valor_documento: 200
@@ -298,7 +484,7 @@ paths:
     post:
       tags: [Certificados]
       operationId: criarCertificadoV2
-      description: Cria certificado usando nome, nome_arquivo, arquivo_base64 e senha. name, file_name, file_base64 e camelCase sao rejeitados.
+      description: Cria certificado usando nome, nome_arquivo, arquivo_base64 e senha. Quando o certificado for de CPF para uma empresa CNPJ, a primeira tentativa retorna erro em confirmar_documento_divergente; reenvie o mesmo payload com o campo true somente depois da confirmação explícita do usuário. Um CNPJ divergente continua inválido. name, file_name, file_base64 e camelCase sao rejeitados.
       x-required-scopes: ["certificates:write"]
       requestBody:
         required: true
@@ -520,6 +706,28 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/IbptItemRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/utilitarios/ibpt/servico:
+    post:
+      tags: [Catalogos Fiscais]
+      operationId: consultarIbptServicoV2
+      description: Consulta aliquotas IBPT por UF e codigo de servico da LC 116/NBM e calcula os tributos aproximados do servico.
+      x-required-scopes: ["fiscal_catalog:read"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IbptServicoRequestV2"
+            example:
+              uf: SC
+              codigo_servico: "0107"
+              valor: 500
+              descricao: Suporte tecnico em informatica
+              unidade: UN
+              tipo_servico: nacional
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
@@ -1120,11 +1328,11 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
-  /fiscal/perfis-operacao:
+  /fiscal/operacoes:
     get:
       tags: [Parametros Fiscais]
-      operationId: listarPerfisOperacaoV2
-      description: Lista perfis de operacao fiscal resolvidos para a empresa vinculada ao token. visibility, code, document_scopes e camelCase sao rejeitados.
+      operationId: listarOperacoesFiscaisV2
+      description: Lista operacoes fiscais resolvidas para a empresa vinculada ao token.
       x-required-scopes: ["fiscal:operations:read"]
       parameters:
         - name: visibilidade
@@ -1134,27 +1342,88 @@ paths:
             enum: [catalogo, resolvido, bruto]
             default: catalogo
       responses:
-        "200": { $ref: "#/components/responses/PerfilOperacaoListResponse" }
+        "200": { $ref: "#/components/responses/OperacaoFiscalListResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
     post:
       tags: [Parametros Fiscais]
-      operationId: criarPerfilOperacaoV2
-      description: Cria perfil de operacao fiscal usando somente campos publicos em portugues e snake_case.
+      operationId: criarOperacaoFiscalV2
+      description: Cria uma operacao fiscal usando os campos publicos em portugues e snake_case.
       x-required-scopes: ["fiscal:operations:write"]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PerfilOperacaoFiscalRequestV2"
+              $ref: "#/components/schemas/OperacaoFiscalRequestV2"
       responses:
-        "201": { $ref: "#/components/responses/PerfilOperacaoResponse" }
+        "201": { $ref: "#/components/responses/OperacaoFiscalResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/operacoes/{operacao}:
+    put:
+      tags: [Parametros Fiscais]
+      operationId: atualizarOperacaoFiscalV2
+      description: Atualiza a operacao fiscal da empresa vinculada ao token.
+      x-required-scopes: ["fiscal:operations:write"]
+      parameters:
+        - $ref: "#/components/parameters/OperacaoFiscalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperacaoFiscalRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/OperacaoFiscalResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Parametros Fiscais]
+      operationId: excluirOperacaoFiscalV2
+      description: Remove a operacao da empresa ou cria sobrescrita inativa para um padrao global.
+      x-required-scopes: ["fiscal:operations:write"]
+      parameters:
+        - $ref: "#/components/parameters/OperacaoFiscalId"
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/perfis-operacao:
+    get:
+      tags: [Parametros Fiscais]
+      operationId: listarPerfisOperacaoV2
+      deprecated: true
+      description: Alias depreciado. Use `/fiscal/operacoes`; a remocao ocorrera somente na proxima versao principal.
+      x-required-scopes: ["fiscal:operations:read"]
+      parameters:
+        - name: visibilidade
+          in: query
+          schema:
+            type: string
+            enum: [catalogo, resolvido, bruto]
+            default: catalogo
+      responses:
+        "200": { $ref: "#/components/responses/OperacaoFiscalListResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    post:
+      tags: [Parametros Fiscais]
+      operationId: criarPerfilOperacaoV2
+      deprecated: true
+      description: Alias depreciado. Use `/fiscal/operacoes`; a remocao ocorrera somente na proxima versao principal.
+      x-required-scopes: ["fiscal:operations:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OperacaoFiscalRequestV2"
+      responses:
+        "201": { $ref: "#/components/responses/OperacaoFiscalResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
   /fiscal/perfis-operacao/{perfil}:
     put:
       tags: [Parametros Fiscais]
       operationId: atualizarPerfilOperacaoV2
-      description: Atualiza perfil de operacao fiscal da empresa vinculada ao token.
+      deprecated: true
+      description: Alias depreciado. Use `/fiscal/operacoes/{operacao}`; a remocao ocorrera somente na proxima versao principal.
       x-required-scopes: ["fiscal:operations:write"]
       parameters:
         - $ref: "#/components/parameters/PerfilOperacaoId"
@@ -1163,15 +1432,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PerfilOperacaoFiscalRequestV2"
+              $ref: "#/components/schemas/OperacaoFiscalRequestV2"
       responses:
-        "200": { $ref: "#/components/responses/PerfilOperacaoResponse" }
+        "200": { $ref: "#/components/responses/OperacaoFiscalResponse" }
         "404": { $ref: "#/components/responses/ErrorResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
     delete:
       tags: [Parametros Fiscais]
       operationId: excluirPerfilOperacaoV2
-      description: Remove perfil da empresa ou cria sobrescrita inativa quando o perfil e padrao global.
+      deprecated: true
+      description: Alias depreciado. Use `/fiscal/operacoes/{operacao}`; a remocao ocorrera somente na proxima versao principal.
       x-required-scopes: ["fiscal:operations:write"]
       parameters:
         - $ref: "#/components/parameters/PerfilOperacaoId"
@@ -1293,6 +1563,76 @@ paths:
       x-required-scopes: ["fiscal:rules:write"]
       parameters:
         - $ref: "#/components/parameters/ConjuntoRegraId"
+      responses:
+        "200": { $ref: "#/components/responses/DeleteResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/formulas-tributarias:
+    get:
+      tags: [Parametros Fiscais]
+      operationId: listarFormulasTributariasV2
+      description: Lista formulas globais e overrides da empresa. Campos legados em ingles e camelCase sao rejeitados.
+      x-required-scopes: ["fiscal:formulas:read", "fiscal:rules:read"]
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+    post:
+      tags: [Parametros Fiscais]
+      operationId: criarFormulaTributariaV2
+      x-required-scopes: ["fiscal:formulas:write", "fiscal:rules:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormulaTributariaRequestV2" }
+      responses:
+        "201": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/formulas-tributarias/previsualizar:
+    post:
+      tags: [Parametros Fiscais]
+      operationId: previsualizarFormulaTributariaV2
+      x-required-scopes: ["fiscal:formulas:write", "fiscal:rules:write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormulaTributariaPreviewRequestV2" }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/formulas-tributarias/{formula}/versoes:
+    get:
+      tags: [Parametros Fiscais]
+      operationId: listarVersoesFormulaTributariaV2
+      x-required-scopes: ["fiscal:formulas:read", "fiscal:rules:read"]
+      parameters:
+        - $ref: "#/components/parameters/FormulaTributariaId"
+      responses:
+        "200": { $ref: "#/components/responses/GenericCollectionResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+  /fiscal/formulas-tributarias/{formula}:
+    put:
+      tags: [Parametros Fiscais]
+      operationId: atualizarFormulaTributariaV2
+      description: Editar um padrao global cria override empresarial e uma nova versao consultavel.
+      x-required-scopes: ["fiscal:formulas:write", "fiscal:rules:write"]
+      parameters:
+        - $ref: "#/components/parameters/FormulaTributariaId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FormulaTributariaRequestV2" }
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
+    delete:
+      tags: [Parametros Fiscais]
+      operationId: excluirFormulaTributariaV2
+      description: Desativa o override empresarial ou cria override inativo para bloquear heranca global.
+      x-required-scopes: ["fiscal:formulas:write", "fiscal:rules:write"]
+      parameters:
+        - $ref: "#/components/parameters/FormulaTributariaId"
       responses:
         "200": { $ref: "#/components/responses/DeleteResponse" }
         "404": { $ref: "#/components/responses/ErrorResponse" }
@@ -1582,7 +1922,7 @@ paths:
     post:
       tags: [Documents]
       operationId: substituirDocumentoV2
-      description: Cria de forma assincrona uma nova NFS-e vinculada à original. Idempotency-Key é obrigatório.
+      description: Cria assincronamente uma nova NFS-e vinculada à original. Idempotency-Key é obrigatório.
       x-required-scopes: ["documents:substitute"]
       parameters:
         - $ref: "#/components/parameters/ExternalId"
@@ -1594,8 +1934,7 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: "#/components/schemas/SubstituirDocumentoRequestV2"
+            schema: { $ref: "#/components/schemas/SubstituirDocumentoRequestV2" }
             examples:
               nfse:
                 summary: Substituição de NFS-e
@@ -1682,6 +2021,29 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/DocumentOperationResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/{external_id}/corrigir-reenviar:
+    post:
+      tags: [Documents]
+      operationId: corrigirReenviarDocumentoV2
+      description: Corrige o payload completo de uma NF-e ou NFC-e falha/rejeitada e cria uma nova tentativa auditável sobre a mesma emissão. Requer Idempotency-Key, bloqueia concorrência e concilia estados ambíguos antes de retransmitir. NFS-e não é suportada neste endpoint.
+      x-required-scopes: ["documents:write"]
+      parameters:
+        - $ref: "#/components/parameters/ExternalId"
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 120 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CorrectionResendRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/OperationDocumentAcceptedResponse" }
+        "202": { $ref: "#/components/responses/OperationDocumentAcceptedResponse" }
+        "409": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
 components:
   securitySchemes:
     bearerAuth:
@@ -1719,6 +2081,11 @@ components:
       in: path
       required: true
       schema: { type: integer }
+    OperacaoFiscalId:
+      name: operacao
+      in: path
+      required: true
+      schema: { type: integer }
     ReferenciaAliquotaId:
       name: referencia
       in: path
@@ -1729,6 +2096,11 @@ components:
       in: path
       required: true
       schema: { type: integer }
+    FormulaTributariaId:
+      name: formula
+      in: path
+      required: true
+      schema: { type: string, maxLength: 120 }
     CodigoOperacao:
       name: codigo_operacao
       in: path
@@ -1746,6 +2118,17 @@ components:
       required: true
       schema: { type: integer }
   responses:
+    NfseNationalMetadataResponse:
+      description: Resultado normalizado com status encontrado, nao_parametrizado ou indisponivel e metadados de origem/cache.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: object
+                additionalProperties: true
     DirectDocumentAcceptedResponse:
       description: Documento aceito ou replay idempotente.
       content:
@@ -1860,13 +2243,13 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/NfseSubstitutionEnvelope"
-    PerfilOperacaoListResponse:
+    OperacaoFiscalListResponse:
       description: Lista de perfis de operacao.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/PerfilOperacaoListEnvelope"
-    PerfilOperacaoResponse:
+    OperacaoFiscalResponse:
       description: Perfil de operacao fiscal.
       content:
         application/json:
@@ -1962,7 +2345,41 @@ components:
               value:
                 mensagem: Emissao sincrona esta disponivel apenas para NFCe.
                 codigo: validation_error
+            nfse_nacional_xsd:
+              summary: NFSe Nacional bloqueada por validacao XSD local
+              value:
+                mensagem: XML DPS nacional invalido para XSD antes do envio.
+                codigo: DPS_XML_SCHEMA_INVALID
+                detalhes:
+                  diagnostico_validacao_xml:
+                    schema: src/Providers/NFSe/Xsd/1.01/DPS_v1.01.xsd
+                    erros:
+                      - tipo: XSD
+                        mensagem: Element cTribNac nao atende ao schema.
+                        linha: 2
+                        coluna: 0
+                        campo_provavel: cTribNac
+                        payload_path: servico.cTribNac
   schemas:
+    FiscalTag:
+      type: string
+      enum:
+        - SUJEITO_ST
+        - MONOFASICO
+        - COMBUSTIVEL
+        - MEDICAMENTO
+        - BEBIDA_FRIA
+        - CESTA_BASICA
+        - IMPORTADO
+        - ISENTO
+        - NAO_TRIBUTADO
+        - REDUCAO_BASE
+        - PRODUCAO_PROPRIA
+        - ADQUIRIDO_TERCEIROS
+        - USO_CONSUMO
+        - ATIVO_IMOBILIZADO
+        - SERVICO_ISS
+        - USO_INTERNO
     DirectDocumentRequestV2:
       type: object
       required: [external_id, tipo_documento, payload]
@@ -2035,6 +2452,37 @@ components:
         metadados:
           type: object
           additionalProperties: true
+    MetadadosOperacaoV2:
+      type: object
+      additionalProperties: true
+      properties:
+        pagamentos:
+          type: array
+          description: Formas de pagamento preservadas na NFC-e. Na ausência da lista, a emissão mantém o fallback compatível em dinheiro.
+          items:
+            $ref: "#/components/schemas/PagamentoOperacaoV2"
+    PagamentoOperacaoV2:
+      type: object
+      required: [valor]
+      anyOf:
+        - required: [codigo_meio_pagamento]
+        - required: [nome_meio_pagamento]
+      properties:
+        codigo_meio_pagamento:
+          type: string
+          pattern: "^[0-9]{2}$"
+          description: Código tPag oficial. Quando informado, tem precedência sobre nome_meio_pagamento.
+        nome_meio_pagamento:
+          type: string
+          description: Nome conhecido do meio de pagamento, normalizado sem diferenciar caixa ou acentos.
+        descricao:
+          type: [string, "null"]
+          minLength: 2
+          maxLength: 60
+          description: Obrigatória para código 99 (Outros), salvo quando o nome já o descreve.
+        valor:
+          type: number
+          minimum: 0
     ImportacaoImplantacaoRequestV2:
       type: object
       required: [tipo_origem]
@@ -2117,6 +2565,34 @@ components:
         importado:
           type: boolean
           nullable: true
+    IbptServicoRequestV2:
+      type: object
+      required: [uf, codigo_servico, valor]
+      additionalProperties: false
+      properties:
+        uf: { type: string, minLength: 2, maxLength: 2 }
+        codigo_servico:
+          type: string
+          minLength: 4
+          maxLength: 30
+          description: Código NBS ou item da LC 116 aceito pelo IBPT. Pontuação é ignorada e o valor normalizado deve conter de 4 a 20 dígitos.
+        tipo_codigo:
+          type: string
+          enum: [nbs, lc116]
+          default: nbs
+          description: Identifica a classificação para separar corretamente o cache compartilhado.
+        valor: { type: number, minimum: 0 }
+        descricao: { type: string, nullable: true }
+        unidade: { type: string, nullable: true }
+        tipo_servico:
+          type: string
+          enum: [nacional, importado]
+          nullable: true
+          description: Define se a alíquota federal nacional ou importada será utilizada no cálculo. O padrão é nacional.
+        importado:
+          type: boolean
+          nullable: true
+          description: Alternativa booleana a tipo_servico; não pode ser conflitante com ele.
     IbptCupomRequestV2:
       type: object
       required: [itens]
@@ -2182,7 +2658,9 @@ components:
         fiscal_tags_default:
           type: array
           nullable: true
-          items: {}
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/FiscalTag"
         sku: { type: string, maxLength: 100, nullable: true }
         descricao_curta: { type: string, maxLength: 255, nullable: true }
         marca: { type: string, maxLength: 100, nullable: true }
@@ -2263,7 +2741,10 @@ components:
         usar_como_proprio:
           type: boolean
           nullable: true
-          description: Confirma a troca atômica de compartilhado para certificado próprio após validar o PFX.
+        confirmar_documento_divergente:
+          type: boolean
+          nullable: true
+          description: Confirma que o titular do certificado CPF está autorizado a representar a empresa CNPJ selecionada. Não autoriza certificado de outro CNPJ.
     CertificadoOrigemRequestV2:
       type: object
       required: [empresa_origem_id]
@@ -2406,7 +2887,13 @@ components:
         codigo_classificacao_tributaria: { type: string, maxLength: 80, nullable: true }
         codigo_classificacao_ibs_cbs: { type: string, maxLength: 80, nullable: true }
         codigo_tributacao_nacional: { type: string, maxLength: 120, nullable: true }
+        default_lc116_code: { type: string, maxLength: 20, nullable: true }
         codigo_nbs: { type: string, maxLength: 120, nullable: true }
+        codigo_indicador_operacao:
+          type: string
+          pattern: '^\d{6}$'
+          nullable: true
+          description: Indicador da operação cIndOp. Opcional para serviços NFS-e.
         cod_classe_tributo: { type: string, maxLength: 20, nullable: true }
         ipi_classe: { type: string, maxLength: 20, nullable: true }
         ipi_cod_enquadramento: { type: string, maxLength: 20, nullable: true }
@@ -2419,8 +2906,9 @@ components:
         monofasico_aplicavel: { type: boolean, nullable: true }
         fiscal_tags:
           type: array
-          nullable: true
-          items: { type: string, maxLength: 60 }
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/FiscalTag"
     TomadorRequestV2:
       type: object
       required: [documento, nome]
@@ -2476,7 +2964,10 @@ components:
       type: object
       additionalProperties: false
       properties:
-        cnpj: { type: string, maxLength: 20 }
+        cnpj:
+          type: string
+          maxLength: 20
+          description: Campo legado que aceita CPF com 11 dígitos ou CNPJ com 14 posições.
         razao_social: { type: string, maxLength: 255 }
         nome_fantasia: { type: string, maxLength: 255 }
         situacao: { type: string, enum: [ativo, inativo] }
@@ -2539,8 +3030,7 @@ components:
         retrato:
           $ref: "#/components/schemas/RetratoOperacionalRequestV2"
         metadados:
-          type: object
-          additionalProperties: true
+          $ref: "#/components/schemas/MetadadosOperacaoV2"
     OperationDocumentRequestV2:
       type: object
       required: [external_id, tipo_documento, retrato]
@@ -2558,8 +3048,18 @@ components:
         retrato:
           $ref: "#/components/schemas/RetratoOperacionalRequestV2"
         metadados:
-          type: object
-          additionalProperties: true
+          $ref: "#/components/schemas/MetadadosOperacaoV2"
+    CorrectionResendRequestV2:
+      type: object
+      required: [tipo_documento, retrato]
+      additionalProperties: false
+      properties:
+        tipo_documento: { type: string, enum: [nfe, nfce] }
+        municipio: { type: string, maxLength: 120 }
+        retrato:
+          $ref: "#/components/schemas/RetratoOperacionalRequestV2"
+        metadados:
+          $ref: "#/components/schemas/MetadadosOperacaoV2"
     RetratoOperacionalRequestV2:
       type: object
       required: [itens]
@@ -2575,8 +3075,7 @@ components:
           type: object
           additionalProperties: true
         tomador:
-          type: object
-          additionalProperties: true
+          $ref: "#/components/schemas/TomadorRetratoOperacionalV2"
         referencias_documento:
           type: array
           items:
@@ -2587,6 +3086,30 @@ components:
           minItems: 1
           items:
             $ref: "#/components/schemas/ItemRetratoOperacionalV2"
+    TomadorRetratoOperacionalV2:
+      type: object
+      additionalProperties: true
+      description: Para NFS-e sem tomador identificado, omita este grupo ou envie somente situacao=nao_informado. A emissão permanece sujeita à política fiscal do provedor, município, competência e serviço.
+      properties:
+        situacao:
+          type: string
+          enum: [identificado_brasil, identificado_exterior, nao_informado]
+        nome: { type: string }
+        documento: { type: string }
+        tipo_pessoa: { type: string }
+        inscricao_estadual: { type: string }
+        inscricao_municipal: { type: string }
+        email: { type: string, format: email }
+        telefone: { type: string }
+        logradouro: { type: string }
+        numero: { type: string }
+        complemento: { type: string }
+        bairro: { type: string }
+        municipio: { type: string }
+        uf: { type: string }
+        cep: { type: string }
+        codigo_ibge: { type: string }
+        codigo_municipio: { type: string }
     ItemRetratoOperacionalV2:
       type: object
       additionalProperties: true
@@ -2609,6 +3132,19 @@ components:
         valor_frete: { type: number, default: 0 }
         valor_seguro: { type: number, default: 0 }
         valor_outras_despesas: { type: number, default: 0 }
+        tags_fiscais:
+          type: array
+          uniqueItems: true
+          description: Quando informado, substitui as tags efetivas do catálogo neste item.
+          items:
+            $ref: "#/components/schemas/FiscalTag"
+        fiscal_tags:
+          type: array
+          uniqueItems: true
+          deprecated: true
+          description: Alias anterior de tags_fiscais, mantido para compatibilidade.
+          items:
+            $ref: "#/components/schemas/FiscalTag"
         codigo_servico: { type: string, description: Codigo do item da lista de servicos aplicavel. }
         codigo_servico_municipal: { type: string, description: Codigo do servico no cadastro municipal. }
         codigo_tributacao_nacional: { type: string, description: Codigo de tributacao nacional da NFS-e. }
@@ -2671,9 +3207,71 @@ components:
               - inbound_nfe.corrected
               - inbound_nfe.manifested
               - inbound_nfe.event
+              - nfse_distribution.document
+              - nfse_distribution.event
+              - nfse_distribution.sync_failed
+              - nfse_distribution.quarantined
+              - fiscal_inbound.document
+              - fiscal_inbound.event
+              - fiscal_inbound.sync_failed
+              - fiscal_inbound.quarantined
+    NfseDistributionEventV2:
+      type: object
+      required: [event_code, event_code_numeric, event_label, category, severity, status_effect]
+      properties:
+        id: { type: string }
+        fiscal_environment: { type: string, enum: [homologacao, producao] }
+        event_code:
+          type: string
+          enum: [e101101, e105102, e101103, e105104, e105105, e202201, e203202, e204203, e205204, e202205, e203206, e204207, e205208, e305101, e305102, e305103]
+        event_code_numeric: { type: string, pattern: '^[0-9]{6}$' }
+        event_label: { type: string }
+        event_type: { type: string }
+        category: { type: string, enum: [cancellation, cancellation_review, confirmation, rejection, rejection_annulment, official_action, official_block] }
+        severity: { type: string, enum: [info, warning, critical] }
+        status_effect: { type: string, enum: [none, cancelled, cancellation_pending, cancellation_denied, event_blocked, event_unblocked] }
+        actor_role: { type: string, nullable: true }
+        author_document: { type: string, nullable: true }
+        reason_code: { type: string, nullable: true }
+        reason: { type: string, nullable: true }
+        remote_event_id: { type: string, nullable: true }
+        reference_event_id: { type: string, nullable: true }
+        reference_access_key: { type: string, nullable: true }
+        administrative_process: { type: string, nullable: true }
+        source: { type: string, nullable: true, enum: [distribution_nsu, events_endpoint] }
+        protocol: { type: string, nullable: true }
+        sequence: { type: integer, nullable: true }
+        occurred_at: { type: string, format: date-time, nullable: true }
+    NfseDistributionEventStateV2:
+      type: object
+      properties:
+        cancellation: { type: string, enum: [active, pending_analysis, denied, cancelled] }
+        manifestations: { type: object, additionalProperties: { type: string } }
+        blocked_event_codes: { type: array, items: { type: string } }
+        last_event_code: { type: string, nullable: true }
+        last_event_at: { type: string, format: date-time, nullable: true }
+    NfseDistributionDocumentV2:
+      type: object
+      required: [id, empresa_id, fiscal_environment, access_key, status]
+      additionalProperties: true
+      properties:
+        id: { type: integer }
+        empresa_id: { type: integer }
+        fiscal_environment: { type: string, enum: [homologacao, producao] }
+        access_key: { type: string }
+        status: { type: string, enum: [active, cancelled] }
+        event_state: { $ref: "#/components/schemas/NfseDistributionEventStateV2" }
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/NfseDistributionEventV2" }
     FiscalCanonicalPayloadV2:
       type: object
-      required: [identificacao, emitente, tomador, itens]
+      required: [identificacao, emitente, tomador]
+      oneOf:
+        - required: [itens]
+        - required: [servico, totais, tributacao]
+          not:
+            required: [itens]
       additionalProperties: false
       properties:
         identificacao:
@@ -2681,9 +3279,10 @@ components:
         emitente:
           $ref: "#/components/schemas/ParteFiscalV2"
         tomador:
-          $ref: "#/components/schemas/ParteFiscalV2"
+          $ref: "#/components/schemas/TomadorFiscalV2"
         itens:
           type: array
+          description: Obrigatorio para NFe/NFCe e proibido para NFSe V2.
           minItems: 1
           items:
             $ref: "#/components/schemas/ItemFiscalV2"
@@ -2701,8 +3300,6 @@ components:
           $ref: "#/components/schemas/TotaisFiscalV2"
         impostos:
           $ref: "#/components/schemas/ImpostosFiscalV2"
-        valores_nfse:
-          $ref: "#/components/schemas/ValoresNfseFiscalV2"
         tributacao:
           $ref: "#/components/schemas/TributacaoNfseFiscalV2"
         observacoes:
@@ -2764,6 +3361,29 @@ components:
         telefone: { type: string }
         endereco:
           $ref: "#/components/schemas/EnderecoFiscalV2"
+    TomadorFiscalV2:
+      type: object
+      additionalProperties: false
+      description: Para NFS-e sem tomador identificado, envie somente situacao=nao_informado. Por compatibilidade, um objeto vazio ou contendo apenas tipo_pessoa válido também é normalizado para nao_informado. Nos demais casos, informe os dados de identificação aplicáveis.
+      properties:
+        situacao:
+          type: string
+          enum: [identificado_brasil, identificado_exterior, nao_informado]
+        cpf_cnpj:
+          type: string
+          description: CPF ou CNPJ da parte fiscal, aceitando pessoa fisica ou juridica no mesmo campo.
+        razao_social:
+          type: string
+          description: Nome civil ou razao social da parte fiscal.
+        nome_fantasia: { type: string }
+        tipo_pessoa: { type: string, enum: [fisica, juridica, estrangeiro] }
+        inscricao_estadual: { type: string }
+        inscricao_municipal: { type: string }
+        crt: { type: string }
+        email: { type: string, format: email }
+        telefone: { type: string }
+        endereco:
+          $ref: "#/components/schemas/EnderecoFiscalV2"
     EnderecoFiscalV2:
       type: object
       additionalProperties: false
@@ -2794,30 +3414,18 @@ components:
           $ref: "#/components/schemas/ImpostosFiscalV2"
     ServicoFiscalV2:
       type: object
+      required: [codigo_servico_nacional, codigo_nbs, codigo_municipio_prestacao, descricao]
       additionalProperties: false
       properties:
         codigo_servico_nacional: { type: string }
         codigo_servico_municipal: { type: string }
         codigo_nbs: { type: string }
         codigo_municipio_prestacao: { type: string }
-        municipio_prestacao_codigo: { type: string }
+        codigo_atividade_simples_nacional: { type: string }
         descricao: { type: string }
-    ValoresNfseFiscalV2:
-      type: object
-      additionalProperties: false
-      properties:
-        valor_recebido: { type: number }
-        desconto_incondicionado: { type: number }
-        desconto_condicionado: { type: number }
-        deducao_reducao:
-          type: object
-          additionalProperties: false
-          description: Informe percentual ou valor, nunca ambos.
-          properties:
-            percentual: { type: number }
-            valor: { type: number }
     TributacaoNfseFiscalV2:
       type: object
+      required: [municipal]
       additionalProperties: false
       properties:
         municipal:
@@ -2829,9 +3437,10 @@ components:
         adicionais:
           $ref: "#/components/schemas/AdicionaisIbsCbsNfseFiscalV2"
         ibs_cbs:
-          $ref: "#/components/schemas/IbsCbsNfseFiscalV2"
+          $ref: "#/components/schemas/DeclaracaoIbsCbsNfseFiscalV2"
     TributacaoMunicipalNfseFiscalV2:
       type: object
+      required: [tipo_retencao_iss]
       additionalProperties: false
       properties:
         tributacao_iss: { type: string }
@@ -2904,27 +3513,122 @@ components:
             municipal: { type: number }
     AdicionaisIbsCbsNfseFiscalV2:
       type: object
-      description: Campos adicionais de IBS/CBS usados no cabecalho do grupo ibscbs da DPS.
+      description: Campos declarados no cabecalho IBS/CBS da DPS. Ausencias recebem a politica padrao da emissao direta.
       additionalProperties: false
       properties:
-        finalidade_nfse: { type: string }
-        indicador_final: { type: string }
-        codigo_indicador_operacao: { type: string }
+        finalidade_nfse: { type: string, enum: ["0", "1", "2"], default: "0" }
+        tipo_nfse_debito: { type: string, enum: ["01", "02", "03", "04", "05", "06"] }
+        tipo_nfse_credito: { type: string, enum: ["01", "05"] }
+        ind_final: { type: string }
+        uso_consumo_pessoal: { type: boolean, default: false }
+        codigo_indicador_operacao:
+          type: string
+          default: "050101"
+          description: Código vigente do ANEXO_C-INDOP_IBSCBS do leiaute Nacional 1.01.
+          enum:
+            - "010101"
+            - "010102"
+            - "010103"
+            - "010104"
+            - "010105"
+            - "010201"
+            - "020101"
+            - "020201"
+            - "020301"
+            - "030101"
+            - "030102"
+            - "030103"
+            - "030104"
+            - "040101"
+            - "050101"
+            - "050102"
+            - "050103"
+            - "050104"
+            - "050201"
+            - "060101"
+            - "070101"
+            - "070102"
+            - "080101"
+            - "090101"
+            - "090102"
+            - "100101"
+            - "100102"
+            - "100201"
+            - "100301"
+            - "100302"
+            - "100401"
+            - "100501"
+            - "100502"
+            - "100601"
+            - "110101"
+            - "110201"
+            - "120101"
+            - "130101"
+            - "130201"
         tipo_operacao: { type: string }
         referencias_nfse:
           type: array
           items: { type: string }
         tipo_ente_governamental: { type: string }
-        indicador_destinatario: { type: string }
+        indicador_destinatario: { type: string, default: "0" }
         destinatario:
           type: object
           additionalProperties: false
           properties:
             cpf_cnpj: { type: string }
             razao_social: { type: string }
+    DeclaracaoIbsCbsNfseFiscalV2:
+      type: object
+      description: Declaracao enviada na DPS; bases, aliquotas e valores calculados pertencem somente a resposta/consulta.
+      additionalProperties: false
+      properties:
+        cst: { type: string, pattern: '^\\d{3}$', default: "000" }
+        classe: { type: string, pattern: '^\\d{6}$', default: "000001" }
+        codigo_credito_presumido: { type: string }
+        regular:
+          type: object
+          required: [cst, classe]
+          additionalProperties: false
+          properties:
+            cst: { type: string, pattern: '^\\d{3}$' }
+            classe: { type: string, pattern: '^\\d{6}$' }
+        diferimento:
+          type: object
+          required: [percentual_ibs_uf, percentual_ibs_municipal, percentual_cbs]
+          additionalProperties: false
+          properties:
+            percentual_ibs_uf: { type: number, minimum: 0, maximum: 100 }
+            percentual_ibs_municipal: { type: number, minimum: 0, maximum: 100 }
+            percentual_cbs: { type: number, minimum: 0, maximum: 100 }
+        regime_apuracao_simples_nacional: { type: string }
+        ajuste:
+          type: object
+          additionalProperties: false
+          required: [valor_ibs, valor_cbs]
+          properties:
+            valor_ibs: { type: number, minimum: 0 }
+            valor_cbs: { type: number, minimum: 0 }
+        imovel: { type: object, additionalProperties: true }
+        bens_moveis:
+          type: array
+          description: Reservado ao 1.04; bloqueado ate incorporacao do XSD oficial.
+          items: { type: object, additionalProperties: true }
+        pagamentos_vinculados:
+          type: array
+          maxItems: 99
+          items:
+            type: object
+            additionalProperties: false
+            required: [numero, id_transacao, tipo_meio_pagamento, cnpj_recebedor, cnpj_base_psp]
+            properties:
+              numero: { type: string }
+              id_transacao: { type: string }
+              tipo_meio_pagamento: { type: string }
+              cnpj_recebedor: { type: string }
+              cnpj_base_psp: { type: string }
     IbsCbsNfseFiscalV2:
       type: object
-      description: Layout publico completo de IBS/CBS aceito e persistido. Em NFSe Nacional, a DPS XML atual serializa apenas cst, classe, regular.cst, regular.classe e dif.percentual de ibs_uf, ibs_mun e cbs, por compatibilidade com o XSD local; os grupos NT 009 permanecem parciais ate a troca do XSD. Em NFe/NFCe, o bloco e exigido condicionalmente por CRT, ambiente, data de vigencia RTC ou extensoes.rtc.obrigar_ibs_cbs.
+      description: Layout de IBS/CBS de NFe/NFCe, exigido condicionalmente por CRT, ambiente, data de vigencia RTC ou extensoes.rtc.obrigar_ibs_cbs. NFS-e usa DeclaracaoIbsCbsNfseFiscalV2.
       additionalProperties: false
       properties:
         cst: { type: string }
@@ -3103,6 +3807,19 @@ components:
         valor_servicos: { type: number }
         valor_descontos: { type: number }
         valor_documento: { type: number }
+        valor_recebido: { type: number }
+        desconto_incondicionado: { type: number }
+        desconto_condicionado: { type: number }
+        deducao_reducao:
+          type: object
+          additionalProperties: false
+          properties:
+            percentual: { type: number }
+            valor: { type: number }
+        ajuste_base_calculo:
+          type: object
+          additionalProperties: true
+          description: Grupo vAjusteBC exclusivo do perfil Nacional 1.04.
     ImpostosFiscalV2:
       type: object
       additionalProperties: false
@@ -3171,15 +3888,23 @@ components:
     SubstituirDocumentoRequestV2:
       type: object
       additionalProperties: false
-      required: [external_id_substituta, motivo_substituicao, justificativa, payload]
+      required: [external_id_substituta, motivo_substituicao, justificativa]
+      oneOf:
+        - required: [payload]
+        - required: [codigo_operacao, retrato]
       properties:
         external_id_substituta: { type: string, maxLength: 120 }
         motivo_substituicao:
           type: string
           enum: [desenquadramento_simples_nacional, enquadramento_simples_nacional, inclusao_retroativa_imunidade_isencao, exclusao_retroativa_imunidade_isencao, rejeicao_pelo_tomador_intermediario, outros]
         justificativa: { type: string, minLength: 15, maxLength: 255 }
-        payload:
-          $ref: "#/components/schemas/FiscalCanonicalPayloadV2"
+        payload: { $ref: "#/components/schemas/FiscalCanonicalPayloadV2" }
+        codigo_operacao: { type: string, maxLength: 80 }
+        municipio: { type: string, maxLength: 120 }
+        retrato: { $ref: "#/components/schemas/RetratoOperacionalRequestV2" }
+        metadados:
+          type: object
+          additionalProperties: true
     CorrigirDocumentoRequestV2:
       type: object
       required: [correcao]
@@ -3226,7 +3951,7 @@ components:
           type: string
           maxLength: 255
           writeOnly: true
-    PerfilOperacaoFiscalRequestV2:
+    OperacaoFiscalRequestV2:
       type: object
       additionalProperties: false
       properties:
@@ -3282,7 +4007,7 @@ components:
         permite_sobrescrever_cfop_item: { type: boolean }
     PerfilOperacaoFiscalV2:
       allOf:
-        - $ref: "#/components/schemas/PerfilOperacaoFiscalRequestV2"
+        - $ref: "#/components/schemas/OperacaoFiscalRequestV2"
         - type: object
           properties:
             id: { type: string }
@@ -3367,7 +4092,7 @@ components:
           additionalProperties: false
           properties:
             ativo: { type: boolean }
-            perfis_operacao_ids:
+            operacoes_ids:
               type: array
               items: { type: integer }
             direcao: { type: string, enum: [entrada, saida], nullable: true }
@@ -3410,6 +4135,12 @@ components:
             codigos_classificacao_tributaria:
               type: array
               items: { type: string }
+            fiscal_tags:
+              type: array
+              uniqueItems: true
+              description: Todas as tags informadas devem estar presentes no item para a regra corresponder.
+              items:
+                $ref: "#/components/schemas/FiscalTag"
     ParteAtivacaoRegraTributariaV2:
       type: object
       additionalProperties: false
@@ -3454,6 +4185,58 @@ components:
             id: { type: string }
             escopo: { type: string, enum: [padrao_global, sobrescrita_empresa] }
             editavel: { type: boolean }
+    FormulaTributariaRequestV2:
+      type: object
+      additionalProperties: false
+      properties:
+        codigo: { type: string, maxLength: 80 }
+        nome: { type: string, maxLength: 255 }
+        contexto: { type: string, enum: [item, nota] }
+        tipo_motor: { type: string, enum: [sequential] }
+        tributo: { type: string, maxLength: 40, nullable: true }
+        familia_tributaria: { type: string, maxLength: 60, nullable: true }
+        perfil_calculo: { type: string, maxLength: 80, nullable: true }
+        escopos_documento:
+          type: array
+          items: { type: string, enum: [nfe, nfce, nfse, cte] }
+        escopos_item:
+          type: array
+          items: { type: string }
+        ativo: { type: boolean }
+        codigo_versao: { type: string, maxLength: 60 }
+        inicio_vigencia: { type: string, format: date }
+        fim_vigencia: { type: string, format: date, nullable: true }
+        variaveis: { type: object, additionalProperties: true }
+        requisitos: { type: object, additionalProperties: true }
+        arredondamento: { type: object, additionalProperties: true }
+        politica_avisos: { type: object, additionalProperties: true }
+        metadados: { type: object, additionalProperties: true }
+        metadados_versao: { type: object, additionalProperties: true }
+        linhas:
+          type: array
+          items: { $ref: "#/components/schemas/LinhaFormulaTributariaV2" }
+    LinhaFormulaTributariaV2:
+      type: object
+      required: [sequencia, campo_destino, expressao]
+      additionalProperties: false
+      properties:
+        grupo_tributo: { type: string, maxLength: 60, nullable: true }
+        sequencia: { type: integer, minimum: 0 }
+        condicao: { type: string, nullable: true }
+        campo_destino: { type: string, maxLength: 120 }
+        expressao: { type: string }
+        ativo: { type: boolean }
+        metadados: { type: object, additionalProperties: true }
+    FormulaTributariaPreviewRequestV2:
+      type: object
+      required: [linhas]
+      additionalProperties: false
+      properties:
+        dados: { type: object, additionalProperties: true }
+        linhas:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/LinhaFormulaTributariaV2" }
     ContratoPublicoFiscalV2:
       type: object
       properties:
@@ -3576,7 +4359,12 @@ components:
         id: { type: string }
         nome: { type: string }
         situacao: { type: string }
-        cnpj: { type: string }
+        cnpj:
+          type: string
+          description: Campo legado que contém o CPF ou CNPJ da empresa.
+        documento: { type: string }
+        tipo_documento: { type: string, enum: [cpf, cnpj] }
+        tipo_pessoa: { type: string, enum: [pf, pj] }
         razao_social: { type: string }
         nome_fantasia: { type: string }
         email: { type: string }
@@ -3642,6 +4430,31 @@ components:
           items:
             type: object
             additionalProperties: true
+        contexto:
+          type: object
+          nullable: true
+          additionalProperties: true
+        explicacoes_itens:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        explicacao_documento:
+          type: object
+          nullable: true
+          additionalProperties: true
+        totais:
+          type: object
+          additionalProperties: true
+        rastro_decisao:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        auditoria:
+          type: object
+          nullable: true
+          additionalProperties: true
         retrato_previsualizacao:
           type: object
           nullable: true
@@ -3649,9 +4462,6 @@ components:
         resolucao_tributaria:
           type: object
           nullable: true
-          additionalProperties: true
-        perfis_resolvidos:
-          type: object
           additionalProperties: true
     AgendamentoV2:
       type: object
@@ -4055,4 +4865,5 @@ components:
           additionalProperties: true
         detalhes:
           type: object
+          description: Pode incluir diagnostico_validacao_xml quando a pre-validacao XSD local de NFSe Nacional falhar, com schema, linha, coluna, campo_provavel e payload_path.
           additionalProperties: true

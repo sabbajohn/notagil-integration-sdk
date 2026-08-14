@@ -196,6 +196,104 @@ final class NotaAgilClientV2Test extends TestCase
         $this->assertStringNotContainsString('"product_id"', $body);
     }
 
+    public function test_v2_correction_resend_uses_same_document_and_idempotency_key(): void
+    {
+        $history = [];
+        $client = NotaAgilClient::v2(
+            token: 'test-token',
+            baseUrl: 'https://api.test/api/v2/integrations',
+            http: $this->http([
+                new Response(202, [], json_encode([
+                    'data' => [
+                        'external_id' => 'pedido/42',
+                        'status_fiscal' => 'pendente',
+                        'replay_idempotente' => false,
+                        'tentativa' => ['id' => '9', 'numero' => 2, 'status' => 'queued'],
+                    ],
+                ], JSON_THROW_ON_ERROR)),
+            ], $history),
+        );
+
+        $result = $client->correctAndResendDocumentV2('pedido/42', [
+            'tipo_documento' => 'nfce',
+            'retrato' => [
+                'ambiente_fiscal' => 'homologacao',
+                'itens' => [[
+                    'descricao' => 'Produto corrigido',
+                    'quantidade' => 1,
+                    'valor_unitario' => 12,
+                    'valor_bruto' => 12,
+                ]],
+            ],
+            'metadados' => ['motivo' => 'correcao_operador'],
+        ], 'idem-resend-2');
+
+        $this->assertSame(2, $result['tentativa']['numero']);
+        $this->assertSame('/api/v2/integrations/documentos/pedido%2F42/corrigir-reenviar', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('POST', $history[0]['request']->getMethod());
+        $this->assertSame('idem-resend-2', $history[0]['request']->getHeaderLine('Idempotency-Key'));
+        $this->assertStringContainsString('"tipo_documento":"nfce"', (string) $history[0]['request']->getBody());
+        $this->assertStringContainsString('"retrato"', (string) $history[0]['request']->getBody());
+    }
+
+    public function test_new_v2_fiscal_surfaces_use_public_portuguese_routes(): void
+    {
+        $history = [];
+        $response = new Response(200, [], json_encode(['data' => ['ok' => true]], JSON_THROW_ON_ERROR));
+        $client = NotaAgilClient::v2(
+            token: 'test-token',
+            baseUrl: 'https://api.test/api/v2/integrations',
+            http: $this->http(array_fill(0, 18, $response), $history),
+        );
+
+        $client->nfseNationalParameterizationV2('aliquota', ['codigo_municipio' => '4209102', 'forcar_atualizacao' => true]);
+        $client->nfseNationalIssuerCncV2(['inscricao_municipal' => '123']);
+        $client->diagnoseNfseNationalMunicipalityV2(['codigo_servico' => '0107']);
+        $client->syncNfseDistributionV2(['ambiente_fiscal' => 'homologacao']);
+        $client->nfseDistributionV2(['papel' => 'tomador', 'por_pagina' => 10]);
+        $client->nfseDistributionXmlV2(7);
+        $client->refreshNfseDistributionEventsV2(7);
+        $client->consultIbptServiceV2(['uf' => 'SC', 'codigo_servico' => '0107', 'valor' => 500]);
+        $client->fiscalOperationsV2(['visibilidade' => 'resolvido']);
+        $client->createFiscalOperationV2(['codigo' => 'VENDA_NOVA', 'nome' => 'Venda nova']);
+        $client->updateFiscalOperationV2(12, ['nome' => 'Venda atualizada']);
+        $client->deleteFiscalOperationV2(12);
+        $client->taxFormulasV2();
+        $client->createTaxFormulaV2(['codigo' => 'ICMS_1', 'linhas' => []]);
+        $client->previewTaxFormulaV2(['dados' => ['valor' => 100], 'linhas' => [['sequencia' => 1, 'campo_destino' => 'icms.valor', 'expressao' => 'valor * 0.18']]]);
+        $client->taxFormulaVersionsV2('ICMS/1');
+        $client->updateTaxFormulaV2('ICMS/1', ['nome' => 'ICMS atualizado']);
+        $client->deleteTaxFormulaV2('ICMS/1');
+
+        $requests = array_map(
+            static fn (array $transaction): string => $transaction['request']->getMethod().' '.$transaction['request']->getUri()->getPath().(
+                $transaction['request']->getUri()->getQuery() !== '' ? '?'.$transaction['request']->getUri()->getQuery() : ''
+            ),
+            $history,
+        );
+
+        $this->assertSame([
+            'GET /api/v2/integrations/nfse/nacional/parametrizacao/aliquota?codigo_municipio=4209102&forcar_atualizacao=1',
+            'GET /api/v2/integrations/nfse/nacional/cnc/emitente?inscricao_municipal=123',
+            'GET /api/v2/integrations/nfse/nacional/diagnostico-municipal?codigo_servico=0107',
+            'POST /api/v2/integrations/nfse/distribuicao/sincronizar',
+            'GET /api/v2/integrations/nfse/distribuicao?papel=tomador&por_pagina=10',
+            'GET /api/v2/integrations/nfse/distribuicao/7/xml',
+            'POST /api/v2/integrations/nfse/distribuicao/7/atualizar-eventos',
+            'POST /api/v2/integrations/fiscal/utilitarios/ibpt/servico',
+            'GET /api/v2/integrations/fiscal/operacoes?visibilidade=resolvido',
+            'POST /api/v2/integrations/fiscal/operacoes',
+            'PUT /api/v2/integrations/fiscal/operacoes/12',
+            'DELETE /api/v2/integrations/fiscal/operacoes/12',
+            'GET /api/v2/integrations/fiscal/formulas-tributarias',
+            'POST /api/v2/integrations/fiscal/formulas-tributarias',
+            'POST /api/v2/integrations/fiscal/formulas-tributarias/previsualizar',
+            'GET /api/v2/integrations/fiscal/formulas-tributarias/ICMS%2F1/versoes',
+            'PUT /api/v2/integrations/fiscal/formulas-tributarias/ICMS%2F1',
+            'DELETE /api/v2/integrations/fiscal/formulas-tributarias/ICMS%2F1',
+        ], $requests);
+    }
+
     public function test_v2_product_methods_use_evolved_contract_and_auxiliary_catalog_paths(): void
     {
         $history = [];

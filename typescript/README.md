@@ -5,7 +5,7 @@ TypeScript beta SDK for the NotaAgil public integration APIs documented in `../o
 See [docs/payload-emissao.md](https://github.com/sabbajohn/notagil-integration-sdk/blob/main/docs/payload-emissao.md) for the normalized fiscal emission payload based on `operation_code` and `snapshot`.
 
 ```bash
-npm install @notagil/integration-sdk@^0.4.1
+npm install @notagil/integration-sdk@^0.4.5
 ```
 
 ```ts
@@ -318,7 +318,7 @@ const directNfse: DirectNfseNacionalSubmitRequest = {
     id: 'nfse-direct-2026-0001',
     tpAmb: 2,
     dhEmi: '2026-05-26T10:00:00-03:00',
-    verAplic: 'sdk-0.4.1',
+    verAplic: 'sdk-0.4.5',
     serie: '1',
     nDPS: '1001',
     dCompet: '2026-05-26',
@@ -441,9 +441,9 @@ await client.createTaxRuleSet(10, {
 ### Cancelamento e substituição de NFS-e
 
 ```ts
-await client.cancelDocumentV2('nfse-original-001', 'Serviço não prestado ao tomador.', 'servico_nao_prestado');
+await v2.cancelDocumentV2('nfse-original-001', 'Serviço não prestado ao tomador.', 'servico_nao_prestado');
 
-await client.substituteDocumentV2('nfse-original-001', {
+await v2.substituteDocumentV2('nfse-original-001', {
   external_id_substituta: 'nfse-substituta-001',
   motivo_substituicao: 'outros',
   justificativa: 'Correção integral dos dados fiscais da NFS-e.',
@@ -452,6 +452,20 @@ await client.substituteDocumentV2('nfse-original-001', {
 ```
 
 O token precisa do escopo `documents:substitute`. A substituição retorna `202`; repetir a mesma requisição e chave idempotente retorna o resultado existente.
+
+### Correcao e reenvio de NF-e/NFC-e
+
+```ts
+const result = await v2.correctAndResendDocumentV2('nfce-rejeitada-001', {
+  tipo_documento: 'nfce',
+  retrato: retratoCorrigido,
+  metadados: { motivo: 'correcao_operador' },
+}, 'nfce-rejeitada-001-tentativa-2');
+
+console.log(result.tentativa, result.replay_idempotente);
+```
+
+O metodo preserva o documento, cria uma tentativa auditavel e requer o escopo `documents:write`. Ele nao aceita NFS-e.
 
 Generate OpenAPI operation types when `openapi-typescript` is installed:
 

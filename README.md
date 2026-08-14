@@ -11,7 +11,7 @@ Use o SDK para cadastrar e consultar empresas, consultar configuracoes fiscais, 
 
 ## Versao Atual
 
-Release atual: `v0.4.1`.
+Release atual: `v0.4.5`.
 
 Principais pontos:
 
@@ -27,7 +27,7 @@ Principais pontos:
 ### PHP
 
 ```sh
-composer require notagil/integration-sdk:^0.4.1
+composer require notagil/integration-sdk:^0.4.5
 ```
 
 O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src`.
@@ -35,7 +35,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ### TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@^0.4.1
+npm install @notagil/integration-sdk@^0.4.5
 ```
 
 O pacote npm e publicado a partir do diretorio `typescript/`.
@@ -304,6 +304,29 @@ await v2.createDocumentByOperationV2(
 
 Em itens de NFS-e por operação, use `tipo_item: 'servico'` e os campos públicos `codigo_servico`, `codigo_servico_municipal`, `codigo_tributacao_nacional`, `codigo_nbs`, `codigo_cnae`, `codigo_atividade`, `codigo_beneficio` e `codigo_indicador_operacao`.
 
+## Correcao e reenvio auditavel v2
+
+Use este fluxo somente para NF-e/NFC-e falha ou rejeitada. Ele preserva o `external_id`, cria uma nova tentativa auditavel e exige uma nova `Idempotency-Key`. NFS-e continua usando cancelamento/substituicao.
+
+```ts
+const reenviado = await v2.correctAndResendDocumentV2(
+  'erp-nfce-9002',
+  {
+    tipo_documento: 'nfce',
+    retrato: {
+      ...retrato,
+      itens: retrato.itens.map((item) => ({ ...item, valor_unitario: 105, valor_bruto: 105 })),
+    },
+    metadados: { motivo: 'correcao_operador' },
+  },
+  'idem-erp-nfce-9002-tentativa-2',
+);
+
+console.log(reenviado.tentativa, reenviado.replay_idempotente);
+```
+
+Os detalhes do documento expõem `tentativas_emissao`. Respostas `409` indicam concorrencia, documento ja autorizado ou estado ambiguo ainda nao conciliado; repetir exatamente a mesma requisicao com a mesma chave retorna o replay idempotente.
+
 ## Emissao Direta v2
 
 Use esse fluxo quando o consumidor ja monta o contrato fiscal publico completo.
@@ -436,7 +459,7 @@ const request: DirectNfseNacionalSubmitRequest = {
     id: 'nfse-direct-2026-0001',
     tpAmb: 2,
     dhEmi: '2026-06-28T10:00:00-03:00',
-    verAplic: 'sdk-0.4.1',
+    verAplic: 'sdk-0.4.5',
     serie: '1',
     nDPS: '1001',
     dCompet: '2026-06-28',
@@ -503,7 +526,7 @@ $payload = [
     'id' => 'nfse-direct-2026-0001',
     'tpAmb' => 2,
     'dhEmi' => '2026-06-28T10:00:00-03:00',
-    'verAplic' => 'sdk-0.4.1',
+    'verAplic' => 'sdk-0.4.5',
     'serie' => '1',
     'nDPS' => '1001',
     'dCompet' => '2026-06-28',
@@ -600,6 +623,13 @@ const cupom = await v2.consultIbptCouponV2({
   itens: [
     { ncm: '84715010', valor: 100 },
   ],
+});
+
+const servico = await v2.consultIbptServiceV2({
+  uf: 'SC',
+  codigo_servico: '0107',
+  tipo_codigo: 'lc116',
+  valor: 500,
 });
 ```
 
@@ -762,11 +792,11 @@ Detalhes do E2E ficam em [docs/e2e-homologacao.md](docs/e2e-homologacao.md).
 2. Atualize `typescript/package.json` e `typescript/package-lock.json`.
 3. Rode as validacoes locais.
 4. Commit na `main`.
-5. Crie uma release/tag semver, por exemplo `v0.4.1`.
+5. Crie uma release/tag semver, por exemplo `v0.4.5`.
 
 ```sh
-git tag v0.4.1
-git push origin main v0.4.1
+git tag v0.4.5
+git push origin main v0.4.5
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o TypeScript no npm quando uma GitHub Release e publicada. Para PHP, o Packagist usa a tag do repositorio `notagil/integration-sdk`.

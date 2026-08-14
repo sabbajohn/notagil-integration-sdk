@@ -70,6 +70,98 @@ test('substituteDocumentV2 sends the standardized body and idempotency key', asy
   assert.match(history[0].input, /\/documentos\/original-1\/substituir$/);
 });
 
+test('correctAndResendDocumentV2 reuses the document identity with a new idempotent attempt', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    baseUrl: 'https://api.test/api/v2/integrations',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      return new Response(JSON.stringify({
+        data: {
+          external_id: 'pedido/42',
+          status_fiscal: 'pendente',
+          replay_idempotente: false,
+          tentativa: { id: '9', numero: 2, status: 'queued' },
+        },
+      }), { status: 202, headers: { 'content-type': 'application/json' } });
+    },
+  });
+
+  const result = await client.correctAndResendDocumentV2('pedido/42', {
+    tipo_documento: 'nfce',
+    retrato: {
+      ambiente_fiscal: 'homologacao',
+      itens: [{ descricao: 'Produto corrigido', quantidade: 1, valor_unitario: 12, valor_bruto: 12 }],
+    },
+    metadados: { motivo: 'correcao_operador' },
+  }, 'idem-resend-2');
+
+  assert.equal(result.tentativa.numero, 2);
+  assert.equal(history[0].input, 'https://api.test/api/v2/integrations/documentos/pedido%2F42/corrigir-reenviar');
+  assert.equal(history[0].init.method, 'POST');
+  assert.equal(history[0].init.headers['Idempotency-Key'], 'idem-resend-2');
+  assert.match(history[0].init.body, /"tipo_documento":"nfce"/);
+  assert.match(history[0].init.body, /"retrato"/);
+});
+
+test('new v2 fiscal surfaces use the public Portuguese routes', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    baseUrl: 'https://api.test/api/v2/integrations',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      const url = new URL(input);
+      const body = url.pathname.endsWith('/nfse/distribuicao')
+        ? { data: [], meta: { total: 0 } }
+        : { data: { ok: true } };
+      return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
+    },
+  });
+
+  await client.getNfseNationalParameterizationV2('aliquota', { codigo_municipio: '4209102', forcar_atualizacao: true });
+  await client.getNfseNationalIssuerCncV2({ inscricao_municipal: '123' });
+  await client.diagnoseNfseNationalMunicipalityV2({ codigo_servico: '0107' });
+  await client.syncNfseDistributionV2({ ambiente_fiscal: 'homologacao' });
+  const distribution = await client.listNfseDistributionV2({ papel: 'tomador', por_pagina: 10 });
+  await client.getNfseDistributionXmlV2(7);
+  await client.refreshNfseDistributionEventsV2(7);
+  await client.consultIbptServiceV2({ uf: 'SC', codigo_servico: '0107', valor: 500 });
+  await client.listFiscalOperationsV2({ visibilidade: 'resolvido' });
+  await client.createFiscalOperationV2({ codigo: 'VENDA_NOVA', nome: 'Venda nova' });
+  await client.updateFiscalOperationV2(12, { nome: 'Venda atualizada' });
+  await client.deleteFiscalOperationV2(12);
+  await client.listTaxFormulasV2();
+  await client.createTaxFormulaV2({ codigo: 'ICMS_1', linhas: [] });
+  await client.previewTaxFormulaV2({ dados: { valor: 100 }, linhas: [{ sequencia: 1, campo_destino: 'icms.valor', expressao: 'valor * 0.18' }] });
+  await client.listTaxFormulaVersionsV2('ICMS/1');
+  await client.updateTaxFormulaV2('ICMS/1', { nome: 'ICMS atualizado' });
+  await client.deleteTaxFormulaV2('ICMS/1');
+
+  assert.equal(distribution.meta.total, 0);
+  assert.deepEqual(history.map(({ input, init }) => `${init.method} ${new URL(input).pathname}${new URL(input).search}`), [
+    'GET /api/v2/integrations/nfse/nacional/parametrizacao/aliquota?codigo_municipio=4209102&forcar_atualizacao=true',
+    'GET /api/v2/integrations/nfse/nacional/cnc/emitente?inscricao_municipal=123',
+    'GET /api/v2/integrations/nfse/nacional/diagnostico-municipal?codigo_servico=0107',
+    'POST /api/v2/integrations/nfse/distribuicao/sincronizar',
+    'GET /api/v2/integrations/nfse/distribuicao?papel=tomador&por_pagina=10',
+    'GET /api/v2/integrations/nfse/distribuicao/7/xml',
+    'POST /api/v2/integrations/nfse/distribuicao/7/atualizar-eventos',
+    'POST /api/v2/integrations/fiscal/utilitarios/ibpt/servico',
+    'GET /api/v2/integrations/fiscal/operacoes?visibilidade=resolvido',
+    'POST /api/v2/integrations/fiscal/operacoes',
+    'PUT /api/v2/integrations/fiscal/operacoes/12',
+    'DELETE /api/v2/integrations/fiscal/operacoes/12',
+    'GET /api/v2/integrations/fiscal/formulas-tributarias',
+    'POST /api/v2/integrations/fiscal/formulas-tributarias',
+    'POST /api/v2/integrations/fiscal/formulas-tributarias/previsualizar',
+    'GET /api/v2/integrations/fiscal/formulas-tributarias/ICMS%2F1/versoes',
+    'PUT /api/v2/integrations/fiscal/formulas-tributarias/ICMS%2F1',
+    'DELETE /api/v2/integrations/fiscal/formulas-tributarias/ICMS%2F1',
+  ]);
+});
+
 test('manifestCompanyInboundNfe alias uses the company-scoped inbound path', async () => {
   const history = [];
   const client = new NotagilIntegrationClient({

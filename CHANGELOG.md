@@ -6,9 +6,16 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as ve
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-08-14
+
+### Added
+- Correcao e reenvio auditavel de NF-e/NFC-e v2 com `correctAndResendDocumentV2`, `Idempotency-Key`, replay e dados da tentativa de emissao.
+- Helpers PHP e TypeScript para parametrizacao/CNC/diagnostico e distribuicao da NFS-e Nacional, IBPT de servico, operacoes fiscais e formulas tributarias.
+
 ### Changed
 - Emissao por operacao v2 alinhada ao contrato publico em portugues: `tipo_documento`, `metadados`, `retrato.itens`, `produto_id`, `quantidade`, `valor_unitario` e `valor_bruto`.
 - OpenAPI v2 e tipos TypeScript gerados sincronizados com a superficie atual do servico, rejeitando aliases publicos em ingles como `items`, `counterparty`, `document_data`, `product_id`, `quantity` e `unit_price`.
+- OpenAPI v2 e tipos gerados sincronizados com as 19 operacoes publicas adicionadas desde a ultima atualizacao do SDK.
 
 ## [0.4.1] - 2026-06-28
 

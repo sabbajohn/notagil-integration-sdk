@@ -7,7 +7,7 @@ Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padr
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:^0.4.1
+composer require notagil/integration-sdk:^0.4.5
 ```
 
 ## Uso Basico
@@ -224,7 +224,7 @@ $payload = [
     'id' => 'nfse-direct-2026-0001',
     'tpAmb' => 2,
     'dhEmi' => '2026-05-26T10:00:00-03:00',
-    'verAplic' => 'sdk-0.4.1',
+    'verAplic' => 'sdk-0.4.5',
     'serie' => '1',
     'nDPS' => '1001',
     'dCompet' => '2026-05-26',
@@ -290,13 +290,13 @@ Para NFSe Nacional, nao envie `prestador.omitirIM`. Informe `prestador.inscricao
 ## Cancelamento e substituicao de NFSe
 
 ```php
-$client->cancelDocumentV2(
+$v2->cancelDocumentV2(
     'nfse-original-001',
     'Servico nao prestado ao tomador.',
     'servico_nao_prestado',
 );
 
-$client->substituteDocumentV2('nfse-original-001', [
+$v2->substituteDocumentV2('nfse-original-001', [
     'external_id_substituta' => 'nfse-substituta-001',
     'motivo_substituicao' => 'outros',
     'justificativa' => 'Correcao integral dos dados fiscais da NFSe.',
@@ -305,6 +305,20 @@ $client->substituteDocumentV2('nfse-original-001', [
 ```
 
 O token precisa do escopo `documents:substitute`. A chave de idempotencia e obrigatoria na substituicao.
+
+## Correcao e reenvio de NF-e/NFC-e
+
+```php
+$result = $v2->correctAndResendDocumentV2('nfce-rejeitada-001', [
+    'tipo_documento' => 'nfce',
+    'retrato' => $retratoCorrigido,
+    'metadados' => ['motivo' => 'correcao_operador'],
+], 'nfce-rejeitada-001-tentativa-2');
+
+var_dump($result['tentativa'] ?? null, $result['replay_idempotente'] ?? false);
+```
+
+O metodo preserva o documento, cria uma tentativa auditavel e requer o escopo `documents:write`. Ele nao aceita NFS-e.
 
 ## Superficies Disponiveis
 
