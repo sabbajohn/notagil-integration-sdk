@@ -1322,6 +1322,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documentos/inutilizacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Inutiliza uma faixa ainda não utilizada de NF-e ou NFC-e na SEFAZ. Requer Idempotency-Key; reenvios idênticos retornam o registro original e conteúdo diferente com a mesma chave retorna conflito. */
+        post: operations["inutilizarNumeracaoDocumentoV2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/documentos/{external_id}": {
         parameters: {
             query?: never;
@@ -1525,11 +1542,20 @@ export interface components {
                 [key: string]: unknown;
             };
         } | unknown | unknown;
+        /** @description Metadados operacionais da integração. Pagamentos pertencem a retrato.pagamentos. */
         MetadadosOperacaoV2: {
-            /** @description Formas de pagamento preservadas na NFC-e. Na ausência da lista, a emissão mantém o fallback compatível em dinheiro. */
-            pagamentos?: components["schemas"]["PagamentoOperacaoV2"][];
-        } & {
             [key: string]: unknown;
+        };
+        /** @description Grupo fiscal de pagamentos aceito somente para NF-e e NFC-e. É rejeitado para NFS-e. */
+        GrupoPagamentosOperacaoV2: {
+            /** @description Total recebido, obrigatoriamente igual à soma dos valores informados em formas. */
+            valor_total: number;
+            /**
+             * @description Troco devolvido ao consumidor e enviado como vTroco no XML da NFC-e.
+             * @default 0
+             */
+            valor_troco?: number;
+            formas: components["schemas"]["PagamentoOperacaoV2"][];
         };
         PagamentoOperacaoV2: {
             /** @description Código tPag oficial. Quando informado, tem precedência sobre nome_meio_pagamento. */
@@ -1988,6 +2014,7 @@ export interface components {
             referencias_documento?: {
                 [key: string]: unknown;
             }[];
+            pagamentos?: components["schemas"]["GrupoPagamentosOperacaoV2"];
             itens: components["schemas"]["ItemRetratoOperacionalV2"][];
         } & {
             [key: string]: unknown;
@@ -2536,6 +2563,20 @@ export interface components {
             /** @default false */
             forcar_consulta_remota?: boolean;
         };
+        InutilizarNumeracaoRequestV2: {
+            external_id: string;
+            /** @enum {string} */
+            tipo_documento: "nfe" | "nfce";
+            /** @enum {string} */
+            ambiente_fiscal: "homologacao" | "producao";
+            /** @description Não pode ser superior ao ano corrente. */
+            ano: number;
+            serie: number;
+            numero_inicial: number;
+            /** @description Deve ser maior ou igual a numero_inicial; a faixa aceita no máximo 1.000 números. */
+            numero_final: number;
+            justificativa: string;
+        };
         CancelarDocumentoRequestV2: {
             /**
              * @default outros
@@ -3038,8 +3079,11 @@ export interface components {
             /** @enum {string} */
             tipo_documento?: "nfe" | "nfce" | "nfse";
             status?: string;
-            status_fiscal?: string;
+            /** @enum {string} */
+            status_fiscal?: "autorizado" | "pendente" | "bloqueado" | "denegado" | "rejeitado" | "cancelado";
             status_operacional?: string;
+            codigo_status?: string | null;
+            motivo_status?: string | null;
             chave_documento?: string;
             protocolo?: string;
             ambiente_fiscal?: string;
@@ -3131,6 +3175,7 @@ export interface components {
             dados?: {
                 documento?: components["schemas"]["DocumentDetailV2"];
                 remoto?: components["schemas"]["ConsultaRemotaDocumentoV2"];
+                consulta?: components["schemas"]["SituacaoConsultaDocumentoV2"];
             };
         };
         DocumentOperationEnvelope: {
@@ -3142,8 +3187,17 @@ export interface components {
         AcoesDisponiveisDocumentoV2: {
             pode_cancelar?: boolean;
             pode_substituir?: boolean;
+            pode_consultar?: boolean;
+            pode_inutilizar?: boolean;
         } & {
             [key: string]: unknown;
+        };
+        SituacaoConsultaDocumentoV2: {
+            /** @enum {string} */
+            situacao: "encontrado" | "nao_encontrado" | "sem_chave" | "indisponivel";
+            chave_consultada?: string | null;
+            /** Format: date-time */
+            realizada_em: string;
         };
         PoliticaEventosNfseV2: {
             codigo?: string;
@@ -5468,6 +5522,27 @@ export interface operations {
             422: components["responses"]["ErrorResponse"];
         };
     };
+    inutilizarNumeracaoDocumentoV2: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Chave idempotente obrigatoria para emissao direta. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InutilizarNumeracaoRequestV2"];
+            };
+        };
+        responses: {
+            200: components["responses"]["GenericResourceResponse"];
+            409: components["responses"]["ErrorResponse"];
+            422: components["responses"]["ErrorResponse"];
+        };
+    };
     obterDocumentoV2: {
         parameters: {
             query?: never;
@@ -5572,6 +5647,7 @@ export interface operations {
         responses: {
             200: components["responses"]["ConsultarDocumentoResponse"];
             422: components["responses"]["ErrorResponse"];
+            503: components["responses"]["ConsultarDocumentoResponse"];
         };
     };
     cancelarDocumentoV2: {

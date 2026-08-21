@@ -105,6 +105,34 @@ test('correctAndResendDocumentV2 reuses the document identity with a new idempot
   assert.match(history[0].init.body, /"retrato"/);
 });
 
+test('invalidateFiscalNumberRangeV2 sends the canonical range and idempotency key', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    baseUrl: 'https://api.test/api/v2/integrations',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      return new Response(JSON.stringify({ dados: { situacao: 'authorized' } }), { status: 200, headers: { 'content-type': 'application/json' } });
+    },
+  });
+
+  const result = await client.invalidateFiscalNumberRangeV2({
+    external_id: 'inutilizacao-pdv-42',
+    tipo_documento: 'nfce',
+    ambiente_fiscal: 'homologacao',
+    ano: 2026,
+    serie: 1,
+    numero_inicial: 42,
+    numero_final: 42,
+    justificativa: 'Falha fiscal confirmada após consulta à SEFAZ.',
+  }, 'idem-inutilizacao-42');
+
+  assert.equal(result.situacao, 'authorized');
+  assert.equal(history[0].input, 'https://api.test/api/v2/integrations/documentos/inutilizacoes');
+  assert.equal(history[0].init.headers['Idempotency-Key'], 'idem-inutilizacao-42');
+  assert.match(history[0].init.body, /"numero_inicial":42/);
+});
+
 test('new v2 fiscal surfaces use the public Portuguese routes', async () => {
   const history = [];
   const client = NotagilIntegrationClient.v2({
@@ -556,6 +584,8 @@ test('normalizeDocumentResponse accepts v2 Portuguese fields', () => {
       numero: '42',
       status_operacional: 'concluido',
       status_fiscal: 'autorizado',
+      codigo_status: '100',
+      motivo_status: 'Autorizado o uso da NFC-e',
       chave_documento: '12345678901234567890123456789012345678901234',
       protocolo: '135260000000001',
       autorizado_em: '2026-06-23T10:30:00-03:00',
@@ -571,6 +601,8 @@ test('normalizeDocumentResponse accepts v2 Portuguese fields', () => {
   assert.equal(normalized.number, '42');
   assert.equal(normalized.operational_status, 'concluido');
   assert.equal(normalized.fiscal_status, 'autorizado');
+  assert.equal(normalized.status_code, '100');
+  assert.equal(normalized.status_reason, 'Autorizado o uso da NFC-e');
   assert.equal(normalized.access_key, '12345678901234567890123456789012345678901234');
   assert.equal(normalized.protocol, '135260000000001');
   assert.equal(normalized.artifacts.xml_available, true);

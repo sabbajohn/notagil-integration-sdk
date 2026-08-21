@@ -11,11 +11,13 @@ Use o SDK para cadastrar e consultar empresas, consultar configuracoes fiscais, 
 
 ## Versao Atual
 
-Release atual: `v0.4.5`.
+Release preparada: `v0.4.6`.
 
 Principais pontos:
 
 - Superficie v2 explicita nos SDKs PHP e TypeScript.
+- Estados fiscais canonicos (`autorizado`, `pendente`, `bloqueado`, `denegado`, `rejeitado` e `cancelado`) com codigo, motivo e acoes disponiveis.
+- Consulta e inutilizacao v2 com `Idempotency-Key` explicita.
 - Helpers para contratos fiscais v2 e builders de emissao direta.
 - Contrato publico recomendado `FiscalCanonicalPayloadV2` para novos terceiros; o contrato direto de NFSe Nacional fica reservado para fluxos internos/controlados.
 - Documentacao de integracao detalhada para fluxos v1/v2.
@@ -27,7 +29,7 @@ Principais pontos:
 ### PHP
 
 ```sh
-composer require notagil/integration-sdk:^0.4.5
+composer require notagil/integration-sdk:^0.4.6
 ```
 
 O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src`.
@@ -35,7 +37,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ### TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@^0.4.5
+npm install @notagil/integration-sdk@^0.4.6
 ```
 
 O pacote npm e publicado a partir do diretorio `typescript/`.
@@ -141,7 +143,35 @@ console.log(contract.contrato);
 7. Aguarde o documento usando `waitDocument`/`waitDocumentV2`.
 8. Normalize a resposta com `normalizeDocumentResponse`.
 9. Baixe XML/PDF quando autorizado.
-10. Em caso de rejeicao, use `rejection_reason`, `errors` e `codigo` para exibir a causa ao operador.
+10. Decida o fluxo por `status_fiscal`, `codigo_status`, `motivo_status` e `acoes_disponiveis`, e nao apenas pelo HTTP.
+
+Uma nota `bloqueado` possui autorizacao incerta e nao deve ser retransmitida automaticamente. Consulte a SEFAZ antes de inutilizar. Somente `301`, `302` e `303` representam denegacao; documento denegado nao pode ser cancelado nem inutilizado.
+
+```php
+$result = $v2->invalidateFiscalNumberRangeV2([
+    'external_id' => 'pdv-inutilizacao-venda-42',
+    'tipo_documento' => 'nfce',
+    'ambiente_fiscal' => 'homologacao',
+    'ano' => 2026,
+    'serie' => 1,
+    'numero_inicial' => 9002,
+    'numero_final' => 9002,
+    'justificativa' => 'Falha de comunicacao impediu concluir a emissao fiscal.',
+], 'pdv-inutilizacao-venda-42');
+```
+
+```ts
+const result = await v2.invalidateFiscalNumberRangeV2({
+  external_id: 'pdv-inutilizacao-venda-42',
+  tipo_documento: 'nfce',
+  ambiente_fiscal: 'homologacao',
+  ano: 2026,
+  serie: 1,
+  numero_inicial: 9002,
+  numero_final: 9002,
+  justificativa: 'Falha de comunicacao impediu concluir a emissao fiscal.',
+}, 'pdv-inutilizacao-venda-42');
+```
 
 ## Emissao por Operacao v1
 

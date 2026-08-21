@@ -6,6 +6,15 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as ve
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-08-21
+
+### Added
+- Inutilizacao idempotente de numeracao NF-e/NFC-e v2 nos clientes PHP e TypeScript.
+- Campos canonicos `codigo_status` e `motivo_status` e estados `bloqueado` e `denegado` nas respostas de documento.
+
+### Changed
+- OpenAPI e normalizadores sincronizados com consulta remota explicita e acoes de consulta/inutilizacao.
+
 ## [0.4.5] - 2026-08-14
 
 ### Added

@@ -982,6 +982,8 @@ export interface DocumentStatusV2 extends Record<string, unknown> {
   numero?: string | number | null;
   status_operacional?: string | null;
   status_fiscal?: string | null;
+  codigo_status?: string | null;
+  motivo_status?: string | null;
   ambiente_fiscal?: FiscalEnvironment | string | null;
   chave_documento?: string | null;
   protocolo?: string | null;
@@ -993,6 +995,17 @@ export interface DocumentStatusV2 extends Record<string, unknown> {
   tentativas_emissao?: FiscalDocumentEmissionAttemptV2[];
   tentativa?: FiscalDocumentEmissionAttemptV2 | null;
   replay_idempotente?: boolean;
+}
+
+export interface InvalidateFiscalNumberRangeV2Request extends Record<string, unknown> {
+  external_id: string;
+  tipo_documento: 'nfe' | 'nfce';
+  ambiente_fiscal: FiscalEnvironment;
+  ano: number;
+  serie: number;
+  numero_inicial: number;
+  numero_final: number;
+  justificativa: string;
 }
 
 export interface CorrectionResendResponseV2 extends DocumentStatusV2 {
@@ -1206,6 +1219,10 @@ export interface DocumentAccepted {
   status_operacional?: string | null;
   fiscal_status?: string | null;
   status_fiscal?: string | null;
+  status_code?: string | null;
+  codigo_status?: string | null;
+  status_reason?: string | null;
+  motivo_status?: string | null;
   fiscal_snapshot_id?: string | number | null;
   resolution_status?: ResolutionStatus | string | null;
   idempotent_replay: boolean;
@@ -1589,6 +1606,8 @@ export function normalizeDocumentResponse<T extends Partial<DocumentAccepted & D
     authorized_at: doc.authorized_at ?? doc.autorizado_em ?? (legacy.autorizado_em as string | undefined) ?? null,
     operational_status: doc.operational_status ?? doc.status_operacional ?? (legacy.status_operacional as string | undefined) ?? null,
     fiscal_status: doc.fiscal_status ?? doc.status_fiscal ?? (legacy.status_fiscal as string | undefined) ?? doc.status ?? null,
+    status_code: doc.status_code ?? doc.codigo_status ?? null,
+    status_reason: doc.status_reason ?? doc.motivo_status ?? null,
     artifacts: doc.artifacts ?? (Object.keys(artefatos).length > 0 ? {
       xml_available: artefatos.xml_disponivel,
       pdf_available: artefatos.pdf_disponivel,
@@ -2518,6 +2537,14 @@ export class NotagilIntegrationClient {
   queryDocumentV2(externalId: string, payload: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(`/documentos/${encodeURIComponent(externalId)}/consultar`, {
       method: 'POST',
+      body: payload,
+    });
+  }
+
+  invalidateFiscalNumberRangeV2(payload: InvalidateFiscalNumberRangeV2Request, idempotencyKey: string): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/documentos/inutilizacoes', {
+      method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
       body: payload,
     });
   }

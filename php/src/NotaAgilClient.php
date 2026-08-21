@@ -259,6 +259,14 @@ class NotaAgilClient
         return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/consultar', ['json' => $payload]);
     }
 
+    public function invalidateFiscalNumberRangeV2(array $payload, string $idempotencyKey): array
+    {
+        return $this->request('POST', '/documentos/inutilizacoes', [
+            'json' => $payload,
+            'headers' => ['Idempotency-Key' => $idempotencyKey],
+        ]);
+    }
+
     public function cancelDocumentV2(string $externalId, string $justificativa, string $motivoCancelamento = 'outros'): array
     {
         return $this->request('POST', '/documentos/'.rawurlencode($externalId).'/cancelar', [
@@ -1232,6 +1240,8 @@ class NotaAgilClient
         $document['authorized_at'] = $document['authorized_at'] ?? ($document['autorizado_em'] ?? ($legacy['autorizado_em'] ?? null));
         $document['operational_status'] = $document['operational_status'] ?? ($document['status_operacional'] ?? ($legacy['status_operacional'] ?? null));
         $document['fiscal_status'] = $document['fiscal_status'] ?? ($document['status_fiscal'] ?? ($legacy['status_fiscal'] ?? ($document['status'] ?? null)));
+        $document['status_code'] = $document['status_code'] ?? ($document['codigo_status'] ?? null);
+        $document['status_reason'] = $document['status_reason'] ?? ($document['motivo_status'] ?? null);
         if (! isset($document['artifacts']) && isset($document['artefatos']) && is_array($document['artefatos'])) {
             $document['artifacts'] = [
                 'xml_available' => $document['artefatos']['xml_disponivel'] ?? null,

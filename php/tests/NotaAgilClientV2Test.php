@@ -378,6 +378,8 @@ final class NotaAgilClientV2Test extends TestCase
                 'numero' => '42',
                 'status_operacional' => 'concluido',
                 'status_fiscal' => 'autorizado',
+                'codigo_status' => '100',
+                'motivo_status' => 'Autorizado o uso da NFC-e',
                 'chave_documento' => '12345678901234567890123456789012345678901234',
                 'protocolo' => '135260000000001',
                 'autorizado_em' => '2026-06-23T10:30:00-03:00',
@@ -393,6 +395,8 @@ final class NotaAgilClientV2Test extends TestCase
         $this->assertSame('1', $normalized['series']);
         $this->assertSame('42', $normalized['number']);
         $this->assertSame('autorizado', $normalized['fiscal_status']);
+        $this->assertSame('100', $normalized['status_code']);
+        $this->assertSame('Autorizado o uso da NFC-e', $normalized['status_reason']);
         $this->assertSame('concluido', $normalized['operational_status']);
         $this->assertSame('12345678901234567890123456789012345678901234', $normalized['access_key']);
         $this->assertSame('135260000000001', $normalized['protocol']);
@@ -451,6 +455,35 @@ final class NotaAgilClientV2Test extends TestCase
 
             throw $exception;
         }
+    }
+
+    public function test_invalidate_fiscal_number_range_v2_sends_canonical_payload_and_idempotency_key(): void
+    {
+        $history = [];
+        $client = NotaAgilClient::v2(
+            token: 'test-token',
+            http: $this->http([
+                new Response(200, [], json_encode(['dados' => ['situacao' => 'authorized']], JSON_THROW_ON_ERROR)),
+            ], $history),
+        );
+        $payload = [
+            'external_id' => 'inutilizacao-pdv-42',
+            'tipo_documento' => 'nfce',
+            'ambiente_fiscal' => 'homologacao',
+            'ano' => 2026,
+            'serie' => 1,
+            'numero_inicial' => 42,
+            'numero_final' => 42,
+            'justificativa' => 'Falha fiscal confirmada após consulta à SEFAZ.',
+        ];
+
+        $this->assertSame(
+            ['situacao' => 'authorized'],
+            $client->invalidateFiscalNumberRangeV2($payload, 'idem-inutilizacao-42'),
+        );
+        $this->assertSame('/api/v2/integrations/documentos/inutilizacoes', $history[0]['request']->getUri()->getPath());
+        $this->assertSame('idem-inutilizacao-42', $history[0]['request']->getHeaderLine('Idempotency-Key'));
+        $this->assertStringContainsString('"numero_inicial":42', (string) $history[0]['request']->getBody());
     }
 
     /**

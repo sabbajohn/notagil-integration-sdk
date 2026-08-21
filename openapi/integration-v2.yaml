@@ -1829,6 +1829,24 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/DocumentListResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
+  /documentos/inutilizacoes:
+    post:
+      tags: [Documents]
+      operationId: inutilizarNumeracaoDocumentoV2
+      description: Inutiliza uma faixa ainda não utilizada de NF-e ou NFC-e na SEFAZ. Requer Idempotency-Key; reenvios idênticos retornam o registro original e conteúdo diferente com a mesma chave retorna conflito.
+      x-required-scopes: ["documents:invalidate"]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InutilizarNumeracaoRequestV2"
+      responses:
+        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "409": { $ref: "#/components/responses/ErrorResponse" }
+        "422": { $ref: "#/components/responses/ErrorResponse" }
   /documentos/{external_id}:
     get:
       tags: [Documents]
@@ -1900,6 +1918,7 @@ paths:
               $ref: "#/components/schemas/ConsultarDocumentoRequestV2"
       responses:
         "200": { $ref: "#/components/responses/ConsultarDocumentoResponse" }
+        "503": { $ref: "#/components/responses/ConsultarDocumentoResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
   /documentos/{external_id}/cancelar:
     post:
@@ -2455,10 +2474,25 @@ components:
     MetadadosOperacaoV2:
       type: object
       additionalProperties: true
+      description: Metadados operacionais da integração. Pagamentos pertencem a retrato.pagamentos.
+    GrupoPagamentosOperacaoV2:
+      type: object
+      additionalProperties: false
+      description: Grupo fiscal de pagamentos aceito somente para NF-e e NFC-e. É rejeitado para NFS-e.
+      required: [valor_total, formas]
       properties:
-        pagamentos:
+        valor_total:
+          type: number
+          minimum: 0
+          description: Total recebido, obrigatoriamente igual à soma dos valores informados em formas.
+        valor_troco:
+          type: number
+          minimum: 0
+          default: 0
+          description: Troco devolvido ao consumidor e enviado como vTroco no XML da NFC-e.
+        formas:
           type: array
-          description: Formas de pagamento preservadas na NFC-e. Na ausência da lista, a emissão mantém o fallback compatível em dinheiro.
+          minItems: 1
           items:
             $ref: "#/components/schemas/PagamentoOperacaoV2"
     PagamentoOperacaoV2:
@@ -3081,6 +3115,8 @@ components:
           items:
             type: object
             additionalProperties: true
+        pagamentos:
+          $ref: "#/components/schemas/GrupoPagamentosOperacaoV2"
         itens:
           type: array
           minItems: 1
@@ -3872,6 +3908,23 @@ components:
         forcar_consulta_remota:
           type: boolean
           default: false
+    InutilizarNumeracaoRequestV2:
+      type: object
+      additionalProperties: false
+      required: [external_id, tipo_documento, ambiente_fiscal, ano, serie, numero_inicial, numero_final, justificativa]
+      properties:
+        external_id: { type: string, maxLength: 120 }
+        tipo_documento: { type: string, enum: [nfe, nfce] }
+        ambiente_fiscal: { type: string, enum: [homologacao, producao] }
+        ano: { type: integer, minimum: 2006, description: Não pode ser superior ao ano corrente. }
+        serie: { type: integer, minimum: 0, maximum: 889 }
+        numero_inicial: { type: integer, minimum: 1, maximum: 999999999 }
+        numero_final:
+          type: integer
+          minimum: 1
+          maximum: 999999999
+          description: Deve ser maior ou igual a numero_inicial; a faixa aceita no máximo 1.000 números.
+        justificativa: { type: string, minLength: 15, maxLength: 255 }
     CancelarDocumentoRequestV2:
       type: object
       required: [justificativa]
@@ -4523,8 +4576,12 @@ components:
         external_id: { type: string }
         tipo_documento: { type: string, enum: [nfe, nfce, nfse] }
         status: { type: string }
-        status_fiscal: { type: string }
+        status_fiscal:
+          type: string
+          enum: [autorizado, pendente, bloqueado, denegado, rejeitado, cancelado]
         status_operacional: { type: string }
+        codigo_status: { type: string, nullable: true }
+        motivo_status: { type: string, nullable: true }
         chave_documento: { type: string }
         protocolo: { type: string }
         ambiente_fiscal: { type: string }
@@ -4638,6 +4695,8 @@ components:
             remoto:
               $ref: "#/components/schemas/ConsultaRemotaDocumentoV2"
               nullable: true
+            consulta:
+              $ref: "#/components/schemas/SituacaoConsultaDocumentoV2"
     DocumentOperationEnvelope:
       type: object
       properties:
@@ -4651,7 +4710,18 @@ components:
       properties:
         pode_cancelar: { type: boolean }
         pode_substituir: { type: boolean }
+        pode_consultar: { type: boolean }
+        pode_inutilizar: { type: boolean }
       additionalProperties: true
+    SituacaoConsultaDocumentoV2:
+      type: object
+      required: [situacao, realizada_em]
+      properties:
+        situacao:
+          type: string
+          enum: [encontrado, nao_encontrado, sem_chave, indisponivel]
+        chave_consultada: { type: string, nullable: true }
+        realizada_em: { type: string, format: date-time }
     PoliticaEventosNfseV2:
       type: object
       properties:
