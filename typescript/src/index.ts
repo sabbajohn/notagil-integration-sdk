@@ -1,3 +1,5 @@
+import type { components as OpenApiComponentsV2 } from './openapi-types-v2.js';
+
 export type DocumentType = 'nfe' | 'nfce' | 'nfse';
 export type ResolutionStatus = 'resolved' | 'review' | 'blocked';
 export type FiscalEnvironment = 'homologacao' | 'producao';
@@ -1089,6 +1091,14 @@ export interface DocumentListFiltersV2 {
   criado_ate?: string;
   por_pagina?: number;
 }
+
+export interface BillingFiltersV2 {
+  mes?: string;
+  data_de?: string;
+  data_ate?: string;
+}
+
+export type BillingV2 = OpenApiComponentsV2['schemas']['CobrancaV2'];
 
 export interface PublicEnvelopeV2<T> {
   dados: T;
@@ -3453,8 +3463,8 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>('/metricas', { method: 'GET' });
   }
 
-  getBillingV2(): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('/cobranca', { method: 'GET' });
+  getBillingV2(filters: BillingFiltersV2 = {}): Promise<BillingV2> {
+    return this.request<BillingV2>(this.withQuery('/cobranca', filters), { method: 'GET' });
   }
 
   static async webhookSignature(secret: string, deliveryId: string, timestamp: string, body: string): Promise<string> {

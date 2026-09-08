@@ -51,6 +51,30 @@ test('createCompanyDocumentByOperation sends bearer token, idempotency key and s
   assert.match(history[0].init.body, /"snapshot"/);
 });
 
+test('getBillingV2 sends the requested billing competence', async () => {
+  const history = [];
+  const client = NotagilIntegrationClient.v2({
+    token: 'test-token',
+    baseUrl: 'https://api.test/api/v2/integrations',
+    fetch: async (input, init) => {
+      history.push({ input, init });
+      return new Response(JSON.stringify({
+        dados: {
+          conta_id: '10',
+          consumo: { documentos_autorizados: 12 },
+          faturamento: { valor_devido: 149.9, moeda: 'BRL' },
+        },
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+    },
+  });
+
+  const billing = await client.getBillingV2({ mes: '2026-09' });
+
+  assert.equal(billing.consumo.documentos_autorizados, 12);
+  assert.equal(history[0].input, 'https://api.test/api/v2/integrations/cobranca?mes=2026-09');
+  assert.equal(history[0].init.method, 'GET');
+});
+
 test('substituteDocumentV2 sends the standardized body and idempotency key', async () => {
   const history = [];
   const client = new NotagilIntegrationClient({

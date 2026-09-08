@@ -81,6 +81,34 @@ final class NotaAgilClientV2Test extends TestCase
         $this->assertSame('/api/v2/integrations/docs', $client->publicSwaggerUrl());
     }
 
+    public function test_billing_v2_accepts_competence_and_custom_period_filters(): void
+    {
+        $history = [];
+        $client = NotaAgilClient::v2(
+            token: 'test-token',
+            http: $this->http([
+                new Response(200, [], json_encode(['dados' => [
+                    'conta_id' => '10',
+                    'consumo' => ['documentos_autorizados' => 12],
+                    'faturamento' => ['valor_devido' => 149.9, 'moeda' => 'BRL'],
+                ]], JSON_THROW_ON_ERROR)),
+                new Response(200, [], json_encode(['dados' => [
+                    'conta_id' => '10',
+                    'consumo' => ['documentos_autorizados' => 3],
+                    'faturamento' => ['valor_devido' => 99.9, 'moeda' => 'BRL'],
+                ]], JSON_THROW_ON_ERROR)),
+            ], $history),
+        );
+
+        $monthly = $client->billingV2(['mes' => '2026-09']);
+        $custom = $client->billingV2(['data_de' => '2026-09-01', 'data_ate' => '2026-09-05']);
+
+        $this->assertSame(12, $monthly['consumo']['documentos_autorizados']);
+        $this->assertSame(99.9, $custom['faturamento']['valor_devido']);
+        $this->assertSame('mes=2026-09', $history[0]['request']->getUri()->getQuery());
+        $this->assertSame('data_de=2026-09-01&data_ate=2026-09-05', $history[1]['request']->getUri()->getQuery());
+    }
+
     public function test_v2_document_methods_use_portuguese_companyless_contract(): void
     {
         $history = [];

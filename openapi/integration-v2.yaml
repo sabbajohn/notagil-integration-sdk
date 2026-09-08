@@ -1323,10 +1323,23 @@ paths:
     get:
       tags: [Cobranca]
       operationId: obterCobrancaV2
-      description: Retorna cobranca da conta vinculada ao token. empresa_id, company_id e account_id sao rejeitados.
+      description: Retorna plano, consumo faturavel de producao e composicao do faturamento da conta vinculada ao token. Sem filtros, usa o mes atual. empresa_id, company_id e account_id sao rejeitados.
       x-required-scopes: ["billing:read"]
+      parameters:
+        - name: mes
+          in: query
+          description: Competencia no formato YYYY-MM. Nao pode ser combinada com data_de ou data_ate.
+          schema: { type: string, pattern: '^\\d{4}-\\d{2}$' }
+        - name: data_de
+          in: query
+          description: Inicio inclusivo de um periodo personalizado. Nao pode ser combinado com mes.
+          schema: { type: string, format: date }
+        - name: data_ate
+          in: query
+          description: Fim inclusivo de um periodo personalizado. Nao pode ser combinado com mes.
+          schema: { type: string, format: date }
       responses:
-        "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "200": { $ref: "#/components/responses/CobrancaResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
   /fiscal/operacoes:
     get:
@@ -2312,6 +2325,12 @@ components:
               metadados:
                 type: object
                 additionalProperties: true
+    CobrancaResponse:
+      description: Plano, consumo e composicao do faturamento da conta do token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CobrancaEnvelopeV2"
     CertificadoOrigemResponse:
       description: Configuração efetiva da origem do certificado da empresa consumidora.
       content:
@@ -2380,6 +2399,110 @@ components:
                         campo_provavel: cTribNac
                         payload_path: servico.cTribNac
   schemas:
+    CobrancaEnvelopeV2:
+      type: object
+      required: [dados]
+      properties:
+        dados:
+          $ref: "#/components/schemas/CobrancaV2"
+        metadados:
+          type: object
+          additionalProperties: true
+    CobrancaV2:
+      type: object
+      required: [conta_id, situacao_assinatura, plano, periodo, escopo_faturamento, consumo, faturamento]
+      additionalProperties: false
+      properties:
+        conta_id: { type: string }
+        situacao_assinatura: { type: string, nullable: true }
+        plano:
+          oneOf:
+            - $ref: "#/components/schemas/PlanoCobrancaV2"
+            - type: "null"
+        periodo: { $ref: "#/components/schemas/PeriodoCobrancaV2" }
+        escopo_faturamento: { $ref: "#/components/schemas/EscopoFaturamentoV2" }
+        consumo: { $ref: "#/components/schemas/ConsumoCobrancaV2" }
+        faturamento: { $ref: "#/components/schemas/FaturamentoV2" }
+    PlanoCobrancaV2:
+      type: object
+      required: [id, nome, preco_mensal, moeda, limites]
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        preco_mensal: { type: number, format: double }
+        moeda: { type: string, example: BRL }
+        limites: { type: object, additionalProperties: true }
+    PeriodoCobrancaV2:
+      type: object
+      required: [modo, mes, inicio, fim, quantidade_meses]
+      additionalProperties: false
+      properties:
+        modo: { type: string, enum: [mensal, personalizado] }
+        mes: { type: string, pattern: '^\\d{4}-\\d{2}$', nullable: true }
+        inicio: { type: string, format: date }
+        fim: { type: string, format: date }
+        quantidade_meses: { type: integer, minimum: 1 }
+    EscopoFaturamentoV2:
+      type: object
+      required: [modo, quantidade_clientes]
+      additionalProperties: false
+      properties:
+        modo: { type: string, enum: [individual, coletivo] }
+        quantidade_clientes: { type: integer, minimum: 0 }
+    ConsumoCobrancaV2:
+      type: object
+      required: [documentos_total, documentos_autorizados, nfe_autorizadas, nfse_autorizadas, nfce_autorizadas, valor_documentos_autorizados, empresas]
+      additionalProperties: false
+      properties:
+        documentos_total: { type: integer, minimum: 0 }
+        documentos_autorizados: { type: integer, minimum: 0 }
+        nfe_autorizadas: { type: integer, minimum: 0 }
+        nfse_autorizadas: { type: integer, minimum: 0 }
+        nfce_autorizadas: { type: integer, minimum: 0 }
+        valor_documentos_autorizados: { type: number, format: double, minimum: 0 }
+        empresas: { type: integer, minimum: 0 }
+    FaixaFaturamentoV2:
+      type: object
+      required: [de, ate, quantidade, valor_unitario, valor]
+      additionalProperties: false
+      properties:
+        de: { type: integer, minimum: 1 }
+        ate: { type: integer, nullable: true }
+        quantidade: { type: integer, minimum: 0 }
+        valor_unitario: { type: number, format: double, minimum: 0 }
+        valor: { type: number, format: double, minimum: 0 }
+    ItemFaturamentoV2:
+      type: object
+      additionalProperties: false
+      properties:
+        descricao: { type: string }
+        modo: { type: string, enum: [faixas_progressivas, percentual_faturamento], nullable: true }
+        quantidade: { type: integer, minimum: 0 }
+        quantidade_inclusa: { type: integer, minimum: 0 }
+        valor_unitario: { type: number, format: double, minimum: 0, nullable: true }
+        faturamento: { type: number, format: double, minimum: 0 }
+        faturamento_incluso: { type: number, format: double, minimum: 0 }
+        faturamento_faturavel: { type: number, format: double, minimum: 0 }
+        percentual: { type: number, format: double, minimum: 0, nullable: true }
+        faixas:
+          type: array
+          items: { $ref: "#/components/schemas/FaixaFaturamentoV2" }
+        estabelecimentos: { type: integer, minimum: 0 }
+        meses: { type: integer, minimum: 0 }
+        valor: { type: number, format: double, minimum: 0 }
+    FaturamentoV2:
+      type: object
+      required: [itens, valor_devido, moeda, ambiente_faturavel, homologacao_faturavel]
+      additionalProperties: false
+      properties:
+        itens:
+          type: object
+          additionalProperties: { $ref: "#/components/schemas/ItemFaturamentoV2" }
+        valor_devido: { type: number, format: double, minimum: 0 }
+        moeda: { type: string, example: BRL }
+        ambiente_faturavel: { type: string, enum: [producao] }
+        homologacao_faturavel: { type: boolean, const: false }
     FiscalTag:
       type: string
       enum:

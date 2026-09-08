@@ -922,7 +922,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Retorna cobranca da conta vinculada ao token. empresa_id, company_id e account_id sao rejeitados. */
+        /** @description Retorna plano, consumo faturavel de producao e composicao do faturamento da conta vinculada ao token. Sem filtros, usa o mes atual. empresa_id, company_id e account_id sao rejeitados. */
         get: operations["obterCobrancaV2"];
         put?: never;
         post?: never;
@@ -1496,6 +1496,101 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CobrancaEnvelopeV2: {
+            dados: components["schemas"]["CobrancaV2"];
+            metadados?: {
+                [key: string]: unknown;
+            };
+        };
+        CobrancaV2: {
+            conta_id: string;
+            situacao_assinatura: string | null;
+            plano: components["schemas"]["PlanoCobrancaV2"] | null;
+            periodo: components["schemas"]["PeriodoCobrancaV2"];
+            escopo_faturamento: components["schemas"]["EscopoFaturamentoV2"];
+            consumo: components["schemas"]["ConsumoCobrancaV2"];
+            faturamento: components["schemas"]["FaturamentoV2"];
+        };
+        PlanoCobrancaV2: {
+            id: string;
+            nome: string;
+            /** Format: double */
+            preco_mensal: number;
+            /** @example BRL */
+            moeda: string;
+            limites: {
+                [key: string]: unknown;
+            };
+        };
+        PeriodoCobrancaV2: {
+            /** @enum {string} */
+            modo: "mensal" | "personalizado";
+            mes: string | null;
+            /** Format: date */
+            inicio: string;
+            /** Format: date */
+            fim: string;
+            quantidade_meses: number;
+        };
+        EscopoFaturamentoV2: {
+            /** @enum {string} */
+            modo: "individual" | "coletivo";
+            quantidade_clientes: number;
+        };
+        ConsumoCobrancaV2: {
+            documentos_total: number;
+            documentos_autorizados: number;
+            nfe_autorizadas: number;
+            nfse_autorizadas: number;
+            nfce_autorizadas: number;
+            /** Format: double */
+            valor_documentos_autorizados: number;
+            empresas: number;
+        };
+        FaixaFaturamentoV2: {
+            de: number;
+            ate: number | null;
+            quantidade: number;
+            /** Format: double */
+            valor_unitario: number;
+            /** Format: double */
+            valor: number;
+        };
+        ItemFaturamentoV2: {
+            descricao?: string;
+            /** @enum {string|null} */
+            modo?: "faixas_progressivas" | "percentual_faturamento" | null;
+            quantidade?: number;
+            quantidade_inclusa?: number;
+            /** Format: double */
+            valor_unitario?: number | null;
+            /** Format: double */
+            faturamento?: number;
+            /** Format: double */
+            faturamento_incluso?: number;
+            /** Format: double */
+            faturamento_faturavel?: number;
+            /** Format: double */
+            percentual?: number | null;
+            faixas?: components["schemas"]["FaixaFaturamentoV2"][];
+            estabelecimentos?: number;
+            meses?: number;
+            /** Format: double */
+            valor?: number;
+        };
+        FaturamentoV2: {
+            itens: {
+                [key: string]: components["schemas"]["ItemFaturamentoV2"];
+            };
+            /** Format: double */
+            valor_devido: number;
+            /** @example BRL */
+            moeda: string;
+            /** @enum {string} */
+            ambiente_faturavel: "producao";
+            /** @constant */
+            homologacao_faturavel: false;
+        };
         /** @enum {string} */
         FiscalTag: "SUJEITO_ST" | "MONOFASICO" | "COMBUSTIVEL" | "MEDICAMENTO" | "BEBIDA_FRIA" | "CESTA_BASICA" | "IMPORTADO" | "ISENTO" | "NAO_TRIBUTADO" | "REDUCAO_BASE" | "PRODUCAO_PROPRIA" | "ADQUIRIDO_TERCEIROS" | "USO_CONSUMO" | "ATIVO_IMOBILIZADO" | "SERVICO_ISS" | "USO_INTERNO";
         DirectDocumentRequestV2: {
@@ -3605,6 +3700,15 @@ export interface components {
                 };
             };
         };
+        /** @description Plano, consumo e composicao do faturamento da conta do token. */
+        CobrancaResponse: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CobrancaEnvelopeV2"];
+            };
+        };
         /** @description Configuração efetiva da origem do certificado da empresa consumidora. */
         CertificadoOrigemResponse: {
             headers: {
@@ -4907,14 +5011,21 @@ export interface operations {
     };
     obterCobrancaV2: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Competencia no formato YYYY-MM. Nao pode ser combinada com data_de ou data_ate. */
+                mes?: string;
+                /** @description Inicio inclusivo de um periodo personalizado. Nao pode ser combinado com mes. */
+                data_de?: string;
+                /** @description Fim inclusivo de um periodo personalizado. Nao pode ser combinado com mes. */
+                data_ate?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["GenericResourceResponse"];
+            200: components["responses"]["CobrancaResponse"];
             422: components["responses"]["ErrorResponse"];
         };
     };

@@ -1191,9 +1191,9 @@ class NotaAgilClient
         return $this->request('GET', '/metricas');
     }
 
-    public function billingV2(): array
+    public function billingV2(array $filters = []): array
     {
-        return $this->request('GET', '/cobranca');
+        return $this->request('GET', $this->withQuery('/cobranca', $filters));
     }
 
     public static function webhookSignature(string $secret, string $deliveryId, string $timestamp, string $body): string
