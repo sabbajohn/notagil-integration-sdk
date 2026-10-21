@@ -41,5 +41,15 @@
   "scripts": {
     "test": "phpunit"
   },
-  "minimum-stability": "stable"
+  "minimum-stability": "stable",
+  "suggest": {
+    "laravel/framework": "^12.0 enables the optional opt-in provisioning bridge; not required by the PHP client."
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "NotaAgil\\Integration\\Laravel\\NotaAgilServiceProvider"
+      ]
+    }
+  }
 }

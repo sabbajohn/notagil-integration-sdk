@@ -9,9 +9,13 @@ Este repositorio publica dois pacotes a partir do mesmo codigo fonte:
 
 Use o SDK para cadastrar e consultar empresas, consultar configuracoes fiscais, montar previews, emitir documentos por operacao, emitir documentos por payload direto, acompanhar processamento, baixar XML/PDF, consultar IBPT, gerenciar produtos/tomadores/webhooks e consumir as rotas v2 da plataforma.
 
+Provisionamento de contas parceiras no PHP e ponte opcional Laravel12:
+[contrato, configuração e adoção](docs/provisionamento-parceiros-laravel.md).
+A ponte fica desligada por padrão e usa credencial própria de provisionamento.
+
 ## Versao Atual
 
-Release preparada: `v0.4.6`.
+Versão: `v0.5.0`.
 
 Principais pontos:
 
@@ -29,7 +33,7 @@ Principais pontos:
 ### PHP
 
 ```sh
-composer require notagil/integration-sdk:^0.4.6
+composer require notagil/integration-sdk:^0.5.0
 ```
 
 O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src`.
@@ -37,7 +41,7 @@ O pacote Composer usa o `composer.json` da raiz e carrega as classes de `php/src
 ### TypeScript
 
 ```sh
-npm install @notagil/integration-sdk@^0.4.6
+npm install @notagil/integration-sdk@^0.5.0
 ```
 
 O pacote npm e publicado a partir do diretorio `typescript/`.
