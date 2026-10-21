@@ -6,6 +6,22 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) e as ve
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-21
+
+### Added
+- PHP: cliente separado para provisionamento/ativação de contas parceiras, DTOs,
+  IDs string, classificação segura de falhas e Retry-After.
+- Ponte opcional Laravel12, desabilitada por padrão, com adapters explícitos,
+  migrations preservadoras, outbox cifrada, fila pós-commit, fencing, limite,
+  retry/replay e conciliação manual sem backfill.
+- Testes HTTP mockados e integração Laravel com SQLite em memória/fila falsa.
+
+### Fixed
+- Isolamento/uniqueness da outbox independente da collation do banco, com digests
+  de identidade canônicos e verificação byte a byte dos valores originais.
+- Leituras de controle da outbox e limite sempre no primário, sem depender de
+  sticky ou de replicação após uma escrita.
+
 ## [0.4.6] - 2026-08-21
 
 ### Added

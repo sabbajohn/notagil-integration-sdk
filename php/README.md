@@ -2,12 +2,16 @@
 
 SDK PHP oficial para a API publica de integracao da NotaAgil.
 
+Veja [provisionamento de contas parceiras e ponte Laravel12](../docs/provisionamento-parceiros-laravel.md)
+para o cliente separado `Provisioning\NotaAgilProvisioningClient`, DTOs,
+idempotência e processamento durável opcional, desligado por padrão.
+
 Veja [docs/payload-emissao.md](../docs/payload-emissao.md) para a estrutura padronizada do payload de emissao fiscal por `operation_code` e `snapshot`.
 
 ## Instalacao
 
 ```bash
-composer require notagil/integration-sdk:^0.4.5
+composer require notagil/integration-sdk:^0.5.0
 ```
 
 ## Uso Basico
