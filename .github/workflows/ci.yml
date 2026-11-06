@@ -30,6 +30,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check lookup type contracts
+        run: npm run test:types
+
       - name: Run tests
         run: node --test ./tests/smoke.test.mjs
 
