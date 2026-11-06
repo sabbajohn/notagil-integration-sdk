@@ -890,3 +890,127 @@ function canonicalFiscalPayloadV2() {
     ],
   };
 }
+
+for (const version of ['v1', 'v2']) {
+  for (const [method, purpose, content] of [
+    ['lookupStoredDocument', 'nota_armazenada', 'metadados_nota'],
+    ['lookupSefazStatus', 'situacao_sefaz', 'situacao_protocolo'],
+    ['lookupNfeDistribution', 'distribuicao_dfe', 'resumo_nfe'],
+  ]) {
+    test(`${method} ${version} sends explicit purpose and returns metadata only`, async () => {
+      const history = [];
+      const result = { resultado_consulta: { finalidade: purpose, conteudo: content, inclui_xml: false } };
+      const client = new NotagilIntegrationClient({
+        baseUrl: `https://api.test/api/${version}/integrations`, token: 'test-token',
+        fetch: async (input, init) => {
+          history.push({ input, init });
+          return new Response(JSON.stringify({ [version === 'v2' ? 'dados' : 'data']: result }));
+        },
+      });
+      const payload = version === 'v2'
+        ? { chave_documento: '1'.repeat(44), tipo_documento: 'nfe', ambiente_fiscal: 'producao' }
+        : { document_key: '1'.repeat(44), document_type: 'nfe', fiscal_environment: 'producao' };
+      const response = version === 'v2' ? await client[`${method}V2`](payload) : await client[method](payload, '10');
+      assert.deepEqual(response, result);
+      assert.equal(history.length, 1);
+      assert.equal(history[0].input, `https://api.test/api/${version}/integrations/${version === 'v2' ? 'consulta-notas/consultar' : 'company/10/consulta-notas/lookup'}`);
+      assert.equal(history[0].init.method, 'POST');
+      assert.equal(history[0].init.headers.Authorization, 'Bearer test-token');
+      assert.deepEqual(JSON.parse(history[0].init.body), { ...payload, finalidade: purpose });
+    });
+  }
+
+  test(`stored XML ${version} preserves original bytes and never permits remote fallback`, async () => {
+    const history = [];
+    const bytes = Uint8Array.from([0xef, 0xbb, 0xbf, ...new TextEncoder().encode('<?xml version="1.0"?>\r\n<nfeProc>'), 0xe7, ...new TextEncoder().encode('</nfeProc>\r\n')]);
+    const client = new NotagilIntegrationClient({
+      baseUrl: `https://api.test/api/${version}/integrations`, token: 'test-token',
+      fetch: async (input, init) => {
+        history.push({ input, init });
+        return new Response(bytes, { headers: { 'Content-Type': 'application/xml', 'Content-Disposition': 'attachment; filename="original.xml"' } });
+      },
+    });
+    const env = version === 'v2' ? 'ambiente_fiscal' : 'fiscal_environment';
+    const options = { [env]: 'producao', somente_armazenado: false };
+    const response = version === 'v2'
+      ? await client.downloadStoredUnifiedDocumentXmlV2('inbound', 'document/1', options)
+      : await client.downloadStoredUnifiedDocumentXml('inbound', 'document/1', '10', options);
+    assert.ok(response.content instanceof ArrayBuffer);
+    assert.deepEqual(new Uint8Array(response.content), bytes);
+    assert.equal(response.filename, 'original.xml');
+    assert.equal(response.content_type, 'application/xml');
+    assert.equal(history.length, 1);
+    assert.equal(history[0].init.method, 'GET');
+    const url = new URL(history[0].input);
+    assert.ok(url.pathname.endsWith('/inbound/document%2F1/xml'));
+    assert.deepEqual(Object.fromEntries(url.searchParams), { [env]: 'producao', somente_armazenado: 'true' });
+  });
+
+  test(`legacy lookup and XML methods ${version} retain their original request shape`, async () => {
+    const history = [];
+    const client = new NotagilIntegrationClient({
+      baseUrl: `https://api.test/api/${version}/integrations`, token: 'test-token',
+      fetch: async (input, init) => {
+        history.push({ input, init });
+        return new Response(init.method === 'POST' ? '{"data":{}}' : '<original/>');
+      },
+    });
+    const payload = version === 'v2'
+      ? { chave_documento: 'legacy-key', consulta_remota: false, forcar_consulta_remota: false }
+      : { document_key: 'legacy-key', remote_lookup: false, force_remote: false };
+    if (version === 'v2') await client.lookupUnifiedDocumentV2(payload);
+    else await client.lookupUnifiedDocument(payload, '10');
+    const xml = version === 'v2'
+      ? await client.downloadUnifiedDocumentXmlV2('outbound', '1')
+      : await client.downloadUnifiedDocumentXml('outbound', '1', '10');
+    assert.deepEqual(JSON.parse(history[0].init.body), payload);
+    assert.equal(new URL(history[1].input).search, '');
+    assert.equal(xml.content, '<original/>');
+  });
+}
+
+test('explicit helpers reject conflicting flags without making a request', () => {
+  let calls = 0;
+  const client = new NotagilIntegrationClient({ token: 'test-token', fetch: async () => { calls++; throw new Error('Unexpected HTTP call'); } });
+  for (const method of ['lookupStoredDocument', 'lookupSefazStatus', 'lookupNfeDistribution']) {
+    for (const suffix of ['', 'V2']) {
+      for (const field of ['finalidade', 'consulta_remota', 'forcar_consulta_remota', 'remote_lookup', 'force_remote']) {
+        for (const value of [undefined, null, false, true]) {
+          assert.throws(() => client[`${method}${suffix}`]({ [field]: value }, '10'), new RegExp(field));
+        }
+      }
+    }
+  }
+  assert.equal(calls, 0);
+});
+
+test('remote helpers default to NF-e model 55 and reject other document types', async () => {
+  for (const suffix of ['', 'V2']) {
+    for (const method of ['lookupSefazStatus', 'lookupNfeDistribution']) {
+      const history = [];
+      const client = new NotagilIntegrationClient({ token: 'test-token', fetch: async (input, init) => { history.push({ input, init }); return new Response('{"data":{}}'); } });
+      const field = suffix === 'V2' ? 'tipo_documento' : 'document_type';
+      await client[`${method}${suffix}`]({}, '10');
+      assert.equal(JSON.parse(history[0].init.body)[field], 'nfe');
+      assert.throws(() => client[`${method}${suffix}`]({ [field]: 'nfce' }, '10'), /model 55/);
+      assert.equal(history.length, 1);
+    }
+  }
+});
+
+test('lookup and stored XML errors do not trigger fallbacks, retries, or manifestation', async () => {
+  for (const status of [404, 409, 429, 503]) {
+    let calls = 0;
+    const client = NotagilIntegrationClient.v2({ token: 'test-token', fetch: async () => {
+      calls++;
+      return new Response(JSON.stringify({ codigo: 'nfe_distribution_test', mensagem: 'Fixture error' }), { status });
+    } });
+    await assert.rejects(
+      status === 429 || status === 503
+        ? client.lookupNfeDistributionV2({ chave_documento: '1'.repeat(44) })
+        : client.downloadStoredUnifiedDocumentXmlV2('inbound', '1'),
+      (error) => error instanceof NotagilApiError && error.status === status,
+    );
+    assert.equal(calls, 1);
+  }
+});

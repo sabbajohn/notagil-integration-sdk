@@ -773,7 +773,7 @@ paths:
     post:
       tags: [Documents]
       operationId: lookupCompanyUnifiedDocument
-      description: Looks up a unified inbound or outbound document view without creating a new fiscal document.
+      description: Returns metadata only. Use finalidade=nota_armazenada, situacao_sefaz or distribuicao_dfe with document_key, document_type and fiscal_environment. Explicit purpose must not be combined with remote_lookup or force_remote. Remote purposes require NF-e model 55. XML bytes use the separate download endpoint.
       x-required-scopes: ["documents:read"]
       parameters: [{ $ref: "#/components/parameters/CompanyId" }]
       requestBody: { $ref: "#/components/requestBodies/JsonObject" }
@@ -783,6 +783,7 @@ paths:
     get:
       tags: [Documents]
       operationId: downloadCompanyUnifiedDocumentXml
+      description: Use somente_armazenado=true to return only the original stored XML, without remote retrieval.
       x-required-scopes: ["documents:read"]
       parameters:
         - $ref: "#/components/parameters/CompanyId"
@@ -794,6 +795,12 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: somente_armazenado
+          in: query
+          schema: { type: boolean, default: false }
+        - name: fiscal_environment
+          in: query
+          schema: { type: string, enum: [homologacao, producao] }
       responses:
         "200": { description: XML artifact. }
   /company/{company_id}/consulta-notas/{source}/{document_id}/pdf:
