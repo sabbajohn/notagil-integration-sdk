@@ -887,7 +887,7 @@ paths:
     post:
       tags: [Documents]
       operationId: consultarNotasV2
-      description: Consulta documento fiscal por origem e identificador usando campos publicos em portugues.
+      description: Retorna metadados, nunca bytes de XML. finalidade separa nota_armazenada (leitura local), situacao_sefaz (situacao/protocolo NF-e modelo 55) e distribuicao_dfe (distribuicao nacional restrita ao interessado). Operacoes explicitas nao fazem fallback. resultado_consulta informa finalidade, conteudo e inclui_xml=false.
       x-required-scopes: ["documents:read"]
       requestBody:
         required: true
@@ -897,12 +897,16 @@ paths:
               $ref: "#/components/schemas/ConsultaNotasRequestV2"
       responses:
         "200": { $ref: "#/components/responses/GenericResourceResponse" }
+        "403": { $ref: "#/components/responses/ErrorResponse" }
+        "404": { $ref: "#/components/responses/ErrorResponse" }
         "422": { $ref: "#/components/responses/ErrorResponse" }
+        "429": { $ref: "#/components/responses/NFeDistributionRateLimitResponse" }
+        "503": { $ref: "#/components/responses/ErrorResponse" }
   /consulta-notas/{origem}/{documento}/xml:
     get:
       tags: [Documents]
       operationId: baixarXmlConsultaNotasV2
-      description: Baixa XML de documento consultado sem parametro de empresa.
+      description: Entrega bytes do XML em endpoint separado. Use somente_armazenado=true para ler exclusivamente o original salvo, sem SEFAZ ou distribuicao. Consulta de protocolo nao recupera XML proprio ausente.
       x-required-scopes: ["documents:read"]
       parameters:
         - name: origem
@@ -914,6 +918,10 @@ paths:
           required: true
           schema: { type: string }
         - $ref: "#/components/parameters/AmbienteFiscal"
+        - name: somente_armazenado
+          in: query
+          description: Sem consulta remota. Retorna 404 se o XML original nao estiver armazenado.
+          schema: { type: boolean, default: false }
       responses:
         "200": { description: XML do documento fiscal. }
         "404": { $ref: "#/components/responses/ErrorResponse" }
@@ -2363,6 +2371,16 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/DeleteEnvelope"
+    NFeDistributionRateLimitResponse:
+      description: Limite de distribuicao por CNPJ e ambiente. Aguarde o Retry-After antes de nova tentativa.
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+          description: Segundos ate uma nova tentativa permitida.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
     ErrorResponse:
       description: Erro padronizado.
       content:
@@ -2944,11 +2962,19 @@ components:
           type: string
           enum: [nfe, nfce, nfse]
           nullable: true
+        finalidade:
+          type: string
+          enum: [nota_armazenada, situacao_sefaz, distribuicao_dfe]
+          description: Operacao explicita. Nao combine com consulta_remota ou forcar_consulta_remota. As duas operacoes remotas exigem chave NF-e modelo 55.
         consulta_remota:
+          deprecated: true
+          description: Compatibilidade; nao enviar com finalidade.
           type: boolean
           nullable: true
           default: true
         forcar_consulta_remota:
+          deprecated: true
+          description: Compatibilidade; nao enviar com finalidade.
           type: boolean
           nullable: true
           default: false

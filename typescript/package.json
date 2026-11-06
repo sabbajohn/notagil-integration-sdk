@@ -54,10 +54,11 @@
     "generate:types": "npm run generate:types:v1 && npm run generate:types:v2",
     "generate:types:v1": "openapi-typescript ../openapi/integration-v1.yaml -o src/openapi-types.ts",
     "generate:types:v2": "openapi-typescript ../openapi/integration-v2.yaml -o src/openapi-types-v2.ts --default-non-nullable false",
-    "test": "npm run build && node --test ./tests/smoke.test.mjs",
+    "test": "npm run build && npm run test:types && node --test ./tests/smoke.test.mjs",
     "test:e2e": "npm run build && node ./tests/e2e-homolog.mjs",
     "prepack": "npm run build",
-    "pack:dry-run": "npm pack --dry-run"
+    "pack:dry-run": "npm pack --dry-run",
+    "test:types": "tsc --noEmit --strict --target ES2022 --module ES2022 --moduleResolution Bundler tests/lookup-types.test.ts"
   },
   "devDependencies": {
     "openapi-typescript": "^7.6.1",

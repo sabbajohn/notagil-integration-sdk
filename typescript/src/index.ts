@@ -4,6 +4,46 @@ export type DocumentType = 'nfe' | 'nfce' | 'nfse';
 export type ResolutionStatus = 'resolved' | 'review' | 'blocked';
 export type FiscalEnvironment = 'homologacao' | 'producao';
 export type PublicApiVersion = 'v1' | 'v2';
+
+/** Lookup endpoints return metadata only. XML bytes use a separate download endpoint. */
+export type UnifiedDocumentLookupPurpose = 'nota_armazenada' | 'situacao_sefaz' | 'distribuicao_dfe';
+export interface UnifiedDocumentLookupResult extends Record<string, unknown> {
+  resultado_consulta: {
+    finalidade: UnifiedDocumentLookupPurpose;
+    conteudo: 'metadados_nota' | 'situacao_protocolo' | 'resumo_nfe';
+    inclui_xml: false;
+  };
+}
+
+interface ExplicitLookupOnly {
+  finalidade?: never;
+  consulta_remota?: never;
+  forcar_consulta_remota?: never;
+  remote_lookup?: never;
+  force_remote?: never;
+}
+
+export interface UnifiedDocumentLookupInputV2 extends ExplicitLookupOnly {
+  chave_documento: string;
+  tipo_documento?: DocumentType;
+  ambiente_fiscal?: FiscalEnvironment;
+}
+
+export interface UnifiedDocumentLookupInput extends ExplicitLookupOnly {
+  document_key: string;
+  document_type?: DocumentType;
+  fiscal_environment?: FiscalEnvironment;
+}
+
+export interface UnifiedDocumentXmlOptionsV2 {
+  ambiente_fiscal?: FiscalEnvironment;
+  somente_armazenado?: boolean;
+}
+
+export interface UnifiedDocumentXmlOptions {
+  fiscal_environment?: FiscalEnvironment;
+  somente_armazenado?: boolean;
+}
 export const DEFAULT_BASE_URL_V1 = 'https://api_notagil.sabbasistemas.com.br/api/v1/integrations';
 export const DEFAULT_BASE_URL_V2 = 'https://api_notagil.sabbasistemas.com.br/api/v2/integrations';
 export const NFSE_CANONICAL_POLICY_FIELDS = [
@@ -3057,8 +3097,36 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>(this.companyPath('/consulta-notas/lookup', companyId), { method: 'POST', body: payload });
   }
 
-  downloadUnifiedDocumentXml(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number): Promise<DownloadResult> {
-    return this.download(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/xml`, companyId), 'text');
+  /** Reads stored document metadata only; never falls back to SEFAZ or distribution. */
+  lookupStoredDocument(payload: UnifiedDocumentLookupInput, companyId: string | number): Promise<UnifiedDocumentLookupResult> {
+    return this.request<UnifiedDocumentLookupResult>(this.companyPath('/consulta-notas/lookup', companyId), {
+      method: 'POST', body: this.withLookupPurpose(payload, 'nota_armazenada'),
+    });
+  }
+
+  /** Queries NF-e (model 55) status/protocol, not the complete invoice XML. */
+  lookupSefazStatus(payload: UnifiedDocumentLookupInput & { document_type?: 'nfe' }, companyId: string | number): Promise<UnifiedDocumentLookupResult> {
+    return this.request<UnifiedDocumentLookupResult>(this.companyPath('/consulta-notas/lookup', companyId), {
+      method: 'POST', body: this.withLookupPurpose({ document_type: 'nfe', ...payload }, 'situacao_sefaz'),
+    });
+  }
+
+  /** Queries national NF-e distribution metadata, subject to SEFAZ roles, window and quotas. */
+  lookupNfeDistribution(payload: UnifiedDocumentLookupInput & { document_type?: 'nfe' }, companyId: string | number): Promise<UnifiedDocumentLookupResult> {
+    return this.request<UnifiedDocumentLookupResult>(this.companyPath('/consulta-notas/lookup', companyId), {
+      method: 'POST', body: this.withLookupPurpose({ document_type: 'nfe', ...payload }, 'distribuicao_dfe'),
+    });
+  }
+
+  downloadUnifiedDocumentXml(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number, options: UnifiedDocumentXmlOptions = {}): Promise<DownloadResult> {
+    return this.download(this.withQuery(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/xml`, companyId), options), 'text');
+  }
+
+  /** Returns original stored bytes as an ArrayBuffer, without remote retrieval or manifestation. */
+  downloadStoredUnifiedDocumentXml(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number, options: Pick<UnifiedDocumentXmlOptions, 'fiscal_environment'> = {}): Promise<DownloadResult & { content: ArrayBuffer }> {
+    return this.download(this.withQuery(this.companyPath(`/consulta-notas/${source}/${encodeURIComponent(String(documentId))}/xml`, companyId), {
+      fiscal_environment: options.fiscal_environment, somente_armazenado: true,
+    }), 'arrayBuffer') as Promise<DownloadResult & { content: ArrayBuffer }>;
   }
 
   downloadUnifiedDocumentPdf(source: 'inbound' | 'outbound', documentId: string | number, companyId: string | number): Promise<DownloadResult> {
@@ -3235,8 +3303,36 @@ export class NotagilIntegrationClient {
     return this.request<Record<string, unknown>>('/consulta-notas/consultar', { method: 'POST', body: payload });
   }
 
-  downloadUnifiedDocumentXmlV2(source: 'inbound' | 'outbound' | string, documentId: string | number): Promise<DownloadResult> {
-    return this.download(`/consulta-notas/${encodeURIComponent(source)}/${encodeURIComponent(String(documentId))}/xml`, 'text');
+  /** Reads stored document metadata only; never falls back to SEFAZ or distribution. */
+  lookupStoredDocumentV2(payload: UnifiedDocumentLookupInputV2): Promise<UnifiedDocumentLookupResult> {
+    return this.request<UnifiedDocumentLookupResult>('/consulta-notas/consultar', {
+      method: 'POST', body: this.withLookupPurpose(payload, 'nota_armazenada'),
+    });
+  }
+
+  /** Queries NF-e (model 55) status/protocol, not the complete invoice XML. */
+  lookupSefazStatusV2(payload: UnifiedDocumentLookupInputV2 & { tipo_documento?: 'nfe' }): Promise<UnifiedDocumentLookupResult> {
+    return this.request<UnifiedDocumentLookupResult>('/consulta-notas/consultar', {
+      method: 'POST', body: this.withLookupPurpose({ tipo_documento: 'nfe', ...payload }, 'situacao_sefaz'),
+    });
+  }
+
+  /** Queries national NF-e distribution metadata, subject to SEFAZ roles, window and quotas. */
+  lookupNfeDistributionV2(payload: UnifiedDocumentLookupInputV2 & { tipo_documento?: 'nfe' }): Promise<UnifiedDocumentLookupResult> {
+    return this.request<UnifiedDocumentLookupResult>('/consulta-notas/consultar', {
+      method: 'POST', body: this.withLookupPurpose({ tipo_documento: 'nfe', ...payload }, 'distribuicao_dfe'),
+    });
+  }
+
+  downloadUnifiedDocumentXmlV2(source: 'inbound' | 'outbound' | string, documentId: string | number, options: UnifiedDocumentXmlOptionsV2 = {}): Promise<DownloadResult> {
+    return this.download(this.withQuery(`/consulta-notas/${encodeURIComponent(source)}/${encodeURIComponent(String(documentId))}/xml`, options), 'text');
+  }
+
+  /** Returns original stored bytes as an ArrayBuffer, without remote retrieval or manifestation. */
+  downloadStoredUnifiedDocumentXmlV2(source: 'inbound' | 'outbound' | string, documentId: string | number, options: Pick<UnifiedDocumentXmlOptionsV2, 'ambiente_fiscal'> = {}): Promise<DownloadResult & { content: ArrayBuffer }> {
+    return this.download(this.withQuery(`/consulta-notas/${encodeURIComponent(source)}/${encodeURIComponent(String(documentId))}/xml`, {
+      ambiente_fiscal: options.ambiente_fiscal, somente_armazenado: true,
+    }), 'arrayBuffer') as Promise<DownloadResult & { content: ArrayBuffer }>;
   }
 
   downloadUnifiedDocumentPdfV2(source: 'inbound' | 'outbound' | string, documentId: string | number): Promise<DownloadResult> {
@@ -3480,6 +3576,23 @@ export class NotagilIntegrationClient {
     const signature = await cryptoApi.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
 
     return Array.from(new Uint8Array(signature)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  private withLookupPurpose(payload: object, purpose: UnifiedDocumentLookupPurpose): Record<string, unknown> {
+    for (const field of ['finalidade', 'consulta_remota', 'forcar_consulta_remota', 'remote_lookup', 'force_remote']) {
+      if (Object.prototype.hasOwnProperty.call(payload, field)) {
+        throw new TypeError(`Explicit lookup helpers do not accept ${field}; choose the method for the desired purpose.`);
+      }
+    }
+    if (purpose !== 'nota_armazenada') {
+      const input = payload as Record<string, unknown>;
+      for (const field of ['tipo_documento', 'document_type']) {
+        if (input[field] !== undefined && input[field] !== 'nfe') {
+          throw new TypeError(`${purpose} requires NF-e (model 55).`);
+        }
+      }
+    }
+    return { ...payload, finalidade: purpose };
   }
 
   private withQuery(path: string, params: object): string {

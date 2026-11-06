@@ -833,7 +833,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Looks up a unified inbound or outbound document view without creating a new fiscal document. */
+        /** @description Returns metadata only. Use finalidade=nota_armazenada, situacao_sefaz or distribuicao_dfe with document_key, document_type and fiscal_environment. Explicit purpose must not be combined with remote_lookup or force_remote. Remote purposes require NF-e model 55. XML bytes use the separate download endpoint. */
         post: operations["lookupCompanyUnifiedDocument"];
         delete?: never;
         options?: never;
@@ -848,6 +848,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Use somente_armazenado=true to return only the original stored XML, without remote retrieval. */
         get: operations["downloadCompanyUnifiedDocumentXml"];
         put?: never;
         post?: never;
@@ -3464,7 +3465,10 @@ export interface operations {
     };
     downloadCompanyUnifiedDocumentXml: {
         parameters: {
-            query?: never;
+            query?: {
+                somente_armazenado?: boolean;
+                fiscal_environment?: "homologacao" | "producao";
+            };
             header?: never;
             path: {
                 company_id: components["parameters"]["CompanyId"];

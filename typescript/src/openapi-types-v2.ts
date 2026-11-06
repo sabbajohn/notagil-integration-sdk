@@ -643,7 +643,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Consulta documento fiscal por origem e identificador usando campos publicos em portugues. */
+        /** @description Retorna metadados, nunca bytes de XML. finalidade separa nota_armazenada (leitura local), situacao_sefaz (situacao/protocolo NF-e modelo 55) e distribuicao_dfe (distribuicao nacional restrita ao interessado). Operacoes explicitas nao fazem fallback. resultado_consulta informa finalidade, conteudo e inclui_xml=false. */
         post: operations["consultarNotasV2"];
         delete?: never;
         options?: never;
@@ -658,7 +658,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Baixa XML de documento consultado sem parametro de empresa. */
+        /** @description Entrega bytes do XML em endpoint separado. Use somente_armazenado=true para ler exclusivamente o original salvo, sem SEFAZ ou distribuicao. Consulta de protocolo nao recupera XML proprio ausente. */
         get: operations["baixarXmlConsultaNotasV2"];
         put?: never;
         post?: never;
@@ -1887,9 +1887,22 @@ export interface components {
             chave_documento: string;
             /** @enum {string|null} */
             tipo_documento?: "nfe" | "nfce" | "nfse" | null;
-            /** @default true */
+            /**
+             * @description Operacao explicita. Nao combine com consulta_remota ou forcar_consulta_remota. As duas operacoes remotas exigem chave NF-e modelo 55.
+             * @enum {string}
+             */
+            finalidade?: "nota_armazenada" | "situacao_sefaz" | "distribuicao_dfe";
+            /**
+             * @deprecated
+             * @description Compatibilidade; nao enviar com finalidade.
+             * @default true
+             */
             consulta_remota?: boolean | null;
-            /** @default false */
+            /**
+             * @deprecated
+             * @description Compatibilidade; nao enviar com finalidade.
+             * @default false
+             */
             forcar_consulta_remota?: boolean | null;
             /** @enum {string|null} */
             ambiente_fiscal?: "homologacao" | "producao" | null;
@@ -3745,6 +3758,17 @@ export interface components {
                 "application/json": components["schemas"]["DeleteEnvelope"];
             };
         };
+        /** @description Limite de distribuicao por CNPJ e ambiente. Aguarde o Retry-After antes de nova tentativa. */
+        NFeDistributionRateLimitResponse: {
+            headers: {
+                /** @description Segundos ate uma nova tentativa permitida. */
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
         /** @description Erro padronizado. */
         ErrorResponse: {
             headers: {
@@ -4578,13 +4602,19 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["GenericResourceResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
             422: components["responses"]["ErrorResponse"];
+            429: components["responses"]["NFeDistributionRateLimitResponse"];
+            503: components["responses"]["ErrorResponse"];
         };
     };
     baixarXmlConsultaNotasV2: {
         parameters: {
             query?: {
                 ambiente_fiscal?: components["parameters"]["AmbienteFiscal"];
+                /** @description Sem consulta remota. Retorna 404 se o XML original nao estiver armazenado. */
+                somente_armazenado?: boolean;
             };
             header?: never;
             path: {

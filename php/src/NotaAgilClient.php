@@ -686,9 +686,36 @@ class NotaAgilClient
         return $this->request('POST', $this->companyPath('/consulta-notas/lookup', $companyId), ['json' => $payload]);
     }
 
-    public function downloadUnifiedDocumentXml(string $source, string|int $documentId, string|int $companyId): array
+    /** Consulta somente metadados armazenados; nao consulta SEFAZ nem distribuicao. */
+    public function lookupStoredDocument(array $payload, string|int $companyId): array
     {
-        return $this->download($this->companyPath('/consulta-notas/'.$source.'/'.$documentId.'/xml', $companyId));
+        return $this->lookupUnifiedDocument($this->withLookupPurpose($payload, 'nota_armazenada'), $companyId);
+    }
+
+    /** Consulta situacao/protocolo da NF-e (modelo 55); nao retorna o XML completo. */
+    public function lookupSefazStatus(array $payload, string|int $companyId): array
+    {
+        return $this->lookupUnifiedDocument($this->withLookupPurpose(array_merge(['document_type' => 'nfe'], $payload), 'situacao_sefaz'), $companyId);
+    }
+
+    /** Consulta metadados da distribuicao nacional NF-e, sujeita a papel, janela e limites. */
+    public function lookupNfeDistribution(array $payload, string|int $companyId): array
+    {
+        return $this->lookupUnifiedDocument($this->withLookupPurpose(array_merge(['document_type' => 'nfe'], $payload), 'distribuicao_dfe'), $companyId);
+    }
+
+    public function downloadUnifiedDocumentXml(string $source, string|int $documentId, string|int $companyId, array $filters = []): array
+    {
+        return $this->download($this->withQuery($this->companyPath('/consulta-notas/'.rawurlencode($source).'/'.rawurlencode((string) $documentId).'/xml', $companyId), $filters));
+    }
+
+    /** Baixa os bytes originais armazenados, sem buscar remotamente ou manifestar. */
+    public function downloadStoredUnifiedDocumentXml(string $source, string|int $documentId, string|int $companyId, array $filters = []): array
+    {
+        return $this->downloadUnifiedDocumentXml($source, $documentId, $companyId, [
+            'fiscal_environment' => $filters['fiscal_environment'] ?? null,
+            'somente_armazenado' => true,
+        ]);
     }
 
     public function downloadUnifiedDocumentPdf(string $source, string|int $documentId, string|int $companyId): array
@@ -906,9 +933,36 @@ class NotaAgilClient
         return $this->request('POST', '/consulta-notas/consultar', ['json' => $payload]);
     }
 
-    public function downloadUnifiedDocumentXmlV2(string $source, string|int $documentId): array
+    /** Consulta somente metadados armazenados; nao consulta SEFAZ nem distribuicao. */
+    public function lookupStoredDocumentV2(array $payload): array
     {
-        return $this->download('/consulta-notas/'.rawurlencode($source).'/'.rawurlencode((string) $documentId).'/xml');
+        return $this->lookupUnifiedDocumentV2($this->withLookupPurpose($payload, 'nota_armazenada'));
+    }
+
+    /** Consulta situacao/protocolo da NF-e (modelo 55); nao retorna o XML completo. */
+    public function lookupSefazStatusV2(array $payload): array
+    {
+        return $this->lookupUnifiedDocumentV2($this->withLookupPurpose(array_merge(['tipo_documento' => 'nfe'], $payload), 'situacao_sefaz'));
+    }
+
+    /** Consulta metadados da distribuicao nacional NF-e, sujeita a papel, janela e limites. */
+    public function lookupNfeDistributionV2(array $payload): array
+    {
+        return $this->lookupUnifiedDocumentV2($this->withLookupPurpose(array_merge(['tipo_documento' => 'nfe'], $payload), 'distribuicao_dfe'));
+    }
+
+    public function downloadUnifiedDocumentXmlV2(string $source, string|int $documentId, array $filters = []): array
+    {
+        return $this->download($this->withQuery('/consulta-notas/'.rawurlencode($source).'/'.rawurlencode((string) $documentId).'/xml', $filters));
+    }
+
+    /** Baixa os bytes originais armazenados, sem buscar remotamente ou manifestar. */
+    public function downloadStoredUnifiedDocumentXmlV2(string $source, string|int $documentId, array $filters = []): array
+    {
+        return $this->downloadUnifiedDocumentXmlV2($source, $documentId, [
+            'ambiente_fiscal' => $filters['ambiente_fiscal'] ?? null,
+            'somente_armazenado' => true,
+        ]);
     }
 
     public function downloadUnifiedDocumentPdfV2(string $source, string|int $documentId): array
@@ -1341,6 +1395,25 @@ class NotaAgilClient
         }
 
         return preg_match('/filename="?([^";]+)"?/i', $disposition, $matches) === 1 ? $matches[1] : null;
+    }
+
+    private function withLookupPurpose(array $payload, string $purpose): array
+    {
+        foreach (['finalidade', 'consulta_remota', 'forcar_consulta_remota', 'remote_lookup', 'force_remote'] as $field) {
+            if (array_key_exists($field, $payload)) {
+                throw new \InvalidArgumentException("Explicit lookup helpers do not accept {$field}; choose the method for the desired purpose.");
+            }
+        }
+
+        if ($purpose !== 'nota_armazenada') {
+            foreach (['tipo_documento', 'document_type'] as $field) {
+                if (array_key_exists($field, $payload) && $payload[$field] !== 'nfe') {
+                    throw new \InvalidArgumentException("{$purpose} requires NF-e (model 55).");
+                }
+            }
+        }
+
+        return array_merge($payload, ['finalidade' => $purpose]);
     }
 
     private function withQuery(string $path, array $filters): string

@@ -489,3 +489,7 @@ NOTAGIL_TOKEN=seu_token npm run test:e2e
 ```
 
 Use `tests/fixtures/e2e-operation-request.sample.json` as a starting point and adjust it for your company setup.
+
+## Consulta NF-e por finalidade
+
+Use `lookupStoredDocumentV2` para metadados locais, `lookupSefazStatusV2` para situação/protocolo e `lookupNfeDistributionV2` para distribuição nacional. Nenhuma dessas consultas retorna bytes de XML. Para o original salvo, use `downloadStoredUnifiedDocumentXmlV2`, sem fallback remoto. [Contrato, limites e exemplos PHP/TypeScript](../docs/nfe-document-lookup.md).

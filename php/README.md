@@ -356,3 +356,7 @@ if (($payload['type'] ?? null) === 'fiscal_document.authorized') {
 ```
 
 O pacote e agnostico de framework. Veja `examples/laravel.php` para uma forma simples de registrar o cliente no container Laravel.
+
+## Consulta NF-e por finalidade
+
+Use `lookupStoredDocumentV2` para metadados locais, `lookupSefazStatusV2` para situação/protocolo e `lookupNfeDistributionV2` para distribuição nacional. Nenhuma dessas consultas retorna bytes de XML. Para o original salvo, use `downloadStoredUnifiedDocumentXmlV2`, sem fallback remoto. [Contrato, limites e exemplos PHP/TypeScript](../docs/nfe-document-lookup.md).

@@ -834,3 +834,7 @@ git push origin main v0.4.5
 ```
 
 O workflow `.github/workflows/release-packages.yml` publica o TypeScript no npm quando uma GitHub Release e publicada. Para PHP, o Packagist usa a tag do repositorio `notagil/integration-sdk`.
+
+## Consulta NF-e por finalidade
+
+Use `lookupStoredDocumentV2` para metadados locais, `lookupSefazStatusV2` para situação/protocolo e `lookupNfeDistributionV2` para distribuição nacional. Nenhuma dessas consultas retorna bytes de XML. Para o original salvo, use `downloadStoredUnifiedDocumentXmlV2`, sem fallback remoto. [Contrato, limites e exemplos PHP/TypeScript](docs/nfe-document-lookup.md).
