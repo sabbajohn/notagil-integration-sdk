@@ -23,8 +23,7 @@ final class ProvisioningStore
         private readonly DatabaseManager $database,
         private readonly Encrypter $encrypter,
         private readonly ProvisioningSettings $settings,
-    ) {
-    }
+    ) {}
 
     public function connection(): Connection
     {
@@ -218,7 +217,7 @@ final class ProvisioningStore
         return true;
     }
 
-    public function complete(object $claim, ProvisioningResult $result): bool
+    public function complete(object $claim, ProvisioningResult $result, ?callable $consume = null): bool
     {
         if ($result->externalCustomerId !== $claim->external_customer_id
             || ($claim->remote_account_id !== null && $claim->remote_account_id !== $result->accountId)
@@ -226,13 +225,23 @@ final class ProvisioningStore
             throw new LogicException('Provisioning result identity mismatch.');
         }
 
-        return $this->claimed($claim)->update([
-            'state' => $result->activationStatus === ActivationStatus::Active ? 'concluido' : 'aguardando_ativacao',
-            'remote_account_id' => $result->accountId, 'remote_empresa_id' => $result->empresaId,
-            'remote_result' => $this->encrypter->encrypt(json_encode($result->toArray(), JSON_THROW_ON_ERROR), false),
-            'last_http_status' => $result->httpStatus, 'last_error_code' => null,
-            'claim_until' => null, 'next_retry_at' => null, 'updated_at' => Carbon::now('UTC'),
-        ]) === 1;
+        return $this->connection()->transaction(function () use ($claim, $result, $consume): bool {
+            // Fence stale workers BEFORE installing credentials or running consumer writes.
+            if ($this->claimed($claim)->where('claim_until', '>', Carbon::now('UTC'))->lockForUpdate()->first() === null) {
+                return false;
+            }
+            if ($consume !== null) {
+                $consume();
+            }
+
+            return $this->claimed($claim)->update([
+                'state' => $result->activationStatus === ActivationStatus::Active ? 'concluido' : 'aguardando_ativacao',
+                'remote_account_id' => $result->accountId, 'remote_empresa_id' => $result->empresaId,
+                'remote_result' => $this->encrypter->encrypt(json_encode($result->toArray(), JSON_THROW_ON_ERROR), false),
+                'last_http_status' => $result->httpStatus, 'last_error_code' => null,
+                'claim_until' => null, 'next_retry_at' => null, 'updated_at' => Carbon::now('UTC'),
+            ]) === 1;
+        }, 3);
     }
 
     public function defer(object $claim, ProvisioningState $state, string $errorCode, int $status = 0, ?int $delay = null): bool

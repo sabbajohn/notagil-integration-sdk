@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace NotaAgil\Integration\Laravel;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
 use NotaAgil\Integration\Laravel\Commands\ReconcileProvisionings;
 use NotaAgil\Integration\Laravel\Contracts\ProvisioningCredentialResolver;
+use NotaAgil\Integration\Laravel\Contracts\ProvisioningResultConsumer;
 use NotaAgil\Integration\Laravel\Contracts\ProvisioningSource;
 
 /** Optional Laravel 12 bridge. The PHP client has no Illuminate dependency. */
@@ -18,6 +20,13 @@ final class NotaAgilServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../../config/notaagil-provisioning.php', 'notaagil-provisioning');
         if (! $this->app['config']->get('notaagil-provisioning.enabled', false)) {
             return;
+        }
+        $consumer = $this->app['config']->get('notaagil-provisioning.result_consumer');
+        if ($consumer !== null) {
+            if (! is_string($consumer) || ! is_subclass_of($consumer, ProvisioningResultConsumer::class)) {
+                throw new LogicException('Configure an explicit provisioning result consumer.');
+            }
+            $this->app->singleton(ProvisioningResultConsumer::class, $consumer);
         }
         $this->app->singleton(ProvisioningSettings::class, fn ($app) => new ProvisioningSettings($app['config']->get('notaagil-provisioning')));
         $this->app->singleton(ProvisioningSource::class, function ($app) {
@@ -61,7 +70,7 @@ final class NotaAgilServiceProvider extends ServiceProvider
             throw new LogicException('Configure explicit NotaAgil provisioning source models.');
         }
         foreach ($models as $model) {
-            if (! is_string($model) || ! is_subclass_of($model, \Illuminate\Database\Eloquent\Model::class)) {
+            if (! is_string($model) || ! is_subclass_of($model, Model::class)) {
                 throw new LogicException('Provisioning source models must be Eloquent models.');
             }
             $this->app['events']->listen('eloquent.created: '.$model, function ($created): void {

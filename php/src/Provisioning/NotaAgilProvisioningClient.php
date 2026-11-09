@@ -17,6 +17,7 @@ use Throwable;
 final class NotaAgilProvisioningClient
 {
     private readonly string $platformUrl;
+
     private readonly ClientInterface $http;
 
     public function __construct(
@@ -32,7 +33,7 @@ final class NotaAgilProvisioningClient
             throw new InvalidArgumentException('Provide an HTTPS platform origin and a separate provisioning credential.');
         }
         $this->platformUrl = rtrim($platformUrl, '/');
-        $this->http = $http ?? new Client();
+        $this->http = $http ?? new Client;
     }
 
     public function __debugInfo(): array
@@ -83,11 +84,12 @@ final class NotaAgilProvisioningClient
         try {
             $envelope = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
             if (! is_array($envelope) || ! isset($envelope['data']) || ! is_array($envelope['data'])) {
-                throw new \UnexpectedValueException();
+                throw new \UnexpectedValueException;
             }
             $result = ProvisioningResult::fromArray($envelope['data'], $status);
-            if ($result->externalCustomerId !== $payload['external_customer_id']) {
-                throw new \UnexpectedValueException();
+            if ($result->externalCustomerId !== $payload['external_customer_id']
+                || (isset($payload['integration']) && ! hash_equals($payload['integration']['token_sha256'], $result->integration['token_sha256'] ?? ''))) {
+                throw new \UnexpectedValueException;
             }
 
             return $result;

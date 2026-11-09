@@ -22,8 +22,8 @@ final readonly class ProvisioningResult
         public string $billingEnvironment,
         public string $invitationStatus,
         public int $httpStatus,
-    ) {
-    }
+        public ?array $integration,
+    ) {}
 
     public static function fromArray(array $data, int $httpStatus): self
     {
@@ -59,6 +59,21 @@ final readonly class ProvisioningResult
             throw new UnexpectedValueException('Invalid provisioning response.');
         }
 
+        $integration = null;
+        if (array_key_exists('integration', $data)) {
+            $value = $data['integration'];
+            if (! is_array($value) || ! is_array($value['scopes'] ?? null)
+                || ! preg_match('/\A[a-f0-9]{64}\z/', $string($value['token_sha256'] ?? null))) {
+                throw new UnexpectedValueException('Invalid integration confirmation.');
+            }
+            $integration = [
+                'client_id' => $string($value['client_id'] ?? null),
+                'token_id' => $string($value['token_id'] ?? null),
+                'token_sha256' => $value['token_sha256'],
+                'scopes' => array_values(array_map($string, $value['scopes'])),
+            ];
+        }
+
         return new self(
             $string($data['external_customer_id'] ?? null),
             $string($data['account']['id'] ?? null),
@@ -72,6 +87,7 @@ final readonly class ProvisioningResult
             $environment,
             $invitation,
             $httpStatus,
+            $integration,
         );
     }
 
@@ -86,6 +102,7 @@ final readonly class ProvisioningResult
                 'billing_source' => $this->billingSource, 'billing_environment' => $this->billingEnvironment,
             ],
             'invitation' => ['status' => $this->invitationStatus],
+            ...($this->integration === null ? [] : ['integration' => $this->integration]),
         ];
     }
 }
