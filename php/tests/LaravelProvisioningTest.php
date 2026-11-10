@@ -15,6 +15,7 @@ use Illuminate\Bus\Dispatcher;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Bus\Dispatcher as DispatcherContract;
 use Illuminate\Contracts\Encryption\Encrypter as EncrypterContract;
+use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseServiceProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
@@ -24,7 +25,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Testing\Fakes\BusFake;
+use NotaAgil\Integration\Laravel\Commands\ReconcileProvisionings;
 use NotaAgil\Integration\Laravel\Contracts\ProvisioningCredentialResolver;
+use NotaAgil\Integration\Laravel\Contracts\ProvisioningResultConsumer;
 use NotaAgil\Integration\Laravel\Contracts\ProvisioningSource;
 use NotaAgil\Integration\Laravel\Jobs\ProcessProvisioning;
 use NotaAgil\Integration\Laravel\NotaAgilServiceProvider;
@@ -43,15 +46,21 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Stringable;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 /** Entirely synthetic Application, SQLite memory, fake queue, mock HTTP. No .env. */
 #[Group('laravel-provisioning')]
 final class LaravelProvisioningTest extends TestCase
 {
     private Application $app;
+
     private BusFake $bus;
+
     private FixtureLogger $logger;
+
     private array $history = [];
+
     private array $config;
 
     protected function setUp(): void
@@ -76,12 +85,12 @@ final class LaravelProvisioningTest extends TestCase
             'queue' => ['default' => 'fixture', 'connections' => ['fixture' => ['driver' => 'database']]],
             'notaagil-provisioning' => $this->config,
         ]));
-        $this->logger = new FixtureLogger();
+        $this->logger = new FixtureLogger;
         $this->app->instance('log', $this->logger);
         $this->app->instance(EncrypterContract::class, new Encrypter(str_repeat('s', 32), 'AES-256-CBC'));
         $this->bus = new BusFake(new Dispatcher($this->app));
         $this->app->instance(DispatcherContract::class, $this->bus);
-        $this->app->instance(FixtureCredentials::class, new FixtureCredentials());
+        $this->app->instance(FixtureCredentials::class, new FixtureCredentials);
         Facade::clearResolvedInstances();
         Facade::setFacadeApplication($this->app);
         $this->app->register(EventServiceProvider::class);
@@ -191,6 +200,67 @@ final class LaravelProvisioningTest extends TestCase
     private function due(): void
     {
         Carbon::setTestNow(Carbon::now('UTC')->addHours(2));
+    }
+
+    public function test_worker_replays_remote_success_after_a_local_consumer_failure(): void
+    {
+        $row = $this->create();
+        $db = $this->app['db']->connection();
+        $consumer = new class($db) implements ProvisioningResultConsumer
+        {
+            public int $calls = 0;
+
+            public function __construct(private Connection $db) {}
+
+            public function consume(string $sourceKey, ProvisioningResult $result, string $platformUrl): void
+            {
+                $this->db->table('fixture_establishments')->where('id', 1)->update(['name' => 'installed']);
+                if (++$this->calls === 1) {
+                    throw new \RuntimeException('synthetic-local-failure');
+                }
+            }
+        };
+        $this->app->instance(ProvisioningResultConsumer::class, $consumer);
+        $worker = $this->worker([$this->response($row), $this->response($row)]);
+        $worker->process($row->id);
+        self::assertSame('resultado_incerto', $this->store()->get($row->id)->state);
+        self::assertSame('Synthetic account', $db->table('fixture_establishments')->value('name'));
+        $this->due();
+        $worker->process($row->id);
+        self::assertSame('concluido', $this->store()->get($row->id)->state);
+        self::assertSame('installed', $db->table('fixture_establishments')->value('name'));
+        self::assertSame(2, $consumer->calls);
+        self::assertSame((string) $this->history[0]['request']->getBody(), (string) $this->history[1]['request']->getBody());
+        self::assertSame($this->history[0]['request']->getHeaderLine('Idempotency-Key'), $this->history[1]['request']->getHeaderLine('Idempotency-Key'));
+    }
+
+    public function test_completion_callback_is_atomic_and_a_stale_claim_cannot_install_credentials(): void
+    {
+        $row = $this->create();
+        $claim = $this->store()->claim($row->id);
+        $result = ProvisioningResult::fromArray(ProvisioningClientTest::payload('active', $row->external_customer_id), 201);
+        try {
+            $this->store()->complete($claim, $result, function (): void {
+                $this->app['db']->table('fixture_establishments')->where('id', 1)->update(['name' => 'must-roll-back']);
+                throw new \RuntimeException('synthetic-local-failure');
+            });
+            self::fail('Expected local failure');
+        } catch (\RuntimeException $error) {
+            self::assertSame('synthetic-local-failure', $error->getMessage());
+        }
+        self::assertSame('Synthetic account', $this->app['db']->table('fixture_establishments')->value('name'));
+        self::assertSame('processando', $this->store()->get($row->id)->state);
+        $this->due();
+        $replacement = $this->store()->claim($row->id);
+        $called = false;
+        self::assertFalse($this->store()->complete($claim, $result, function () use (&$called): void {
+            $called = true;
+        }));
+        self::assertFalse($called);
+        self::assertTrue($this->store()->complete($replacement, $result, function () use (&$called): void {
+            $called = true;
+        }));
+        self::assertTrue($called);
     }
 
     public function test_intent_is_transactional_and_dispatch_waits_until_outer_commit(): void
@@ -364,7 +434,8 @@ final class LaravelProvisioningTest extends TestCase
 
     public function test_queue_outage_does_not_erase_committed_intent(): void
     {
-        $bus = new class ($this->app) extends Dispatcher {
+        $bus = new class($this->app) extends Dispatcher
+        {
             public function dispatch($command)
             {
                 throw new \RuntimeException('private queue details');
@@ -524,14 +595,14 @@ final class LaravelProvisioningTest extends TestCase
     public function test_reconciliation_command_queues_persisted_intents_only_and_honors_disabled_flag(): void
     {
         $this->create();
-        $command = new \NotaAgil\Integration\Laravel\Commands\ReconcileProvisionings();
+        $command = new ReconcileProvisionings;
         $command->setLaravel($this->app);
-        $output = new \Symfony\Component\Console\Output\BufferedOutput();
-        self::assertSame(0, $command->run(new \Symfony\Component\Console\Input\ArrayInput(['--limit' => '10']), $output));
+        $output = new BufferedOutput;
+        self::assertSame(0, $command->run(new ArrayInput(['--limit' => '10']), $output));
         $this->bus->assertDispatchedTimes(ProcessProvisioning::class, 2);
         self::assertStringContainsString('Queued 1 persisted intents.', $output->fetch());
         $this->app['config']->set('notaagil-provisioning.enabled', false);
-        self::assertSame(1, $command->run(new \Symfony\Component\Console\Input\ArrayInput([]), $output));
+        self::assertSame(1, $command->run(new ArrayInput([]), $output));
         $this->bus->assertDispatchedTimes(ProcessProvisioning::class, 2);
     }
 
@@ -686,6 +757,7 @@ if (class_exists(Application::class)) {
     final class FixtureCredentials implements ProvisioningCredentialResolver
     {
         public string $token = 'synthetic-partner-secret';
+
         public string $platformUrl = 'https://api.example.test';
 
         public function resolve(string $partnerScope): ProvisioningCredentials
@@ -701,7 +773,9 @@ if (class_exists(Application::class)) {
     final class FixtureEstablishment extends Model
     {
         protected $table = 'fixture_establishments';
+
         protected $guarded = [];
+
         public $timestamps = false;
 
         protected $attributes = ['first' => true, 'cnpj' => '12ABC34501DE35', 'name' => 'Synthetic account'];

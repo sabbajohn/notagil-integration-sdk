@@ -9,9 +9,13 @@ use InvalidArgumentException;
 final readonly class ProvisioningRequest
 {
     public string $externalCustomerId;
+
     public string $accountName;
+
     public string $cnpj;
+
     public string $legalName;
+
     public ?string $tradeName;
 
     public function __construct(
@@ -21,7 +25,11 @@ final readonly class ProvisioningRequest
         string $legalName,
         public Owner $owner,
         ?string $tradeName = null,
+        public ?string $integrationTokenHash = null,
     ) {
+        if ($integrationTokenHash !== null && ! preg_match('/\A[a-f0-9]{64}\z/', $integrationTokenHash)) {
+            throw new InvalidArgumentException('Invalid integration token verifier.');
+        }
         $this->externalCustomerId = Contract::text($externalCustomerId, 120, 'external_customer_id');
         $this->accountName = Contract::text($accountName, 120, 'account.name');
         $this->cnpj = strtoupper((string) preg_replace('/[.\/\s-]/u', '', $cnpj));
@@ -44,6 +52,7 @@ final readonly class ProvisioningRequest
             'account' => ['name' => $this->accountName],
             'empresa' => $company,
             'owner' => $this->owner->toArray(),
+            ...($this->integrationTokenHash === null ? [] : ['integration' => ['token_sha256' => $this->integrationTokenHash]]),
         ];
     }
 
@@ -57,6 +66,7 @@ final readonly class ProvisioningRequest
             $value['empresa']['razao_social'],
             new Owner($value['owner']['name'], $value['owner']['email']),
             $value['empresa']['nome_fantasia'] ?? null,
+            $value['integration']['token_sha256'] ?? null,
         );
     }
 }

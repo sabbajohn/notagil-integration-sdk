@@ -23,6 +23,28 @@ use PHPUnit\Framework\TestCase;
 
 final class ProvisioningClientTest extends TestCase
 {
+    public function test_optional_verifier_roundtrip_and_confirmation_never_retain_server_secrets(): void
+    {
+        $hash = hash('sha256', 'itg_synthetic-client-secret');
+        $snapshot = new ProvisioningRequest('fixture-1', 'Synthetic', '12345678000195', 'Company', new Owner('Owner', 'owner@example.test'), integrationTokenHash: $hash);
+        self::assertSame($snapshot->toArray(), ProvisioningRequest::fromArray($snapshot->toArray())->toArray());
+        $payload = self::payload();
+        $payload['integration'] = ['client_id' => '1', 'token_id' => '2', 'token_sha256' => $hash, 'scopes' => ['documents:write'], 'token' => 'forbidden-server-secret'];
+        $history = [];
+        $result = $this->client([new Response(201, [], json_encode(['data' => $payload]))], $history)->provision($snapshot, 'same-key');
+        self::assertSame($hash, $result->integration['token_sha256']);
+        self::assertStringNotContainsString('forbidden-server-secret', json_encode($result->toArray()));
+        self::assertStringNotContainsString('itg_synthetic-client-secret', (string) $history[0]['request']->getBody());
+    }
+
+    public function test_old_server_cannot_silently_complete_a_token_provisioning_request(): void
+    {
+        $snapshot = new ProvisioningRequest('fixture-1', 'Synthetic', '12345678000195', 'Company', new Owner('Owner', 'owner@example.test'), integrationTokenHash: str_repeat('a', 64));
+        $history = [];
+        $this->expectException(ProvisioningException::class);
+        $this->client([new Response(201, [], json_encode(['data' => self::payload()]))], $history)->provision($snapshot, 'same-key');
+    }
+
     public static function payload(string $status = 'active', string $externalId = 'fixture-1'): array
     {
         return [

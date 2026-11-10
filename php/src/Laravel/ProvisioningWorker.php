@@ -6,6 +6,7 @@ namespace NotaAgil\Integration\Laravel;
 
 use LogicException;
 use NotaAgil\Integration\Laravel\Contracts\ProvisioningCredentialResolver;
+use NotaAgil\Integration\Laravel\Contracts\ProvisioningResultConsumer;
 use NotaAgil\Integration\Laravel\Contracts\ProvisioningSource;
 use NotaAgil\Integration\Provisioning\ProvisioningException;
 use Psr\Log\LoggerInterface;
@@ -20,8 +21,8 @@ final class ProvisioningWorker
         private readonly ProvisioningClientFactory $clients,
         private readonly ProvisioningSettings $settings,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+        private readonly ?ProvisioningResultConsumer $consumer = null,
+    ) {}
 
     public function process(int $id): void
     {
@@ -78,7 +79,7 @@ final class ProvisioningWorker
             $result = $claim->operation === 'activate'
                 ? $client->activate($snapshot, $claim->idempotency_key)
                 : $client->provision($snapshot, $claim->idempotency_key);
-            if ($this->store->complete($claim, $result)) {
+            if ($this->store->complete($claim, $result, fn () => $this->consumer?->consume($claim->source_key, $result, $credential->platformUrl))) {
                 $this->audit($claim, $result->activationStatus->value, $result->httpStatus);
             }
         } catch (ProvisioningException $error) {
